@@ -7,14 +7,15 @@ import {
   UploadOutlined,
   LineChartOutlined,
   VideoCameraOutlined,
-  LogoutOutlined} from '@ant-design/icons';
-import { Button, Layout, Menu, theme } from 'antd';
-
+  LogoutOutlined
+} from '@ant-design/icons';
+import { Button, Layout, Menu, theme, DatePicker, Col, Row, Space } from 'antd';
+import dayjs from "dayjs";
 import NotificationCard from "./NotificationCard";
 
-
-
+const { RangePicker } = DatePicker;
 const { Header, Sider, Content } = Layout;
+const getDefaultDates = () => [dayjs().subtract(6, "day"), dayjs()];
 
 // const actions: React.ReactNode[] = [
 //   <EditOutlined key="edit" />,
@@ -31,7 +32,7 @@ export default function Dashboard() {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
 
-  const [filters, ] = useState({
+  const [filters,] = useState({
     team: "",
     smartGoals: false,
     goalsMet: false,
@@ -39,6 +40,7 @@ export default function Dashboard() {
   });
 
   const [dashboardData, setData] = useState([]);
+  const [dates, setDates] = useState(getDefaultDates());
 
   // const teams = [
   //   { name: "Augeo", id: "C08FD2CP3T9" },
@@ -47,11 +49,25 @@ export default function Dashboard() {
   // ];
 
 
+  const handleRangeChange = (values) => {
+    if (values === null) {
+      // If cleared, reset to default
+      const defaultDates = getDefaultDates();
+      setDates(defaultDates);
+    } else {
+      setDates(values);
+    }
+  };
+
+
   useEffect(() => {
     const fetchData = async () => {
       const params = new URLSearchParams();
-      params.append("startDate", "2025-01-01");
-      params.append("endDate", "2025-03-30");
+      const formatted = dates.map((d) => d.format("YYYY-MM-DD"));
+      const [startDate, endDate] = formatted;
+
+      params.append("startDate", startDate);
+      params.append("endDate", endDate);
 
       const res = await fetch(`/api/dashboard?${params.toString()}`);
       const data = await res.json();
@@ -59,7 +75,7 @@ export default function Dashboard() {
     };
 
     fetchData();
-  }, [filters]);
+  }, [filters, dates]);
 
 
   // const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -125,11 +141,34 @@ export default function Dashboard() {
           }}
 
         >
-          {
-            dashboardData.map((data, index) => (
-              <NotificationCard key={index} data={data} />
-            ))
-          }
+          <Row>
+            <Col span={6} style={{ margin: "auto" }}>
+              <Space direction="vertical" style={{ width: "100%" }}>
+                Select Date Range
+                <RangePicker
+                  onChange={handleRangeChange}
+                  value={dates}
+                  format="YYYY-MM-DD"
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    borderRadius: "8px",
+                  }}
+                  allowClear
+                />
+              </Space>
+
+            </Col>
+          </Row>
+          <Row>
+            {
+              dashboardData.map((data, index) => (
+                <Col span={12} key={index} style={{ padding: 8 }}>
+                  <NotificationCard data={data} />
+                </Col>
+              ))
+            }
+          </Row>
         </Content>
       </Layout>
     </Layout>

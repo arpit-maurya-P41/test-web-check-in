@@ -32,7 +32,7 @@ const SuccessCard = ({ data }: { data: NotificationData }) => {
     return (
         <Card
             style={{
-                width: 400,
+                width: "100%",
                 borderRadius: 16,
                 boxShadow: "0px 4px 12px rgba(0,0,0,0.08)",
                 background: "#f0fff4",
@@ -106,7 +106,7 @@ const ErrorCard = ({ data }: { data: NotificationData }) => {
     return (
         <Card
             style={{
-                width: 400,
+                width: "100%",
                 borderRadius: 16,
                 boxShadow: "0px 4px 12px rgba(0,0,0,0.08)",
                 background: "#fff5f5",
