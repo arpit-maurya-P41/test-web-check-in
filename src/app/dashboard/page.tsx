@@ -9,10 +9,12 @@ import {
   TeamOutlined,
   UserSwitchOutlined
 } from '@ant-design/icons';
-import { Button, Layout, Menu, theme, DatePicker, Col, Row, Space } from 'antd';
+import { Button, Layout, Menu, theme, DatePicker, Col, Row, Space, Select } from 'antd';
+
 import dayjs from "dayjs";
 import NotificationCard from "./NotificationCard";
 
+const { Option } = Select;
 const { RangePicker } = DatePicker;
 const { Header, Sider, Content } = Layout;
 const getDefaultDates = () => [dayjs().subtract(6, "day"), dayjs()];
@@ -22,8 +24,22 @@ export default function Dashboard() {
 
   const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
 
+  const [loading, setLoading] = useState(true);
   const [dashboardData, setData] = useState([]);
   const [dates, setDates] = useState(getDefaultDates());
+  const [teams, setTeams] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [selectedTeams, setSelectedTeams] = useState([]);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+
+  const handleTeamChange = (value) => {
+    setSelectedTeams(value);
+  };
+
+  const handleUserChange = (value) => {
+    setSelectedUsers(value);
+  };
+
 
   const handleRangeChange = (values) => {
     if (values === null) {
@@ -44,13 +60,34 @@ export default function Dashboard() {
       params.append("startDate", startDate);
       params.append("endDate", endDate);
 
-      const res = await fetch(`/api/dashboard?${params.toString()}`);
-      const data = await res.json();
+      if (selectedTeams.length > 0) {
+        params.append("teams", selectedTeams.join(","));
+      }
+
+      if (selectedUsers.length > 0) {
+        params.append("users", selectedUsers.join(","));
+      }
+
+      const [dashboardRes, teamsRes, usersRes] = await Promise.all([
+        fetch(`/api/dashboard?${params.toString()}`),
+        fetch("/api/teams"),
+        fetch("/api/users")
+      ]);
+
+      const data = await dashboardRes.json();
+      const teamData = await teamsRes.json();
+      const userData = await usersRes.json();
+
+      setUsers(userData.data);
+      setTeams(teamData.data);
       setData(JSON.parse(JSON.stringify(data.data)));
+
+      setLoading(false);
     };
 
     fetchData();
-  }, [dates]);
+  }, [dates, selectedTeams, selectedUsers]);
+
 
   return (
     <Layout>
@@ -106,34 +143,70 @@ export default function Dashboard() {
           }}
 
         >
-          <Row>
-            <Col span={6} style={{ margin: "auto" }}>
-              <Space direction="vertical" style={{ width: "100%" }}>
-                Select Date Range
-                <RangePicker
-                  onChange={handleRangeChange}
-                  value={dates}
-                  format="YYYY-MM-DD"
-                  style={{
-                    width: "100%",
-                    padding: "8px",
-                    borderRadius: "8px",
-                  }}
-                  allowClear
-                />
-              </Space>
+          {
+            loading ? "Loading..." : <>
+              <Row>
+                <Col span={26} style={{ margin: "auto" }}>
+                  <Space
+                    style={{ marginBottom: 16, display: "flex" }}
+                    wrap
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <RangePicker
+                        onChange={handleRangeChange}
+                        value={dates}
+                        format="YYYY-MM-DD"
+                        style={{
+                          padding: "8px",
+                          borderRadius: "8px",
+                        }}
+                        allowClear
+                      />
+                    </div>
 
-            </Col>
-          </Row>
-          <Row>
-            {
-              dashboardData.map((data, index) => (
-                <Col span={24} key={index} style={{ padding: 8 }}>
-                  <NotificationCard data={data} />
+                    <Select
+                      mode="multiple"
+                      allowClear
+                      placeholder="Select Teams"
+                      value={selectedTeams}
+                      onChange={handleTeamChange}
+                      style={{ minWidth: 240 }}
+                    >
+                      {teams.map((team) => (
+                        <Option key={team.id} value={team.slack_channel_id}>
+                          {team.name}
+                        </Option>
+                      ))}
+                    </Select>
+
+                    <Select
+                      mode="multiple"
+                      allowClear
+                      placeholder="Select Users"
+                      value={selectedUsers}
+                      onChange={handleUserChange}
+                      style={{ minWidth: 240 }}
+                    >
+                      {users.map((user) => (
+                        <Option key={user.id} value={user.slack_user_id}>
+                          {user.email}
+                        </Option>
+                      ))}
+                    </Select>
+                  </Space>
                 </Col>
-              ))
-            }
-          </Row>
+              </Row>
+              <Row>
+                {
+                  dashboardData.map((data, index) => (
+                    <Col span={24} key={index} style={{ padding: 8 }}>
+                      <NotificationCard data={data} />
+                    </Col>
+                  ))
+                }
+              </Row>
+            </>
+          }
         </Content>
       </Layout>
     </Layout>

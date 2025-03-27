@@ -11,6 +11,9 @@ export async function GET(req: Request) {
         const startDateParam = url.searchParams.get("startDate");
         const endDateParam = url.searchParams.get("endDate");
 
+        const teamsParam = url.searchParams.get("teams")?.split(",") || [];
+        const usersParam = url.searchParams.get("users")?.split(",") || [];
+
         const startDate = startDateParam ? new Date(startDateParam) : new Date("2025-01-01");
         const endDate = endDateParam ? new Date(endDateParam) : new Date();
 
@@ -20,6 +23,12 @@ export async function GET(req: Request) {
                     date: {
                         gte: new Date(startDate),
                         lte: new Date(endDate)
+                    },
+                    slack_user_id: {
+                        in: usersParam.length > 0 ? usersParam : undefined
+                    },
+                    slack_channel_id: {
+                        in: teamsParam.length > 0 ? teamsParam : undefined
                     }
                 }
             }
@@ -47,6 +56,12 @@ export async function GET(req: Request) {
                     date: {
                         gte: new Date(startDate),
                         lte: new Date(endDate)
+                    },
+                    slack_user_id: {
+                        in: usersParam.length > 0 ? usersParam : undefined
+                    },
+                    slack_channel_id: {
+                        in: teamsParam.length > 0 ? teamsParam : undefined
                     }
                 }
             }
