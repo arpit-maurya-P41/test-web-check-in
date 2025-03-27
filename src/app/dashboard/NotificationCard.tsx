@@ -69,7 +69,7 @@ const SuccessCard = ({ data }: { data: NotificationData }) => {
                 <Divider />
                 <Space direction="vertical" style={{ width: "100%", textAlign: "center" }}>
                     <Title level={5}>Check-in</Title>
-                    <Text>Goal: {data.checkin.goals}</Text>
+                    <Text>Goals: {data.checkin.goals}</Text>
                     <Text>Blockers: {data.checkin.blockers}</Text>
                     <Text>Feeling: {data.checkin.feeling}</Text>
                 </Space>
@@ -144,10 +144,10 @@ const ErrorCard = ({ data }: { data: NotificationData }) => {
                 <Space direction="vertical" style={{ width: "100%", textAlign: "center" }}>
                     <Title level={5}>Check-in</Title>
                     {data.checkin.missed ? (
-                        <Text>Missed</Text>
+                        <Text>Pending</Text>
                     ) : (
                         <>
-                            <Text>Goal: {data.checkin.goals}</Text>
+                            <Text>Goals: {data.checkin.goals}</Text>
                             <Text>Blockers: {data.checkin.blockers}</Text>
                             <Text>Feeling: {data.checkin.feeling}</Text>
                         </>
@@ -157,7 +157,7 @@ const ErrorCard = ({ data }: { data: NotificationData }) => {
                 <Space direction="vertical" style={{ width: "100%", textAlign: "center" }}>
                     <Title level={5}>Check-out</Title>
                     {data.checkout.missed ? (
-                        <Text>Missed</Text>
+                        <Text>Pending</Text>
                     ) : (
                         <>
                             <Text>Updates: {data.checkout.updates}</Text>

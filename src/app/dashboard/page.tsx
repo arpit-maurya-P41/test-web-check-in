@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  UploadOutlined,
   LineChartOutlined,
-  VideoCameraOutlined,
-  LogoutOutlined
+  LogoutOutlined,
+  TeamOutlined,
+  UserSwitchOutlined
 } from '@ant-design/icons';
 import { Button, Layout, Menu, theme, DatePicker, Col, Row, Space } from 'antd';
 import dayjs from "dayjs";
@@ -17,37 +17,13 @@ const { RangePicker } = DatePicker;
 const { Header, Sider, Content } = Layout;
 const getDefaultDates = () => [dayjs().subtract(6, "day"), dayjs()];
 
-// const actions: React.ReactNode[] = [
-//   <EditOutlined key="edit" />,
-//   <SettingOutlined key="setting" />,
-//   <EllipsisOutlined key="ellipsis" />,
-// ];
-
-
 export default function Dashboard() {
   const [collapsed, setCollapsed] = useState(false);
-  // const [loading, setLoading] = useState<boolean>(true);
 
-  const {
-    token: { colorBgContainer, borderRadiusLG },
-  } = theme.useToken();
-
-  const [filters,] = useState({
-    team: "",
-    smartGoals: false,
-    goalsMet: false,
-    missedCheckins: false,
-  });
+  const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
 
   const [dashboardData, setData] = useState([]);
   const [dates, setDates] = useState(getDefaultDates());
-
-  // const teams = [
-  //   { name: "Augeo", id: "C08FD2CP3T9" },
-  //   { name: "RepSpark", id: "C08FEE2J8TF" },
-  //   { name: "Nigel", id: "C08F79MUE04" },
-  // ];
-
 
   const handleRangeChange = (values) => {
     if (values === null) {
@@ -58,7 +34,6 @@ export default function Dashboard() {
       setDates(values);
     }
   };
-
 
   useEffect(() => {
     const fetchData = async () => {
@@ -75,17 +50,7 @@ export default function Dashboard() {
     };
 
     fetchData();
-  }, [filters, dates]);
-
-
-  // const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-  //   const { name, type, value, checked } = e.target;
-  //   setFilters((prev) => ({
-  //     ...prev,
-  //     [name]: type === "checkbox" ? checked : value,
-  //   }));
-  // };
-
+  }, [dates]);
 
   return (
     <Layout>
@@ -97,8 +62,8 @@ export default function Dashboard() {
           defaultSelectedKeys={['dashboard']}
           items={[
             { key: 'dashboard', icon: <LineChartOutlined />, label: 'Dashboard' },
-            { key: '2', icon: <VideoCameraOutlined />, label: 'nav 2' },
-            { key: '3', icon: <UploadOutlined />, label: 'nav 3' },
+            // { key: 'teamManagement', icon: <TeamOutlined />, label: 'Teams', onClick: () => window.location.href = '/team-management' },
+            // { key: "userManagement", icon: <UserSwitchOutlined />, label: "Users", onClick: () => window.location.href = "/user-managment" }
           ]}
         />
       </Sider>
