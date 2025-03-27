@@ -1,202 +1,168 @@
 
 import React from "react";
-import { Card, Typography, Space, Divider } from "antd";
-import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import { Card, Typography, Space, Divider, Tag, Avatar } from "antd";
+import {
+    CheckCircleOutlined,
+    CloseCircleOutlined,
+    UserOutlined,
+} from "@ant-design/icons";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
-
-interface CheckinData {
-    goals: string;
-    blockers: string;
-    feeling: string;
-    is_smart_goal: boolean;
-    missed?: boolean;
-}
-
-interface CheckoutData {
-    updates: string;
-    blockers: string;
-    feeling: string;
-    goals_met: boolean;
-    missed?: boolean;
-}
-
-interface NotificationData {
-    date: string;
-    checkin: CheckinData;
-    checkout: CheckoutData;
-}
-
-const SuccessCard = ({ data }: { data: NotificationData }) => {
-    return (
-        <Card
-            style={{
-                width: "100%",
-                borderRadius: 16,
-                boxShadow: "0px 4px 12px rgba(0,0,0,0.08)",
-                background: "#f0fff4",
-                border: "1px solid #b7eb8f",
-                padding: 16,
-                transition: "transform 0.3s ease, box-shadow 0.3s ease",
-                position: "relative",
-            }}
-            onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-4px)";
-                e.currentTarget.style.boxShadow = "0px 8px 24px rgba(0,0,0,0.12)";
-            }}
-            onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0px 4px 12px rgba(0,0,0,0.08)";
-            }}
+const StatusTag: React.FC<{ missed: boolean }> = ({ missed }) => {
+    return missed ? (
+        <Tag
+            icon={<CloseCircleOutlined />}
+            color="error"
+            style={{ fontSize: 12, padding: "2px 8px", borderRadius: 12, fontWeight: 500 }}
         >
-            <Text
-                style={{
-                    position: "absolute",
-                    top: 12,
-                    right: 16,
-                    color: "#52c41a",
-                    fontSize: 12,
-                }}
-            >
-                {new Date(data.date).toDateString()}
-            </Text>
-            <Space direction="vertical" style={{ width: "100%", alignItems: "center" }}>
-                <CheckCircleOutlined style={{ fontSize: 48, color: "#52c41a" }} />
-                <Title level={3} style={{ color: "#389e0d", margin: 0 }}>
-                    Check-in & Checkout Completed
-                </Title>
-                <Divider />
-                <Space direction="vertical" style={{ width: "100%", textAlign: "center" }}>
-                    <Title level={5}>Check-in</Title>
-                    <Text>Goals: {data.checkin.goals}</Text>
-                    <Text>Blockers: {data.checkin.blockers}</Text>
-                    <Text>Feeling: {data.checkin.feeling}</Text>
-                </Space>
-                <Divider />
-                <Space direction="vertical" style={{ width: "100%", textAlign: "center" }}>
-                    <Title level={5}>Check-out</Title>
-                    <Text>Updates: {data.checkout.updates}</Text>
-                    <Text>Blockers: {data.checkin.blockers}</Text>
-                    <Text>Feeling: {data.checkin.feeling}</Text>
-                </Space>
-                <Divider />
-                <Space direction="vertical" style={{ width: "100%", textAlign: "center" }}>
-                    <Title level={5}>SMART Goal</Title>
-                    {data.checkin.is_smart_goal ? (
-                        <CheckCircleOutlined style={{ color: "#52c41a" }} />
-                    ) : (
-                        <CloseCircleOutlined style={{ color: "#f5222d" }} />
-                    )}
-                </Space>
-                <Space direction="vertical" style={{ width: "100%", textAlign: "center" }}>
-                    <Title level={5}>Goals Met</Title>
-                    {data.checkout.goals_met ? (
-                        <CheckCircleOutlined style={{ color: "#52c41a" }} />
-                    ) : (
-                        <CloseCircleOutlined style={{ color: "#f5222d" }} />
-                    )}
-                </Space>
-            </Space>
-        </Card>
+            Missed
+        </Tag>
+    ) : (
+        <Tag
+            icon={<CheckCircleOutlined />}
+            color="success"
+            style={{ fontSize: 12, padding: "2px 8px", borderRadius: 12, fontWeight: 500 }}
+        >
+            Done
+        </Tag>
     );
 };
 
-const ErrorCard = ({ data }: { data: NotificationData }) => {
-    return (
-        <Card
-            style={{
-                width: "100%",
-                borderRadius: 16,
-                boxShadow: "0px 4px 12px rgba(0,0,0,0.08)",
-                background: "#fff5f5",
-                border: "1px solid #f5c2c7",
-                padding: 16,
-                transition: "transform 0.3s ease, box-shadow 0.3s ease",
-                position: "relative",
-            }}
-            onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-4px)";
-                e.currentTarget.style.boxShadow = "0px 8px 24px rgba(0,0,0,0.12)";
-            }}
-            onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0px 4px 12px rgba(0,0,0,0.08)";
-            }}
-        >
-            <Text
-                style={{
-                    position: "absolute",
-                    top: 12,
-                    right: 16,
-                    color: "#c62828",
-                    fontSize: 12,
-                }}
-            >
-                {new Date(data.date).toDateString()}
-            </Text>
-            <Space direction="vertical" style={{ width: "100%", alignItems: "center" }}>
-                <CloseCircleOutlined style={{ fontSize: 48, color: "#e57373" }} />
-                <Title level={3} style={{ color: "#c62828", margin: 0 }}>
-                    Check-in / Checkout Missed
-                </Title>
-                <Divider />
-                <Space direction="vertical" style={{ width: "100%", textAlign: "center" }}>
-                    <Title level={5}>Check-in</Title>
-                    {data.checkin.missed ? (
-                        <Text>Pending</Text>
-                    ) : (
-                        <>
-                            <Text>Goals: {data.checkin.goals}</Text>
-                            <Text>Blockers: {data.checkin.blockers}</Text>
-                            <Text>Feeling: {data.checkin.feeling}</Text>
-                        </>
-                    )}
-                </Space>
-                <Divider />
-                <Space direction="vertical" style={{ width: "100%", textAlign: "center" }}>
-                    <Title level={5}>Check-out</Title>
-                    {data.checkout.missed ? (
-                        <Text>Pending</Text>
-                    ) : (
-                        <>
-                            <Text>Updates: {data.checkout.updates}</Text>
-                            <Text>Blockers: {data.checkin.blockers}</Text>
-                            <Text>Feeling: {data.checkin.feeling}</Text>
-                        </>
-                    )}
-                </Space>
-                <Divider />
-                {
-                    !data.checkin.missed ?
-                        <Space direction="vertical" style={{ width: "100%", textAlign: "center" }}>
-                            <Title level={5}>SMART Goal</Title>
-                            {data.checkin.is_smart_goal ? (
-                                <CheckCircleOutlined style={{ color: "#52c41a" }} />
-                            ) : (
-                                <CloseCircleOutlined style={{ color: "#f5222d" }} />
-                            )}
-                        </Space> : null
-                }
-                {
-                    !data.checkout.missed ?
-                        <Space direction="vertical" style={{ width: "100%", textAlign: "center" }}>
-                            <Title level={5}>Goals Met</Title>
-                            {data.checkout.goals_met ? (
-                                <CheckCircleOutlined style={{ color: "#52c41a" }} />
-                            ) : (
-                                <CloseCircleOutlined style={{ color: "#f5222d" }} />
-                            )}
-                        </Space> : null
-                }
-            </Space>
-        </Card>
-    );
-};
-
-const NotificationCard = ({ data }: { data: NotificationData }) => {
+const NotificationCard = ({ data, withGradient = false }) => {
     const isSuccess = !data.checkin.missed && !data.checkout.missed;
-    return isSuccess ? <SuccessCard data={data} /> : <ErrorCard data={data} />;
+
+    return (
+        <Card
+            style={{
+                width: "100%",
+                borderRadius: 16,
+                background: "#f9f9f9", // Softer light grey
+                border: withGradient
+                    ? "2px solid transparent"
+                    : "1px solid #e0e0e0",
+                backgroundImage: withGradient
+                    ? "linear-gradient(#f9f9f9, #f9f9f9), linear-gradient(90deg, #f6d365, #fda085)"
+                    : "none",
+                backgroundOrigin: "border-box",
+                backgroundClip: withGradient ? "padding-box, border-box" : "border-box",
+                boxShadow: "0px 4px 12px rgba(0,0,0,0.05)",
+                padding: 16,
+                position: "relative",
+            }}
+        >
+            {/* User Info & Date */}
+            <Space align="center" style={{ justifyContent: "space-between", width: "100%", marginBottom: 12 }}>
+                <Space align="center">
+                    <Avatar size="small" icon={<UserOutlined />} />
+                    <Text style={{ color: "#262626", fontSize: 14, fontWeight: 500 }}>
+                        {data.checkin.slack_user_id}
+                    </Text>
+                </Space>
+                <Text
+                    style={{
+                        color: "#595959",
+                        fontSize: 12,
+                        letterSpacing: 0.3,
+                    }}
+                >
+                    {new Date(data.date).toLocaleDateString()}
+                </Text>
+            </Space>
+
+            {/* Check-in Section */}
+            <div>
+                <Divider style={{ color: "#262626", fontWeight: 600, letterSpacing: 0.5 }}>Check-in</Divider>
+                {data.checkin.missed ? (
+                    <Space>
+                        <StatusTag missed={true} />
+                        <Text type="secondary" style={{ fontWeight: 500 }}>You missed the check-in</Text>
+                    </Space>
+                ) : (
+                    <Space direction="vertical" size={4}>
+                        <Text style={{ color: "#262626", fontWeight: 500 }}>
+                            <strong>Goals:</strong> {data.checkin.goals}
+                        </Text>
+                        <Text style={{ color: "#262626", fontWeight: 500 }}>
+                            <strong>Blockers:</strong> {data.checkin.blockers}
+                        </Text>
+                        <Text style={{ color: "#262626", fontWeight: 500 }}>
+                            <strong>Mood:</strong> {data.checkin.feeling}
+                        </Text>
+                        <StatusTag missed={false} />
+                    </Space>
+                )}
+            </div>
+
+            {/* Checkout Section */}
+            <div>
+                <Divider style={{ color: "#262626", fontWeight: 600, letterSpacing: 0.5 }}>Check-out</Divider>
+                {data.checkout.missed ? (
+                    <Space>
+                        <StatusTag missed={true} />
+                        <Text type="secondary" style={{ fontWeight: 500 }}>You missed the check-out</Text>
+                    </Space>
+                ) : (
+                    <Space direction="vertical" size={4}>
+                        <Text style={{ color: "#262626", fontWeight: 500 }}>
+                            <strong>Update:</strong> Completed day's tasks
+                        </Text>
+                        <Text style={{ color: "#262626", fontWeight: 500 }}>
+                            <strong>Blockers:</strong> None
+                        </Text>
+                        <Text style={{ color: "#262626", fontWeight: 500 }}>
+                            <strong>Mood:</strong> Good
+                        </Text>
+                        <StatusTag missed={false} />
+                    </Space>
+                )}
+            </div>
+
+            {/* SMART Goal Section */}
+            <div>
+                <Divider style={{ color: "#262626", fontWeight: 600, letterSpacing: 0.5 }}>SMART Goal</Divider>
+                {data.checkin.is_smart_goal ? (
+                    <Tag
+                        icon={<CheckCircleOutlined />}
+                        color="success"
+                        style={{ fontSize: 12, padding: "2px 8px", borderRadius: 12, fontWeight: 500 }}
+                    >
+                        SMART Goal Set
+                    </Tag>
+                ) : (
+                    <Tag
+                        icon={<CloseCircleOutlined />}
+                        color="default"
+                        style={{ fontSize: 12, padding: "2px 8px", borderRadius: 12, fontWeight: 500 }}
+                    >
+                        Not a SMART Goal
+                    </Tag>
+                )}
+            </div>
+
+            {/* Goal Met Section */}
+            <div>
+                <Divider style={{ color: "#262626", fontWeight: 600, letterSpacing: 0.5 }}>Goal Met</Divider>
+                {isSuccess ? (
+                    <Tag
+                        icon={<CheckCircleOutlined />}
+                        color="success"
+                        style={{ fontSize: 12, padding: "2px 8px", borderRadius: 12, fontWeight: 500 }}
+                    >
+                        Goal Achieved
+                    </Tag>
+                ) : (
+                    <Tag
+                        icon={<CloseCircleOutlined />}
+                        color="error"
+                        style={{ fontSize: 12, padding: "2px 8px", borderRadius: 12, fontWeight: 500 }}
+                    >
+                        Goal Not Met
+                    </Tag>
+                )}
+            </div>
+        </Card>
+    );
 };
 
 export default NotificationCard;

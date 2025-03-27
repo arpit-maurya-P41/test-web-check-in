@@ -61,14 +61,22 @@ export async function GET(req: Request) {
             }
         });
 
+        const users = await prisma.users.findMany();
+
         const combinedData = allDates.map(date => {
             const checkin = checkinsWithMissed.find(c => new Date(c.date).toDateString() === date.toDateString());
             const checkout = checkoutsWithMissed.find(c => new Date(c.date).toDateString() === date.toDateString());
+            let user;
+            
+            if (checkin && checkin.slack_user_id) {
+                user = users.find(u => u.slack_user_id === checkin.slack_user_id);
+            }
 
             return {
                 date,
                 checkin,
-                checkout
+                checkout,
+                user
             };
         });
 

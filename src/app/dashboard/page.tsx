@@ -128,7 +128,7 @@ export default function Dashboard() {
           <Row>
             {
               dashboardData.map((data, index) => (
-                <Col span={12} key={index} style={{ padding: 8 }}>
+                <Col span={24} key={index} style={{ padding: 8 }}>
                   <NotificationCard data={data} />
                 </Col>
               ))
