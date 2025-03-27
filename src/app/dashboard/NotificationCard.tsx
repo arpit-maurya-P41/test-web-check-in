@@ -5,7 +5,30 @@ import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
 
-const SuccessCard = ({ data }) => {
+
+interface CheckinData {
+    goals: string;
+    blockers: string;
+    feeling: string;
+    is_smart_goal: boolean;
+    missed?: boolean;
+}
+
+interface CheckoutData {
+    updates: string;
+    blockers: string;
+    feeling: string;
+    goals_met: boolean;
+    missed?: boolean;
+}
+
+interface NotificationData {
+    date: string;
+    checkin: CheckinData;
+    checkout: CheckoutData;
+}
+
+const SuccessCard = ({ data }: { data: NotificationData }) => {
     return (
         <Card
             style={{
@@ -36,7 +59,7 @@ const SuccessCard = ({ data }) => {
                     fontSize: 12,
                 }}
             >
-                {new Date(data.date).toLocaleDateString()}
+                {new Date(data.date).toDateString()}
             </Text>
             <Space direction="vertical" style={{ width: "100%", alignItems: "center" }}>
                 <CheckCircleOutlined style={{ fontSize: 48, color: "#52c41a" }} />
@@ -79,7 +102,7 @@ const SuccessCard = ({ data }) => {
     );
 };
 
-const ErrorCard = ({ data }) => {
+const ErrorCard = ({ data }: { data: NotificationData }) => {
     return (
         <Card
             style={{
@@ -110,7 +133,7 @@ const ErrorCard = ({ data }) => {
                     fontSize: 12,
                 }}
             >
-                {new Date(data.date).toLocaleDateString()}
+                {new Date(data.date).toDateString()}
             </Text>
             <Space direction="vertical" style={{ width: "100%", alignItems: "center" }}>
                 <CloseCircleOutlined style={{ fontSize: 48, color: "#e57373" }} />
@@ -171,7 +194,7 @@ const ErrorCard = ({ data }) => {
     );
 };
 
-const NotificationCard = ({ data }) => {
+const NotificationCard = ({ data }: { data: NotificationData }) => {
     const isSuccess = !data.checkin.missed && !data.checkout.missed;
     return isSuccess ? <SuccessCard data={data} /> : <ErrorCard data={data} />;
 };

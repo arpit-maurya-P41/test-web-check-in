@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState, useEffect } from "react";
 import {
   MenuFoldOutlined,
@@ -8,40 +7,31 @@ import {
   UploadOutlined,
   LineChartOutlined,
   VideoCameraOutlined,
-  LogoutOutlined,
-  EditOutlined, EllipsisOutlined, SettingOutlined
-} from '@ant-design/icons';
-import { Button, Layout, Menu, theme, Avatar, Card, Flex, Switch } from 'antd';
+  LogoutOutlined} from '@ant-design/icons';
+import { Button, Layout, Menu, theme } from 'antd';
 
-import { Tag, Divider, Typography, Space } from "antd";
-import { UserOutlined, MailOutlined, PhoneOutlined } from "@ant-design/icons";
-import { Row, Col } from "antd";
-import { LinkedinOutlined, GithubOutlined, StarOutlined } from "@ant-design/icons";
-import { CloseCircleOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import NotificationCard from "./NotificationCard";
 
-
-const { Title, Text } = Typography;
 
 
 const { Header, Sider, Content } = Layout;
 
-const actions: React.ReactNode[] = [
-  <EditOutlined key="edit" />,
-  <SettingOutlined key="setting" />,
-  <EllipsisOutlined key="ellipsis" />,
-];
+// const actions: React.ReactNode[] = [
+//   <EditOutlined key="edit" />,
+//   <SettingOutlined key="setting" />,
+//   <EllipsisOutlined key="ellipsis" />,
+// ];
 
 
 export default function Dashboard() {
   const [collapsed, setCollapsed] = useState(false);
-  const [loading, setLoading] = useState<boolean>(true);
+  // const [loading, setLoading] = useState<boolean>(true);
 
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
 
-  const [filters, setFilters] = useState({
+  const [filters, ] = useState({
     team: "",
     smartGoals: false,
     goalsMet: false,
@@ -50,18 +40,18 @@ export default function Dashboard() {
 
   const [dashboardData, setData] = useState([]);
 
-  const teams = [
-    { name: "Augeo", id: "C08FD2CP3T9" },
-    { name: "RepSpark", id: "C08FEE2J8TF" },
-    { name: "Nigel", id: "C08F79MUE04" },
-  ];
+  // const teams = [
+  //   { name: "Augeo", id: "C08FD2CP3T9" },
+  //   { name: "RepSpark", id: "C08FEE2J8TF" },
+  //   { name: "Nigel", id: "C08F79MUE04" },
+  // ];
 
 
   useEffect(() => {
     const fetchData = async () => {
       const params = new URLSearchParams();
       params.append("startDate", "2025-01-01");
-      params.append("endDate", "2025-12-12");
+      params.append("endDate", "2025-03-30");
 
       const res = await fetch(`/api/dashboard?${params.toString()}`);
       const data = await res.json();
@@ -72,14 +62,13 @@ export default function Dashboard() {
   }, [filters]);
 
 
-  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, type, value, checked } = e.target;
-    setFilters((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
-
+  // const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  //   const { name, type, value, checked } = e.target;
+  //   setFilters((prev) => ({
+  //     ...prev,
+  //     [name]: type === "checkbox" ? checked : value,
+  //   }));
+  // };
 
 
   return (

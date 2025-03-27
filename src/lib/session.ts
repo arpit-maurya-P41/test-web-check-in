@@ -1,7 +1,7 @@
 "use server";
 
-import { PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient();
+// import { PrismaClient } from "@prisma/client";
+// const prisma = new PrismaClient();
 
 
 export async function isValidSession(sessionId: string): Promise<boolean> {
@@ -9,12 +9,12 @@ export async function isValidSession(sessionId: string): Promise<boolean> {
     
     console.log("Deteling expired sessions");
 
-    const data = await prisma.checkins.findMany(); 
-    console.log("data", data);
+    // const data = await prisma.checkins.findMany(); 
+    // console.log("data", data);
 
     // await query("DELETE FROM sessions WHERE expires_at < NOW()");
 
-    console.log("Checking session");
+    console.log("Checking session", sessionId);
     // const data = await query("SELECT * FROM sessions WHERE id = $1", [sessionId]);
 
     // console.log("data", data);
