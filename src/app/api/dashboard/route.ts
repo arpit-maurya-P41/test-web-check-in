@@ -41,14 +41,23 @@ export async function GET(req: Request) {
             currentDate.setDate(currentDate.getDate() + 1);
         }
 
-        const checkinsWithMissed = allDates.map(date => {
-            const checkin = checkins.find(c => new Date(c.date).toDateString() === date.toDateString());
-            if (checkin) {
-                return { ...checkin, missed: false };
+        const checkinsWithMissed = [];
+
+        allDates.forEach(date => {
+            const currentDateCheckins = [];
+            checkins.forEach(c => {
+                if (new Date(c.date).toDateString() === date.toDateString()) currentDateCheckins.push(c);
+            });
+
+            if (currentDateCheckins.length > 0) {
+                currentDateCheckins.forEach(checkin => {
+                    checkinsWithMissed.push({ ...checkin, missed: false });
+                });
             } else {
-                return { date, missed: true };
+                checkinsWithMissed.push({ date, missed: true });
             }
         });
+
 
         const checkouts = await prisma.checkouts.findMany(
             {
@@ -67,32 +76,42 @@ export async function GET(req: Request) {
             }
         );
 
-        const checkoutsWithMissed = allDates.map(date => {
-            const checkout = checkouts.find(c => new Date(c.date).toDateString() === date.toDateString());
-            if (checkout) {
-                return { ...checkout, missed: false };
+        const checkoutsWithMissed = [];
+
+        allDates.forEach(date => {
+            const currentDateCheckouts = [];
+            checkouts.forEach(c => {
+                if (new Date(c.date).toDateString() === date.toDateString()) currentDateCheckouts.push(c);
+            });
+
+            if (currentDateCheckouts.length > 0) {
+                currentDateCheckouts.forEach(checkin => {
+                    checkoutsWithMissed.push({ ...checkin, missed: false });
+                });
             } else {
-                return { date, missed: true };
+                checkoutsWithMissed.push({ date, missed: true });
             }
         });
 
+        console.log("here")
+
+
         const users = await prisma.users.findMany();
 
-        let combinedData = allDates.map(date => {
-            const checkin = checkinsWithMissed.find(c => new Date(c.date).toDateString() === date.toDateString());
-            const checkout = checkoutsWithMissed.find(c => new Date(c.date).toDateString() === date.toDateString());
-            let user;
-            
-            if (checkin && checkin.slack_user_id) {
-                user = users.find(u => u.slack_user_id === checkin.slack_user_id);
-            }
+        let combinedData = [];
 
-            return {
-                date,
+        checkinsWithMissed.forEach(checkin => {
+            const checkout = checkoutsWithMissed.find(c => new Date(c.date).toDateString() === checkin.date.toDateString()
+                && c.slack_user_id === checkin.slack_user_id);
+
+            let user = users.find(u => u.slack_user_id === checkin.slack_user_id);
+
+            combinedData.push({
+                date: checkin.date,
                 checkin,
                 checkout,
                 user
-            };
+            })
         });
 
         combinedData = combinedData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
