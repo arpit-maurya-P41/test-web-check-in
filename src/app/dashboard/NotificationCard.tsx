@@ -83,12 +83,20 @@ const NotificationCard = ({ data, withGradient = false }) => {
                         <Text style={{ color: "#262626", fontWeight: 500 }}>
                             <strong>Goals:</strong> {data.checkin.goals}
                         </Text>
-                        <Text style={{ color: "#262626", fontWeight: 500 }}>
-                            <strong>Blockers:</strong> {data.checkin.blockers}
-                        </Text>
-                        <Text style={{ color: "#262626", fontWeight: 500 }}>
-                            <strong>Mood:</strong> {data.checkin.feeling}
-                        </Text>
+                        {
+                            data.checkin.blockers ?
+                                <Text style={{ color: "#262626", fontWeight: 500 }}>
+                                    <strong>Blockers:</strong> {data.checkin.blockers}
+                                </Text>
+                                : null
+                        }
+                        {
+                            data.checkin.feeling ?
+                                <Text style={{ color: "#262626", fontWeight: 500 }}>
+                                    <strong>Mood:</strong> {data.checkin.feeling}
+                                </Text>
+                                : null
+                        }
                         <StatusTag missed={false} />
                     </Space>
                 )}
@@ -105,14 +113,24 @@ const NotificationCard = ({ data, withGradient = false }) => {
                 ) : (
                     <Space direction="vertical" size={4}>
                         <Text style={{ color: "#262626", fontWeight: 500 }}>
-                            <strong>Update:</strong> Completed day's tasks
+                            <strong>Updates:</strong> {
+                                data.checkout.updates
+                            }
                         </Text>
-                        <Text style={{ color: "#262626", fontWeight: 500 }}>
-                            <strong>Blockers:</strong> None
-                        </Text>
-                        <Text style={{ color: "#262626", fontWeight: 500 }}>
-                            <strong>Mood:</strong> Good
-                        </Text>
+                        {
+                            data.checkout.blockers ?
+                                <Text style={{ color: "#262626", fontWeight: 500 }}>
+                                    <strong>Blockers:</strong> {data.checkout.blockers}
+                                </Text>
+                                : null
+                        }
+                        {
+                            data.checkout.feeling ?
+                                <Text style={{ color: "#262626", fontWeight: 500 }}>
+                                    <strong>Mood:</strong> {data.checkout.feeling}
+                                </Text>
+                                : null
+                        }
                         <StatusTag missed={false} />
                     </Space>
                 )}
@@ -120,36 +138,14 @@ const NotificationCard = ({ data, withGradient = false }) => {
 
             {/* SMART Goal Section */}
             <div>
-                <Divider style={{ color: "#262626", fontWeight: 600, letterSpacing: 0.5 }}>SMART Goal</Divider>
+                <Divider style={{ color: "#262626", fontWeight: 600, letterSpacing: 0.5 }}>SMART Goals</Divider>
                 {data.checkin.is_smart_goal ? (
                     <Tag
                         icon={<CheckCircleOutlined />}
                         color="success"
                         style={{ fontSize: 12, padding: "2px 8px", borderRadius: 12, fontWeight: 500 }}
                     >
-                        SMART Goal Set
-                    </Tag>
-                ) : (
-                    <Tag
-                        icon={<CloseCircleOutlined />}
-                        color="default"
-                        style={{ fontSize: 12, padding: "2px 8px", borderRadius: 12, fontWeight: 500 }}
-                    >
-                        Not a SMART Goal
-                    </Tag>
-                )}
-            </div>
-
-            {/* Goal Met Section */}
-            <div>
-                <Divider style={{ color: "#262626", fontWeight: 600, letterSpacing: 0.5 }}>Goal Met</Divider>
-                {isSuccess ? (
-                    <Tag
-                        icon={<CheckCircleOutlined />}
-                        color="success"
-                        style={{ fontSize: 12, padding: "2px 8px", borderRadius: 12, fontWeight: 500 }}
-                    >
-                        Goal Achieved
+                        SMART Goals Set
                     </Tag>
                 ) : (
                     <Tag
@@ -157,7 +153,29 @@ const NotificationCard = ({ data, withGradient = false }) => {
                         color="error"
                         style={{ fontSize: 12, padding: "2px 8px", borderRadius: 12, fontWeight: 500 }}
                     >
-                        Goal Not Met
+                        Not SMART Goals
+                    </Tag>
+                )}
+            </div>
+
+            {/* Goal Met Section */}
+            <div>
+                <Divider style={{ color: "#262626", fontWeight: 600, letterSpacing: 0.5 }}>Goals Met</Divider>
+                {isSuccess ? (
+                    <Tag
+                        icon={<CheckCircleOutlined />}
+                        color="success"
+                        style={{ fontSize: 12, padding: "2px 8px", borderRadius: 12, fontWeight: 500 }}
+                    >
+                        Goals Achieved
+                    </Tag>
+                ) : (
+                    <Tag
+                        icon={<CloseCircleOutlined />}
+                        color="error"
+                        style={{ fontSize: 12, padding: "2px 8px", borderRadius: 12, fontWeight: 500 }}
+                    >
+                        Goals Not Met
                     </Tag>
                 )}
             </div>

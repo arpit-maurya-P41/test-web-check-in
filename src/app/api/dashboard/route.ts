@@ -78,7 +78,7 @@ export async function GET(req: Request) {
 
         const users = await prisma.users.findMany();
 
-        const combinedData = allDates.map(date => {
+        let combinedData = allDates.map(date => {
             const checkin = checkinsWithMissed.find(c => new Date(c.date).toDateString() === date.toDateString());
             const checkout = checkoutsWithMissed.find(c => new Date(c.date).toDateString() === date.toDateString());
             let user;
@@ -94,6 +94,8 @@ export async function GET(req: Request) {
                 user
             };
         });
+
+        combinedData = combinedData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
         return NextResponse.json({ data: combinedData });
 
