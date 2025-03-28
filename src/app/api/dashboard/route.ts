@@ -101,8 +101,15 @@ export async function GET(req: Request) {
         let combinedData = [];
 
         checkinsWithMissed.forEach(checkin => {
-            const checkout = checkoutsWithMissed.find(c => new Date(c.date).toDateString() === checkin.date.toDateString()
-                && c.slack_user_id === checkin.slack_user_id);
+            let checkout = checkoutsWithMissed.find(c => new Date(c.date).toDateString() === checkin.date.toDateString()
+                && c.slack_user_id === checkin.slack_user_id && c.slack_channel_id === checkin.slack_channel_id);
+
+            if (!checkout) {
+                checkout = {
+                    date: checkin.date,
+                    missed: true,
+                }
+            }
 
             let user = users.find(u => u.slack_user_id === checkin.slack_user_id);
 
