@@ -29,7 +29,25 @@ const StatusTag: React.FC<{ missed: boolean }> = ({ missed }) => {
     );
 };
 
-const NotificationCard = ({ data, withGradient = false }) => {
+type NotificationData = {
+    date: string;
+    checkin: {
+        slack_user_id: string;
+        missed: boolean;
+        goals?: string;
+        blockers?: string;
+        feeling?: string;
+        is_smart_goal?: boolean;
+    };
+    checkout: {
+        missed: boolean;
+        updates?: string;
+        blockers?: string;
+        feeling?: string;
+    };
+}
+
+const NotificationCard: React.FC<{ data: NotificationData; withGradient?: boolean }> = ({ data, withGradient = false }) => {
     const isSuccess = !data.checkin.missed && !data.checkout.missed;
 
     return (

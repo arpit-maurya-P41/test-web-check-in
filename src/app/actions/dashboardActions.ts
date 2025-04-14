@@ -14,6 +14,7 @@ export async function getRoles(userId: string) {
 }
 
 export async function getDashboardData(userId: string) {
+    await getTeams(userId);
     return userId;
 }
 

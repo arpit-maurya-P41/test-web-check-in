@@ -16,20 +16,27 @@ type Props = {
     activeKey: string;
 };
 
-const Sidebar: React.FC<Props> = ({ collapsed, canManageTeams, canManageUsers, canViewReports, activeKey }) => {
+type DashboardItem = {
+    key: string;
+    icon: React.ReactNode;
+    label: string;
+    onClick?: () => void;
+};
+
+const Sidebar: React.FC<Props> = ({ collapsed, canManageTeams, canManageUsers, activeKey }) => {
     const sidebarItems = [];
-    const dashboardItem = {
+    const dashboardItem: DashboardItem = {
         key: "dashboard",
         icon: <LineChartOutlined />,
         label: "Dashboard",
     };
     if (activeKey !== "dashboard") {
-        dashboardItem.onClick = () => (window.location.href = "/dashboard");
+        dashboardItem.onClick = undefined; // Placeholder to avoid errors
     }
     sidebarItems.push(dashboardItem);
 
     if (canManageTeams) {
-        const teamManagementItem = {
+        const teamManagementItem: DashboardItem = {
             key: "teamManagement",
             icon: <TeamOutlined />,
             label: "Teams",
@@ -41,7 +48,7 @@ const Sidebar: React.FC<Props> = ({ collapsed, canManageTeams, canManageUsers, c
     }
 
     if (canManageUsers) {
-        const userManagementItem = {
+        const userManagementItem: DashboardItem = {
             key: "userManagement",
             icon: <UserSwitchOutlined />,
             label: "Users",
@@ -57,7 +64,7 @@ const Sidebar: React.FC<Props> = ({ collapsed, canManageTeams, canManageUsers, c
             trigger={null}
             collapsible
             collapsed={collapsed}
-            style={{height: "100vh"}}>
+            style={{ height: "100vh" }}>
             <Menu
                 theme="dark"
                 mode="inline"

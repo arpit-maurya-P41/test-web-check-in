@@ -6,15 +6,21 @@ import { loginUser } from "@/app/actions/authActions";
 
 const { Title, Text } = Typography;
 
+type LoginFormValues = {
+    username: string;
+    password: string;
+}
+
 const Login = () => {
     const [form] = Form.useForm();
     const [messageApi, contextHolder] = message.useMessage();
     const [loading, setLoading] = useState(false);
 
-    const onFinish = async (values) => {
+    const onFinish = async (values: LoginFormValues) => {
         setLoading(true);
         try {
             await loginUser(values.username, values.password);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
             messageApi.open({
                 type: "error",

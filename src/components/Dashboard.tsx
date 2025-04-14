@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
     MenuFoldOutlined,
     MenuUnfoldOutlined,
@@ -10,29 +10,29 @@ import {
     Button,
     Layout,
     theme,
-    DatePicker,
-    Col,
-    Row,
-    Space,
-    Select,
+    // DatePicker,
+    // Col,
+    // Row,
+    // Space,
+    // Select,
 } from "antd";
 
-import dayjs from "dayjs";
-import NotificationCard from "./NotificationCard";
+// import dayjs from "dayjs";
+// import NotificationCard from "./NotificationCard";
 import Sidebar from "@/components/Sidebar";
 import { roles } from "@prisma/client";
 
-const { Option } = Select;
-const { RangePicker } = DatePicker;
+// const { Option } = Select;
+// const { RangePicker } = DatePicker;
 const { Header, Content } = Layout;
-const getDefaultDates = () => [dayjs().subtract(6, "day"), dayjs()];
+// const getDefaultDates = () => [dayjs().subtract(6, "day"), dayjs()];
 
 type Props = {
     userId: string;
     roles: roles
 }
 
-const Dashboard: React.FC<Props> = ({userId, roles}) => {
+const Dashboard: React.FC<Props> = ({roles}) => {
   
   const [collapsed, setCollapsed] = useState(false);
 
@@ -40,68 +40,70 @@ const Dashboard: React.FC<Props> = ({userId, roles}) => {
         token: { colorBgContainer, borderRadiusLG },
     } = theme.useToken();
 
-    const [loading, setLoading] = useState(true);
-    const [dashboardData, setData] = useState([]);
-    const [dates, setDates] = useState(getDefaultDates());
-    const [teams, setTeams] = useState([]);
-    const [users, setUsers] = useState([]);
-    const [selectedTeams, setSelectedTeams] = useState([]);
-    const [selectedUsers, setSelectedUsers] = useState([]);
+    const [loading, ] = useState(true);
 
-    const handleTeamChange = (value) => {
-        setSelectedTeams(value);
-    };
+    // const [loading, setLoading] = useState(true);
+    // const [dashboardData, setData] = useState([]);
+    // const [dates, setDates] = useState(getDefaultDates());
+    // const [teams, setTeams] = useState([]);
+    // const [users, setUsers] = useState([]);
+    // const [selectedTeams, setSelectedTeams] = useState([]);
+    // const [selectedUsers, setSelectedUsers] = useState([]);
 
-    const handleUserChange = (value) => {
-        setSelectedUsers(value);
-    };
+    // const handleTeamChange = (value) => {
+    //     setSelectedTeams(value);
+    // };
 
-    const handleRangeChange = (values) => {
-        if (values === null) {
-            // If cleared, reset to default
-            const defaultDates = getDefaultDates();
-            setDates(defaultDates);
-        } else {
-            setDates(values);
-        }
-    };
+    // const handleUserChange = (value) => {
+    //     setSelectedUsers(value);
+    // };
 
-    useEffect(() => {
-        const fetchData = async () => {
-            const params = new URLSearchParams();
-            const formatted = dates.map((d) => d.format("YYYY-MM-DD"));
-            const [startDate, endDate] = formatted;
+    // const handleRangeChange = (values) => {
+    //     if (values === null) {
+    //         // If cleared, reset to default
+    //         const defaultDates = getDefaultDates();
+    //         setDates(defaultDates);
+    //     } else {
+    //         setDates(values);
+    //     }
+    // };
 
-            params.append("startDate", startDate);
-            params.append("endDate", endDate);
+    // useEffect(() => {
+    //     const fetchData = async () => {
+    //         const params = new URLSearchParams();
+    //         const formatted = dates.map((d) => d.format("YYYY-MM-DD"));
+    //         const [startDate, endDate] = formatted;
 
-            if (selectedTeams.length > 0) {
-                params.append("teams", selectedTeams.join(","));
-            }
+    //         params.append("startDate", startDate);
+    //         params.append("endDate", endDate);
 
-            if (selectedUsers.length > 0) {
-                params.append("users", selectedUsers.join(","));
-            }
+    //         if (selectedTeams.length > 0) {
+    //             params.append("teams", selectedTeams.join(","));
+    //         }
 
-            const [dashboardRes, teamsRes, usersRes] = await Promise.all([
-                fetch(`/api/dashboard?${params.toString()}`),
-                fetch("/api/teams"),
-                fetch("/api/users"),
-            ]);
+    //         if (selectedUsers.length > 0) {
+    //             params.append("users", selectedUsers.join(","));
+    //         }
 
-            const data = await dashboardRes.json();
-            const teamData = await teamsRes.json();
-            const userData = await usersRes.json();
+    //         const [dashboardRes, teamsRes, usersRes] = await Promise.all([
+    //             fetch(`/api/dashboard?${params.toString()}`),
+    //             fetch("/api/teams"),
+    //             fetch("/api/users"),
+    //         ]);
 
-            setUsers(userData.data);
-            setTeams(teamData.data);
-            setData(JSON.parse(JSON.stringify(data.data)));
+    //         const data = await dashboardRes.json();
+    //         const teamData = await teamsRes.json();
+    //         const userData = await usersRes.json();
 
-            setLoading(false);
-        };
+    //         setUsers(userData.data);
+    //         setTeams(teamData.data);
+    //         setData(JSON.parse(JSON.stringify(data.data)));
 
-        fetchData();
-    }, [dates, selectedTeams, selectedUsers]);
+    //         setLoading(false);
+    //     };
+
+    //     fetchData();
+    // }, [dates, selectedTeams, selectedUsers]);
 
     // if (loading) return <>Loading...</>;
 
@@ -161,7 +163,7 @@ const Dashboard: React.FC<Props> = ({userId, roles}) => {
                         "Loading..."
                     ) : (
                         <>
-                            <Row>
+                            {/* <Row>
                                 <Col
                                     span={26}
                                     style={{ margin: "auto" }}>
@@ -234,7 +236,7 @@ const Dashboard: React.FC<Props> = ({userId, roles}) => {
                                         <NotificationCard data={data} />
                                     </Col>
                                 ))}
-                            </Row>
+                            </Row> */}
                         </>
                     )}
                 </Content>

@@ -20,7 +20,7 @@ type Props = {
 }
 
 
-const UserManagementIndex: React.FC<Props> = ({ userId, roles }) => {
+const UserManagementIndex: React.FC<Props> = ({ roles }) => {
     const [form] = Form.useForm();
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
 

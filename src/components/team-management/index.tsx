@@ -14,7 +14,7 @@ type Props = {
     roles: roles
 }
 
-const TeamManagementIndex: React.FC<Props> = ({ userId, roles }) => {
+const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
     const [form] = Form.useForm();
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
 
