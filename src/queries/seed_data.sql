@@ -1,131 +1,88 @@
--- 1️⃣ Insert Roles
-INSERT INTO roles (role_name) VALUES 
-('Admin'), 
-('Developer'), 
-('QA');
-
--- 2️⃣ Insert Teams
+-- Seed Data for Teams
 INSERT INTO teams (name, slack_channel_id) VALUES 
-('Augeo', 'C08FD2CP3T9'), 
-('RepSpark', 'C08FEE2J8TF'), 
+('Augeo', 'C08FD2CP3T9'),
+('RepSpark', 'C08FEE2J8TF'),
 ('Nigel', 'C08F79MUE04');
 
--- 3️⃣ Insert Users
-INSERT INTO users (email, password, slack_user_id) VALUES 
-('vivek@example.com', 'password', 'D08F2KGSK8V'),
-('kajal@example.com', 'password', 'D08H3T0DQE4');
+-- Seed Data for Roles
+INSERT INTO roles (role_name, can_manage_teams, can_manage_users, can_view_reports) VALUES 
+('Admin', true, true, true),
+('QA', false, false, false);
 
--- 4️⃣ User-Role Mapping
-INSERT INTO user_role_mapping (user_id, role_id) VALUES 
-(1, 1), -- Vivek -> Admin
-(1, 2), -- Vivek -> Developer
-(2, 3); -- Kajal -> QA
+-- Seed Data for Users
+INSERT INTO users (name, email, password, slack_user_id, role_id) VALUES 
+('Vivek', 'vivek@example.com', 'password123', 'D08F2KGSK8V', (SELECT id FROM roles WHERE role_name = 'Admin')),
+('Kajal', 'kajal@example.com', 'password123', 'D08H3T0DQE4', (SELECT id FROM roles WHERE role_name = 'QA'));
 
--- 5️⃣ User-Team Mapping
-INSERT INTO user_team_mapping (user_id, team_id) VALUES 
-(1, 1), (1, 2), (1, 3), -- Vivek -> All teams
-(2, 1), (2, 2), (2, 3); -- Kajal -> All teams
+-- Seed Data for User & Team Mappings
+INSERT INTO user_team_mappings (user_id, team_id) VALUES
+((SELECT id FROM users WHERE email = 'vivek@example.com'), (SELECT id FROM teams WHERE name = 'Augeo')),
+((SELECT id FROM users WHERE email = 'vivek@example.com'), (SELECT id FROM teams WHERE name = 'RepSpark')),
+((SELECT id FROM users WHERE email = 'vivek@example.com'), (SELECT id FROM teams WHERE name = 'Nigel')),
+((SELECT id FROM users WHERE email = 'kajal@example.com'), (SELECT id FROM teams WHERE name = 'Augeo')),
+((SELECT id FROM users WHERE email = 'kajal@example.com'), (SELECT id FROM teams WHERE name = 'RepSpark')),
+((SELECT id FROM users WHERE email = 'kajal@example.com'), (SELECT id FROM teams WHERE name = 'Nigel'));
 
--- 6️⃣ Sample Check-ins (Assuming current date is today)
-INSERT INTO checkins (slack_user_id, slack_channel_id, goals, blockers, feeling, is_smart_goal, date) VALUES 
-('U001', 'C001', 'Complete API integration', 'None', 'happy', TRUE, CURRENT_DATE),
-('U001', 'C002', 'Fix UI issues', 'Pending API response', 'neutral', FALSE, CURRENT_DATE),
-('U002', 'C003', 'Test authentication module', 'Login issue', 'frustrated', TRUE, CURRENT_DATE);
+-- Vivek Check-ins (SMART Goals, Blockers, Feelings)
+INSERT INTO checkins (slack_user_id, slack_channel_id, feeling, created_at) VALUES
+('D08F2KGSK8V', 'C08FD2CP3T9', 'excited', NOW() - INTERVAL '1 day'), -- Augeo Checkin
+('D08F2KGSK8V', 'C08FEE2J8TF', 'neutral', NOW() - INTERVAL '2 days'), -- RepSpark Checkin
+('D08F2KGSK8V', 'C08F79MUE04', 'neutral', NOW() - INTERVAL '3 days'), -- Nigel Checkin
+('D08F2KGSK8V', 'C08FD2CP3T9', null, NOW() - INTERVAL '4 days'),
+('D08F2KGSK8V', 'C08FEE2J8TF', null, NOW() - INTERVAL '5 days');
 
--- 7️⃣ Sample Check-outs (Assuming current date is today)
-INSERT INTO checkouts (slack_user_id, slack_channel_id, updates, blockers, goals_met, feeling, date) VALUES 
-('U001', 'C001', 'API integration completed', 'None', TRUE, 'happy', CURRENT_DATE),
-('U001', 'C002', 'Fixed UI issues', 'Still waiting for API response', FALSE, 'neutral', CURRENT_DATE),
-('U002', 'C003', 'Tested authentication, found bugs', 'Login issue persists', FALSE, 'frustrated', CURRENT_DATE);
+-- Goals for Vivek's Checkins (SMART and Blockers)
+INSERT INTO goals (checkin_id, goal_text, is_smart) VALUES
+((SELECT id FROM checkins WHERE slack_user_id = 'D08F2KGSK8V' AND slack_channel_id = 'C08FD2CP3T9' LIMIT 1), 'Complete the UI design for the new feature', TRUE),
+((SELECT id FROM checkins WHERE slack_user_id = 'D08F2KGSK8V' AND slack_channel_id = 'C08FEE2J8TF' LIMIT 1), 'Finish the API integration', FALSE),
+((SELECT id FROM checkins WHERE slack_user_id = 'D08F2KGSK8V' AND slack_channel_id = 'C08F79MUE04' LIMIT 1), 'Attend the project meeting', TRUE),
+((SELECT id FROM checkins WHERE slack_user_id = 'D08F2KGSK8V' AND slack_channel_id = 'C08FD2CP3T9' LIMIT 1), 'Fix the bug reported by the customer', FALSE),
+((SELECT id FROM checkins WHERE slack_user_id = 'D08F2KGSK8V' AND slack_channel_id = 'C08FEE2J8TF' LIMIT 1), 'Update the test cases', TRUE);
 
--- 8️⃣ Sample Sessions (Assuming expiry after 24 hours)
-INSERT INTO sessions (user_id, expires_at) VALUES 
-(1, NOW() + INTERVAL '1 day'),
-(2, NOW() + INTERVAL '1 day');
+-- Seed Goal Progress (Status Tracking)
+INSERT INTO goal_progress (goal_id, is_met) VALUES
+((SELECT id FROM goals WHERE goal_text = 'Complete the UI design for the new feature' LIMIT 1), TRUE),
+((SELECT id FROM goals WHERE goal_text = 'Finish the API integration' LIMIT 1), FALSE),
+((SELECT id FROM goals WHERE goal_text = 'Attend the project meeting' LIMIT 1), TRUE),
+((SELECT id FROM goals WHERE goal_text = 'Fix the bug reported by the customer' LIMIT 1), FALSE),
+((SELECT id FROM goals WHERE goal_text = 'Update the test cases' LIMIT 1), TRUE);
 
--- Delete old checkins and checkouts before inserting new data
-DELETE FROM checkins;
-DELETE FROM checkouts;
+-- Seed Data for Checkouts (Goal Progress, Missed, Feelings)
+INSERT INTO checkouts (slack_user_id, slack_channel_id, goal_progress_id, feeling, created_at) VALUES
+('D08F2KGSK8V', 'C08FD2CP3T9', (SELECT id FROM goal_progress WHERE goal_id = (SELECT id FROM goals WHERE goal_text = 'Complete the UI design for the new feature' LIMIT 1)), 'Satisfied', NOW() - INTERVAL '1 day'),
+('D08F2KGSK8V', 'C08FEE2J8TF', (SELECT id FROM goal_progress WHERE goal_id = (SELECT id FROM goals WHERE goal_text = 'Finish the API integration' LIMIT 1)), 'Frustrated', NOW() - INTERVAL '2 days'),
+('D08F2KGSK8V', 'C08F79MUE04', (SELECT id FROM goal_progress WHERE goal_id = (SELECT id FROM goals WHERE goal_text = 'Attend the project meeting' LIMIT 1)), 'Neutral', NOW() - INTERVAL '3 days'),
+('D08F2KGSK8V', 'C08FD2CP3T9', (SELECT id FROM goal_progress WHERE goal_id = (SELECT id FROM goals WHERE goal_text = 'Fix the bug reported by the customer' LIMIT 1)), 'Disappointed', NOW() - INTERVAL '4 days'),
+('D08F2KGSK8V', 'C08FEE2J8TF', (SELECT id FROM goal_progress WHERE goal_id = (SELECT id FROM goals WHERE goal_text = 'Update the test cases' LIMIT 1)), 'Optimistic', NOW() - INTERVAL '5 days');
 
--- ✅ January 2025 Check-ins (Includes SMART & non-SMART goals, blockers & no blockers)
-INSERT INTO checkins (slack_user_id, slack_channel_id, goals, blockers, feeling, is_smart_goal, date) VALUES 
-('D08F2KGSK8V', 'C08FD2CP3T9', 'Plan API structure', 'None', 'happy', TRUE, '2025-01-02'),
-('D08F2KGSK8V', 'C08FEE2J8TF', 'Fix UI issues', 'API response delayed', 'neutral', FALSE, '2025-01-03'),
-('D08H3T0DQE4', 'C08F79MUE04', 'Run regression tests', 'Environment not stable', 'frustrated', TRUE, '2025-01-04'),
-('D08F2KGSK8V', 'C08FD2CP3T9', 'Code refactoring', 'None', 'excited', TRUE, '2025-01-05');
+-- Seed Data for Kajal Check-ins (SMART Goals, Blockers, Feelings)
+INSERT INTO checkins (slack_user_id, slack_channel_id, feeling, created_at) VALUES
+('D08H3T0DQE4', 'C08FD2CP3T9', 'Feeling stressed but optimistic', NOW() - INTERVAL '1 day'), -- Augeo Checkin
+('D08H3T0DQE4', 'C08FEE2J8TF', 'Frustrated', NOW() - INTERVAL '2 days'), -- RepSpark Checkin
+('D08H3T0DQE4', 'C08F79MUE04', 'Motivated', NOW() - INTERVAL '3 days'), -- Nigel Checkin
+('D08H3T0DQE4', 'C08FD2CP3T9', 'Neutral', NOW() - INTERVAL '4 days'),
+('D08H3T0DQE4', 'C08FEE2J8TF', 'Happy', NOW() - INTERVAL '5 days');
 
--- ✅ January 2025 Check-outs (Missed one checkout)
-INSERT INTO checkouts (slack_user_id, slack_channel_id, updates, blockers, goals_met, feeling, date) VALUES 
-('D08F2KGSK8V', 'C08FD2CP3T9', 'API structure completed', 'None', TRUE, 'happy', '2025-01-02'),
-('D08F2KGSK8V', 'C08FEE2J8TF', 'UI fixes pending', 'API response still delayed', FALSE, 'neutral', '2025-01-03'),
--- ('D08H3T0DQE4', 'C08F79MUE04', 'Missed checkout', NULL, FALSE, NULL, '2025-01-04'),  -- Kajal missed checkout
-('D08F2KGSK8V', 'C08FD2CP3T9', 'Refactoring done', 'None', TRUE, 'excited', '2025-01-05');
+-- Goals for Kajal's Checkins (SMART and Blockers)
+INSERT INTO goals (checkin_id, goal_text, is_smart) VALUES
+((SELECT id FROM checkins WHERE slack_user_id = 'D08H3T0DQE4' AND slack_channel_id = 'C08FD2CP3T9' LIMIT 1), 'Complete QA tests for new feature', TRUE),
+((SELECT id FROM checkins WHERE slack_user_id = 'D08H3T0DQE4' AND slack_channel_id = 'C08FEE2J8TF' LIMIT 1), 'Write automated test scripts for the module', FALSE),
+((SELECT id FROM checkins WHERE slack_user_id = 'D08H3T0DQE4' AND slack_channel_id = 'C08F79MUE04' LIMIT 1), 'Review user feedback and prioritize bugs', TRUE),
+((SELECT id FROM checkins WHERE slack_user_id = 'D08H3T0DQE4' AND slack_channel_id = 'C08FD2CP3T9' LIMIT 1), 'Test the integration between modules', FALSE),
+((SELECT id FROM checkins WHERE slack_user_id = 'D08H3T0DQE4' AND slack_channel_id = 'C08FEE2J8TF' LIMIT 1), 'Fix issues found in last sprint’s testing', TRUE);
 
--- ✅ February 2025 Check-ins (Missed one check-in)
-INSERT INTO checkins (slack_user_id, slack_channel_id, goals, blockers, feeling, is_smart_goal, date) VALUES 
-('D08F2KGSK8V', 'C08F79MUE04', 'Improve database indexing', 'None', 'happy', TRUE, '2025-02-10'),
--- ('D08H3T0DQE4', 'C08FEE2J8TF', 'Missed check-in', NULL, NULL, FALSE, '2025-02-11'),  -- Kajal missed check-in
-('D08F2KGSK8V', 'C08FD2CP3T9', 'Enhance error logging', 'Error logs unclear', 'neutral', FALSE, '2025-02-12'),
-('D08H3T0DQE4', 'C08F79MUE04', 'Run security tests', 'Security team not available', 'frustrated', TRUE, '2025-02-13');
+-- Seed Goal Progress (Status Tracking for Kajal)
+INSERT INTO goal_progress (goal_id, is_met) VALUES
+((SELECT id FROM goals WHERE goal_text = 'Complete QA tests for new feature' LIMIT 1), TRUE),
+((SELECT id FROM goals WHERE goal_text = 'Write automated test scripts for the module' LIMIT 1), FALSE),
+((SELECT id FROM goals WHERE goal_text = 'Review user feedback and prioritize bugs' LIMIT 1), TRUE),
+((SELECT id FROM goals WHERE goal_text = 'Test the integration between modules' LIMIT 1), FALSE),
+((SELECT id FROM goals WHERE goal_text = 'Fix issues found in last sprint’s testing' LIMIT 1), TRUE);
 
--- ✅ February 2025 Check-outs
-INSERT INTO checkouts (slack_user_id, slack_channel_id, updates, blockers, goals_met, feeling, date) VALUES 
-('D08F2KGSK8V', 'C08F79MUE04', 'Indexing improved', 'None', TRUE, 'happy', '2025-02-10'),
-('D08F2KGSK8V', 'C08FD2CP3T9', 'Error logs improved', 'Still needs clarity', FALSE, 'neutral', '2025-02-12'),
-('D08H3T0DQE4', 'C08F79MUE04', 'Security tests started', 'Team still unavailable', FALSE, 'frustrated', '2025-02-13');
-
--- ✅ March 2025 Check-ins (Daily logs for Vivek & Kajal)
-INSERT INTO checkins (slack_user_id, slack_channel_id, goals, blockers, feeling, is_smart_goal, date) VALUES 
--- Week 1
-('D08F2KGSK8V', 'C08FD2CP3T9', 'Optimize database queries', 'Slow queries in logs', 'neutral', TRUE, '2025-03-01'),
-('D08H3T0DQE4', 'C08FEE2J8TF', 'Review bug reports', 'None', 'happy', FALSE, '2025-03-01'),
-('D08F2KGSK8V', 'C08F79MUE04', 'Implement caching mechanism', 'Redis config issue', 'frustrated', TRUE, '2025-03-02'),
-('D08H3T0DQE4', 'C08FD2CP3T9', 'Automate test cases', 'None', 'excited', TRUE, '2025-03-02'),
-('D08F2KGSK8V', 'C08FEE2J8TF', 'Refactor authentication module', 'Token expiry issues', 'neutral', TRUE, '2025-03-03'),
-('D08H3T0DQE4', 'C08F79MUE04', 'Check regression test results', 'Flaky test cases', 'frustrated', FALSE, '2025-03-03'),
--- Missed Check-in
--- ('D08F2KGSK8V', 'C08FD2CP3T9', 'Missed check-in', NULL, NULL, FALSE, '2025-03-04'),
-('D08H3T0DQE4', 'C08FEE2J8TF', 'Review new test automation framework', 'None', 'happy', TRUE, '2025-03-04'),
-
--- Week 2
-('D08F2KGSK8V', 'C08F79MUE04', 'Optimize API response time', 'Large payloads', 'neutral', TRUE, '2025-03-05'),
-('D08H3T0DQE4', 'C08FD2CP3T9', 'Verify UI behavior on different browsers', 'None', 'happy', FALSE, '2025-03-05'),
-('D08F2KGSK8V', 'C08FEE2J8TF', 'Implement role-based access control', 'None', 'excited', TRUE, '2025-03-06'),
-('D08H3T0DQE4', 'C08F79MUE04', 'Test database backup scripts', 'Backup failures', 'frustrated', TRUE, '2025-03-06'),
--- Missed Check-in
--- ('D08F2KGSK8V', 'C08FD2CP3T9', 'Missed check-in', NULL, NULL, FALSE, '2025-03-07'),
-('D08H3T0DQE4', 'C08FEE2J8TF', 'Evaluate API rate limiting strategies', 'None', 'happy', TRUE, '2025-03-07'),
-
--- Week 3
-('D08F2KGSK8V', 'C08F79MUE04', 'Improve error handling in services', 'None', 'happy', TRUE, '2025-03-08'),
-('D08H3T0DQE4', 'C08FD2CP3T9', 'Verify email notification functionality', 'SMTP issues', 'neutral', FALSE, '2025-03-08'),
-('D08F2KGSK8V', 'C08FEE2J8TF', 'Set up CI/CD pipelines', 'Jenkins config error', 'frustrated', TRUE, '2025-03-09'),
-('D08H3T0DQE4', 'C08F79MUE04', 'Run load testing', 'None', 'excited', TRUE, '2025-03-09'),
-
--- Week 4
-('D08F2KGSK8V', 'C08FD2CP3T9', 'Update API documentation', 'None', 'neutral', FALSE, '2025-03-10'),
-('D08H3T0DQE4', 'C08FEE2J8TF', 'Perform security vulnerability assessment', 'None', 'happy', TRUE, '2025-03-10');
-
--- ✅ March 2025 Check-outs (Including missed check-outs)
-INSERT INTO checkouts (slack_user_id, slack_channel_id, updates, blockers, goals_met, feeling, date) VALUES 
--- Week 1
-('D08F2KGSK8V', 'C08FD2CP3T9', 'Optimized queries, improved response time', 'Still some slow queries', TRUE, 'neutral', '2025-03-01'),
-('D08H3T0DQE4', 'C08FEE2J8TF', 'Reviewed bug reports, triaged 10 issues', 'None', TRUE, 'happy', '2025-03-01'),
-('D08F2KGSK8V', 'C08F79MUE04', 'Implemented caching, some config issues remain', 'Redis config issue', FALSE, 'frustrated', '2025-03-02'),
-('D08H3T0DQE4', 'C08FD2CP3T9', 'Automated test cases added', 'None', TRUE, 'excited', '2025-03-02'),
-('D08F2KGSK8V', 'C08FEE2J8TF', 'Auth module refactored, token issue persists', 'Token expiry issues', FALSE, 'neutral', '2025-03-03'),
--- Missed Check-out
--- ('D08H3T0DQE4', 'C08F79MUE04', 'Missed checkout', NULL, FALSE, NULL, '2025-03-03'),
-
--- Week 2
-('D08F2KGSK8V', 'C08F79MUE04', 'Optimized API response', 'Payload still large', FALSE, 'neutral', '2025-03-05'),
-('D08H3T0DQE4', 'C08FD2CP3T9', 'UI verified on all browsers', 'None', TRUE, 'happy', '2025-03-05'),
-('D08F2KGSK8V', 'C08FEE2J8TF', 'RBAC implemented successfully', 'None', TRUE, 'excited', '2025-03-06'),
-
--- Week 3
-('D08F2KGSK8V', 'C08F79MUE04', 'Error handling improved', 'None', TRUE, 'happy', '2025-03-08'),
-('D08H3T0DQE4', 'C08FD2CP3T9', 'Email notifications working, SMTP fixed', 'None', TRUE, 'neutral', '2025-03-08'),
-
--- Week 4
-('D08F2KGSK8V', 'C08FD2CP3T9', 'Updated API documentation', 'None', TRUE, 'neutral', '2025-03-10'),
-('D08H3T0DQE4', 'C08FEE2J8TF', 'Security vulnerabilities reported', 'None', TRUE, 'happy', '2025-03-10');
+-- Seed Data for Kajal's Checkouts (Goal Progress, Missed, Feelings)
+INSERT INTO checkouts (slack_user_id, slack_channel_id, goal_progress_id, feeling, created_at) VALUES
+('D08H3T0DQE4', 'C08FD2CP3T9', (SELECT id FROM goal_progress WHERE goal_id = (SELECT id FROM goals WHERE goal_text = 'Complete QA tests for new feature' LIMIT 1)), 'frustrated', NOW() - INTERVAL '1 day'),
+('D08H3T0DQE4', 'C08FEE2J8TF', (SELECT id FROM goal_progress WHERE goal_id = (SELECT id FROM goals WHERE goal_text = 'Write automated test scripts for the module' LIMIT 1)), 'frustrated', NOW() - INTERVAL '2 days'),
+('D08H3T0DQE4', 'C08F79MUE04', (SELECT id FROM goal_progress WHERE goal_id = (SELECT id FROM goals WHERE goal_text = 'Review user feedback and prioritize bugs' LIMIT 1)), 'happy', NOW() - INTERVAL '3 days'),
+('D08H3T0DQE4', 'C08FD2CP3T9', (SELECT id FROM goal_progress WHERE goal_id = (SELECT id FROM goals WHERE goal_text = 'Test the integration between modules' LIMIT 1)), 'happy', NOW() - INTERVAL '4 days'),
+('D08H3T0DQE4', 'C08FEE2J8TF', (SELECT id FROM goal_progress WHERE goal_id = (SELECT id FROM goals WHERE goal_text = 'Fix issues found in last sprint’s testing' LIMIT 1)), null, NOW() - INTERVAL '5 days');

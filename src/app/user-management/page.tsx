@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from 'next/navigation';
-import TeamManagementIndex from "@/components/team-management";
+import UserManagementIndex from "@/components/user-management";
 import { auth } from "@/auth";
 import { getRoles } from "../actions/dashboardActions";
 
@@ -10,7 +10,7 @@ export default async function TeamManagement() {
     if (!session?.user?.id) redirect("/login");
 
     const roles = await getRoles(session.user.id);
-    if (!roles.can_manage_teams) redirect("/dashboard");
+    if (!roles.can_manage_users) redirect("/dashboard");
 
-    return <TeamManagementIndex userId={session.user.id} roles={roles} />
+    return <UserManagementIndex userId={session.user.id} roles={roles} />
 }

@@ -1,81 +1,75 @@
--- Drop tables if they exist (for rerunning scripts safely)
-DROP TABLE IF EXISTS user_role_mapping, user_team_mapping, sessions, checkouts, checkins, users, roles, teams CASCADE;
-
--- 1️⃣ Roles Table
-CREATE TABLE roles (
-    id SERIAL PRIMARY KEY,
-    role_name VARCHAR(50) UNIQUE NOT NULL
-);
-
--- 2️⃣ Teams Table
+-- 🚀 Teams Table
 CREATE TABLE teams (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(100) UNIQUE NOT NULL,
-    slack_channel_id VARCHAR(50) UNIQUE NOT NULL
+    name VARCHAR(255) NOT NULL,
+    slack_channel_id VARCHAR(255) UNIQUE NOT NULL
 );
 
--- 3️⃣ Users Table
+-- 🚀 Roles Table
+CREATE TABLE roles (
+    id SERIAL PRIMARY KEY,
+    role_name VARCHAR(255) UNIQUE NOT NULL,
+    can_manage_teams BOOLEAN DEFAULT FALSE,
+    can_manage_users BOOLEAN DEFAULT FALSE,
+    can_view_reports BOOLEAN DEFAULT FALSE,
+);
+
+-- 🚀 Users Table
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
-    password TEXT NOT NULL,
-    slack_user_id VARCHAR(50) UNIQUE NOT NULL
+    password VARCHAR(255) NOT NULL,
+    slack_user_id VARCHAR(255) UNIQUE NOT NULL,
+    role_id INT NOT NULL REFERENCES roles(id) ON DELETE cascade
 );
 
--- 4️⃣ User-Role Mapping (Many-to-Many)
-CREATE TABLE user_role_mapping (
+-- 🚀 User & Team Mappings Table (Renamed for consistency)
+CREATE TABLE user_team_mappings (
     id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL,
-    role_id INT NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW(),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE,
-    UNIQUE (user_id, role_id) -- Prevent duplicate role assignments
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    team_id INT NOT NULL REFERENCES teams(id) ON DELETE CASCADE
 );
 
--- 5️⃣ User-Team Mapping (Many-to-Many)
-CREATE TABLE user_team_mapping (
-    id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL,
-    team_id INT NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW(),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
-    UNIQUE (user_id, team_id) -- Prevent duplicate team assignments
-);
-
--- 6️⃣ Check-ins Table (Updated goals/blockers + default date)
+-- 🚀 Check-ins Table
 CREATE TABLE checkins (
     id SERIAL PRIMARY KEY,
-    slack_user_id VARCHAR(50) NOT NULL,
-    slack_channel_id VARCHAR(50) NOT NULL,
-    goals TEXT NOT NULL,       -- Renamed from goal
-    blockers TEXT,             -- Renamed from blocker
-    feeling VARCHAR(20) CHECK (feeling IN ('happy', 'neutral', 'frustrated', 'excited', 'tired')),
-    is_smart_goal BOOLEAN DEFAULT FALSE,
-    date DATE DEFAULT CURRENT_DATE NOT NULL, -- Default value to today
-    created_at TIMESTAMP DEFAULT NOW()
+    slack_user_id VARCHAR(255) NOT NULL REFERENCES users(slack_user_id) ON DELETE CASCADE,
+    slack_channel_id VARCHAR(255) NOT NULL REFERENCES teams(slack_channel_id) ON DELETE CASCADE,
+    feeling VARCHAR(255) NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    blocker TEXT NULL
 );
 
--- 7️⃣ Check-outs Table (Added date with default value)
+-- 🚀 Goals Table (Stores Goals for Check-ins)
+CREATE TABLE goals (
+    id SERIAL PRIMARY KEY,
+    checkin_id INT NOT NULL REFERENCES checkins(id) ON DELETE CASCADE,
+    goal_text TEXT NOT NULL,
+    is_smart BOOLEAN DEFAULT FALSE
+);
+
+-- 🚀 Checkouts Table (Now References Goal Progress)
 CREATE TABLE checkouts (
     id SERIAL PRIMARY KEY,
-    slack_user_id VARCHAR(50) NOT NULL,
-    slack_channel_id VARCHAR(50) NOT NULL,
-    updates TEXT NOT NULL,
-    blockers TEXT,
-    goals_met BOOLEAN DEFAULT FALSE,
-    feeling VARCHAR(20) CHECK (feeling IN ('happy', 'neutral', 'frustrated', 'excited', 'tired')),
-    date DATE DEFAULT CURRENT_DATE NOT NULL, -- New column with default today
+    checkin_id INT NOT NULL REFERENCES checkins(id) ON DELETE CASCADE,
+    feeling VARCHAR(255) NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    blocker TEXT NULL
+);
+
+-- 🚀 Goal Progress Table (Tracks if a Goal was Met)
+CREATE TABLE goal_progress (
+    id SERIAL PRIMARY KEY,
+    goal_id INT NOT NULL REFERENCES goals(id) ON DELETE CASCADE,
+    checkout_id INT NOT NULL REFERENCES checkouts(id) ON DELETE CASCADE,
+    is_met BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- 8️⃣ Sessions Table (Removed token)
+-- 🚀 Sessions Table (User Authentication Tracking)
 CREATE TABLE sessions (
     id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL,
-    expires_at TIMESTAMP NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW(),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    expires_at TIMESTAMP NOT NULL
 );

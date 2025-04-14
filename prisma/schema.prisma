@@ -7,82 +7,89 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model checkins {
-  id               Int       @id @default(autoincrement())
-  slack_user_id    String    @db.VarChar(50)
-  slack_channel_id String    @db.VarChar(50)
-  goals            String
-  blockers         String?
-  feeling          String?   @db.VarChar(20)
-  is_smart_goal    Boolean?  @default(false)
-  date             DateTime  @default(dbgenerated("CURRENT_DATE")) @db.Date
-  created_at       DateTime? @default(now()) @db.Timestamp(6)
+  id               Int         @id @default(autoincrement())
+  slack_user_id    String      @db.VarChar(255)
+  slack_channel_id String      @db.VarChar(255)
+  feeling          String?     @db.VarChar(255)
+  created_at       DateTime?   @default(now()) @db.Timestamp(6)
+  blocker          String?
+  teams            teams       @relation(fields: [slack_channel_id], references: [slack_channel_id], onDelete: Cascade, onUpdate: NoAction)
+  users            users       @relation(fields: [slack_user_id], references: [slack_user_id], onDelete: Cascade, onUpdate: NoAction)
+  checkouts        checkouts[]
+  goals            goals[]
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model checkouts {
-  id               Int       @id @default(autoincrement())
-  slack_user_id    String    @db.VarChar(50)
-  slack_channel_id String    @db.VarChar(50)
-  updates          String
-  blockers         String?
-  goals_met        Boolean?  @default(false)
-  feeling          String?   @db.VarChar(20)
-  date             DateTime  @default(dbgenerated("CURRENT_DATE")) @db.Date
-  created_at       DateTime? @default(now()) @db.Timestamp(6)
+  id            Int             @id @default(autoincrement())
+  checkin_id    Int
+  feeling       String?         @db.VarChar(255)
+  created_at    DateTime?       @default(now()) @db.Timestamp(6)
+  blocker       String?
+  checkins      checkins        @relation(fields: [checkin_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  goal_progress goal_progress[]
+}
+
+model goal_progress {
+  id          Int       @id @default(autoincrement())
+  goal_id     Int
+  checkout_id Int
+  is_met      Boolean?  @default(false)
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  checkouts   checkouts @relation(fields: [checkout_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  goals       goals     @relation(fields: [goal_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model goals {
+  id            Int             @id @default(autoincrement())
+  checkin_id    Int
+  goal_text     String
+  is_smart      Boolean?        @default(false)
+  goal_progress goal_progress[]
+  checkins      checkins        @relation(fields: [checkin_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model roles {
-  id                Int                 @id @default(autoincrement())
-  role_name         String              @unique @db.VarChar(50)
-  user_role_mapping user_role_mapping[]
+  id               Int     @id @default(autoincrement())
+  role_name        String  @unique @db.VarChar(255)
+  can_view_reports Boolean @default(false)
+  can_manage_teams Boolean @default(false)
+  can_manage_users Boolean @default(false)
+  users            users[]
 }
 
 model sessions {
-  id         Int       @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   user_id    Int
-  expires_at DateTime  @db.Timestamp(6)
-  created_at DateTime? @default(now()) @db.Timestamp(6)
-  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  expires_at DateTime @db.Timestamp(6)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model teams {
-  id                Int                 @id @default(autoincrement())
-  name              String              @unique @db.VarChar(100)
-  slack_channel_id  String              @unique @db.VarChar(50)
-  user_team_mapping user_team_mapping[]
+  id                 Int                  @id @default(autoincrement())
+  name               String               @db.VarChar(255)
+  slack_channel_id   String               @unique @db.VarChar(255)
+  checkins           checkins[]
+  user_team_mappings user_team_mappings[]
 }
 
-model user_role_mapping {
-  id         Int       @id @default(autoincrement())
-  user_id    Int
-  role_id    Int
-  created_at DateTime? @default(now()) @db.Timestamp(6)
-  updated_at DateTime? @default(now()) @db.Timestamp(6)
-  roles      roles     @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@unique([user_id, role_id])
-}
-
-model user_team_mapping {
-  id         Int       @id @default(autoincrement())
-  user_id    Int
-  team_id    Int
-  created_at DateTime? @default(now()) @db.Timestamp(6)
-  teams      teams     @relation(fields: [team_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@unique([user_id, team_id])
+model user_team_mappings {
+  id      Int   @id @default(autoincrement())
+  user_id Int
+  team_id Int
+  teams   teams @relation(fields: [team_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users   users @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model users {
-  id                Int                 @id @default(autoincrement())
-  email             String              @unique @db.VarChar(255)
-  password          String
-  slack_user_id     String              @unique @db.VarChar(50)
-  sessions          sessions[]
-  user_role_mapping user_role_mapping[]
-  user_team_mapping user_team_mapping[]
+  id                 Int                  @id @default(autoincrement())
+  name               String               @db.VarChar(255)
+  email              String               @unique @db.VarChar(255)
+  password           String               @db.VarChar(255)
+  slack_user_id      String               @unique @db.VarChar(255)
+  role_id            Int
+  checkins           checkins[]
+  sessions           sessions[]
+  user_team_mappings user_team_mappings[]
+  roles              roles                @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
