@@ -1,6 +1,6 @@
 "use server";
 
-import { redirect } from 'next/navigation';
+import { redirect } from "next/navigation";
 import UserManagementIndex from "@/components/user-management";
 import { auth } from "@/auth";
 import { getRoles } from "../actions/dashboardActions";
