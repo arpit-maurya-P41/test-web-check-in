@@ -68,7 +68,7 @@ export async function POST(req: Request) {
                 where: { user_id: body.id },
             }); 
             await prisma.user_team_mappings.createMany({
-                data: body.user_team_mappings.map((id) => ({
+                data: body.user_team_mappings.map((id: number) => ({
                     user_id: body.id,
                     team_id: id,
                 })),
@@ -85,7 +85,7 @@ export async function POST(req: Request) {
                 },
             });
             await prisma.user_team_mappings.createMany({
-                data: body.user_team_mappings.map((id) => ({
+                data: body.user_team_mappings.map((id: number) => ({
                     user_id: user.id,
                     team_id: id,
                 })),
