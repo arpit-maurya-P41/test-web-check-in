@@ -114,6 +114,7 @@ const Dashboard: React.FC<Props> = ({roles}) => {
                 canManageTeams={roles.can_manage_teams}
                 canManageUsers={roles.can_manage_users}
                 canViewReports={roles.can_view_reports}
+                canManageRoles={roles.can_manage_roles}
                 activeKey="dashboard"
             />
             <Layout>

@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { MenuFoldOutlined, MenuUnfoldOutlined, LogoutOutlined } from "@ant-design/icons";
-import { Button, Layout, theme, Table, Input, Popconfirm, Form, Space, Typography } from "antd";
-import { roles, teams } from "@prisma/client";
+import { Button, Layout, theme, Table, Input, Popconfirm, Form, Space, Typography, Checkbox } from "antd";
+import { roles } from "@prisma/client";
 import Sidebar from "../Sidebar";
+import { ColumnsType } from "antd/es/table";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -14,17 +15,17 @@ type Props = {
     roles: roles
 }
 
-const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
+const RoleManagementIndex: React.FC<Props> = ({ roles }) => {
     const [form] = Form.useForm();
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
 
     const [collapsed, setCollapsed] = useState<boolean>(false);
-    const [dataSource, setDataSource] = useState<teams[]>([]);
+    const [dataSource, setDataSource] = useState<roles[]>([]);
     const [editingKey, setEditingKey] = useState<number>(0);
 
     useEffect(() => {
         const fetchData = async () => {
-            const response = await fetch("/api/teams");
+            const response = await fetch("/api/roles");
             const data = await response.json();
             setDataSource(data);
         };
@@ -32,7 +33,7 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
     }, []);
 
     const fetchData = () => {
-        fetch("/api/teams")
+        fetch("/api/roles")
             .then((response) => response.json())
             .then((data) => {
                 setDataSource(data);
@@ -40,7 +41,7 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
     };
 
     const deleteData = (id: number) => {
-        fetch(`/api/teams/${id}`, {
+        fetch(`/api/roles/${id}`, {
             method: "DELETE",
         })
             .then((response) => response.json())
@@ -50,9 +51,10 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
 
     }
 
-    const isEditing = (record: teams) => record.id === editingKey;
+    const isEditing = (record: roles) => record.id === editingKey;
 
-    const edit = (record: teams) => {
+    const edit = (record: roles) => {
+        console.log(record)
         form.setFieldsValue({ ...record });
         setEditingKey(record.id);
     };
@@ -70,7 +72,8 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
             const index = newData.findIndex((item) => id === item.id);
             if (index > -1) {
                 newData[index] = { ...newData[index], ...row };
-                fetch("/api/teams", {
+                console.log(newData[index]);
+                fetch("/api/roles", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -88,62 +91,56 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
         }
     };
 
-    const handleDelete = (id: number) => {
-        deleteData(id);
-    };
+    const handleDelete = (id: number) => deleteData(id);
 
     const handleAdd = () => {
         const count = dataSource.length > 0 ? dataSource[dataSource.length - 1].id + 1 : 1;
-        const newRow: teams = {
+        const newRow: roles = {
             id: count,
-            name: "",
-            slack_channel_id: "",
+            role_name: "",
+            can_manage_roles: false,
+            can_manage_teams: false,
+            can_manage_users: false,
+            can_view_reports: false
         };
         setDataSource([...dataSource, newRow]);
         edit(newRow);
     };
 
-    const columns = [
+    const columns: ColumnsType<roles> = [
         {
             title: "Name",
-            dataIndex: "name",
-            editable: true,
-            render: (_: unknown, record: teams) =>
+            dataIndex: "role_name",
+            render: (_: unknown, record: roles) =>
                 isEditing(record) ? (
                     <Form.Item
-                        name="name"
+                        name="role_name"
                         style={{ margin: 0 }}
                         rules={[{ required: true, message: "Please input a name!" }]}
                     >
                         <Input />
                     </Form.Item>
                 ) : (
-                    record.name
+                    record.role_name
                 ),
         },
-        {
-            title: "Slack Channel Id",
-            dataIndex: "slack_channel_id",
-            editable: true,
-            render: (_: unknown, record: teams) =>
-                isEditing(record) ? (
-                    <Form.Item
-                        name="slack_channel_id"
-                        style={{ margin: 0 }}
-                        rules={[
-                            { required: true, message: "Please input an slack channel id!" }
-                        ]}
-                    >
-                        <Input />
+        ...["can_view_reports", "can_manage_teams", "can_manage_users", "can_manage_roles"].map((perm) => ({
+            title: perm.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+            dataIndex: perm,
+            render: (_: unknown, record: roles) => {
+                return isEditing(record) ? (
+                    <Form.Item name={perm} valuePropName="checked" style={{ margin: 0 }}>
+                        <Checkbox />
                     </Form.Item>
                 ) : (
-                    record.slack_channel_id
-                ),
-        },
+                    <Checkbox checked={record[perm as keyof roles] as boolean} disabled />
+                );
+            },
+        })),
         {
             title: "Actions",
             dataIndex: "actions",
-            render: (_: unknown, record: teams) => {
+            render: (_: unknown, record: roles) => {
                 const editable = isEditing(record);
                 return editable ? (
                     <Space>
@@ -170,20 +167,6 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
         },
     ];
 
-    const mergedColumns = columns.map((col) => {
-        if (!col.editable) return col;
-        return {
-            ...col,
-            onCell: (record: teams) => ({
-                record,
-                inputType: "text",
-                dataIndex: col.dataIndex,
-                title: col.title,
-                editing: isEditing(record),
-            }),
-        };
-    });
-
     return (
         <Layout>
             <Sidebar
@@ -192,7 +175,7 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
                 canManageUsers={roles.can_manage_users}
                 canViewReports={roles.can_view_reports}
                 canManageRoles={roles.can_manage_roles}
-                activeKey="teamManagement"
+                activeKey="roleManagement"
             />
             <Layout>
                 <Header style={{ padding: 0, background: colorBgContainer }}>
@@ -233,15 +216,15 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
                     }}
                 >
                     <div style={{ padding: 24 }}>
-                        <Title level={4}>Teams</Title>
+                        <Title level={4}>Roles</Title>
                         <Button onClick={handleAdd} type="primary" style={{ marginBottom: 16 }}>
-                            Add new Team
+                            Add new role
                         </Button>
                         <Form form={form} component={false}>
                             <Table
                                 bordered
                                 dataSource={dataSource}
-                                columns={mergedColumns}
+                                columns={columns}
                                 rowClassName="editable-row"
                                 pagination={{ pageSize: 5 }}
                                 components={{
@@ -258,4 +241,4 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
     );
 }
 
-export default TeamManagementIndex;
+export default RoleManagementIndex;

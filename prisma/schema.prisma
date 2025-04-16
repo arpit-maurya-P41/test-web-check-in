@@ -55,6 +55,7 @@ model roles {
   can_view_reports Boolean @default(false)
   can_manage_teams Boolean @default(false)
   can_manage_users Boolean @default(false)
+  can_manage_roles Boolean @default(false)
   users            users[]
 }
 

@@ -13,6 +13,7 @@ type Props = {
     canManageTeams: boolean;
     canManageUsers: boolean;
     canViewReports: boolean;
+    canManageRoles: boolean;
     activeKey: string;
 };
 
@@ -23,7 +24,7 @@ type DashboardItem = {
     onClick?: () => void;
 };
 
-const Sidebar: React.FC<Props> = ({ collapsed, canManageTeams, canManageUsers, activeKey }) => {
+const Sidebar: React.FC<Props> = ({ collapsed, canManageTeams, canManageUsers, canManageRoles, activeKey }) => {
     const sidebarItems = [];
     const dashboardItem: DashboardItem = {
         key: "dashboard",
@@ -57,6 +58,18 @@ const Sidebar: React.FC<Props> = ({ collapsed, canManageTeams, canManageUsers, a
             userManagementItem.onClick = () => (window.location.href = "/user-management");
         }
         sidebarItems.push(userManagementItem);
+    }
+
+    if (canManageRoles) {
+        const roleManagementItem: DashboardItem = {
+            key: "roleManagement",
+            icon: <UserSwitchOutlined />,
+            label: "Roles",
+        };
+        if (activeKey !== "roleManagement") {
+            roleManagementItem.onClick = () => (window.location.href = "/role-management");
+        }
+        sidebarItems.push(roleManagementItem);
     }
 
     return (

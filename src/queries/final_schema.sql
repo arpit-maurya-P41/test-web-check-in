@@ -9,9 +9,10 @@ CREATE TABLE teams (
 CREATE TABLE roles (
     id SERIAL PRIMARY KEY,
     role_name VARCHAR(255) UNIQUE NOT NULL,
-    can_manage_teams BOOLEAN DEFAULT FALSE,
-    can_manage_users BOOLEAN DEFAULT FALSE,
-    can_view_reports BOOLEAN DEFAULT FALSE,
+    can_manage_teams BOOLEAN DEFAULT FALSE NOT NULL,
+    can_manage_users BOOLEAN DEFAULT FALSE NOT NULL,
+    can_view_reports BOOLEAN DEFAULT FALSE NOT NULL,
+    can_manage_roles BOOLEAN DEFAULT FALSE NOT NULL
 );
 
 -- 🚀 Users Table

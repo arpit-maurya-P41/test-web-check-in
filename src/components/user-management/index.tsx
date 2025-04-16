@@ -1,172 +1,371 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-    MenuFoldOutlined,
-    MenuUnfoldOutlined,
-    LogoutOutlined,
-} from "@ant-design/icons";
-import { Button, Layout, theme, Table, Input, Popconfirm, Form, Space, Typography } from "antd";
+import { MenuFoldOutlined, MenuUnfoldOutlined, LogoutOutlined } from "@ant-design/icons";
+import { Button, Layout, theme, Table, Input, Popconfirm, Form, Space, Typography, Select, message } from "antd";
+import type { ColumnsType } from "antd/es/table";
 
 import { roles, teams } from "@prisma/client";
 import Sidebar from "../Sidebar";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
+const { Option } = Select;
 
 type Props = {
     userId: string;
     roles: roles
 }
 
+type Role = {
+    id: number;
+    role_name: string;
+}
+
+type UserTeamMapping = {
+    team_id: number;
+    teams: teams;
+};
+
+type User = {
+    id: number;
+    name: string;
+    email: string;
+    slack_user_id: string;
+    password: string;
+    user_team_mappings: UserTeamMapping[];
+    roles: Role;
+};
 
 const UserManagementIndex: React.FC<Props> = ({ roles }) => {
     const [form] = Form.useForm();
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
 
     const [collapsed, setCollapsed] = useState<boolean>(false);
-    const [dataSource, setDataSource] = useState<teams[]>([]);
-    const [editingKey, setEditingKey] = useState<number>(0);
+    const [teams, setTeams] = useState<teams[]>([]);
+    const [users, setUsers] = useState<User[]>([]);
+    const [rolesData, setRoles] = useState<Role[]>([]);
+    const [editingRow, setEditingRow] = useState<number>(0);
 
     useEffect(() => {
         const fetchData = async () => {
-            const response = await fetch("/api/teams");
-            const data = await response.json();
-            setDataSource(data);
+            const teamsAPIResponse = await fetch("/api/teams");
+            const teamsData = await teamsAPIResponse.json();
+            setTeams(teamsData);
+
+            const usersAPIResponse = await fetch("/api/users");
+            const usersData = await usersAPIResponse.json();
+            setUsers(usersData);
+
+            const rolesAPIResponse = await fetch("/api/roles");
+            const roledata = await rolesAPIResponse.json();
+            setRoles(roledata);
         };
         fetchData();
     }, []);
 
     const fetchData = () => {
-        fetch("/api/teams")
+        fetch("/api/users")
             .then((response) => response.json())
             .then((data) => {
-                setDataSource(data);
+                setUsers(data);
             });
     };
 
     const deleteData = (id: number) => {
-        fetch(`/api/teams/${id}`, {
+        fetch(`/api/users/${id}`, {
             method: "DELETE",
         })
             .then((response) => response.json())
             .then((data) => {
-                setDataSource(data);
+                setUsers(data);
             });
 
     }
 
-    const isEditing = (record: teams) => record.id === editingKey;
 
-    const edit = (record: teams) => {
-        form.setFieldsValue({ ...record });
-        setEditingKey(record.id);
-    };
+    // const save = async (id: number) => {
+    //     try {
+    //         const row = await form.validateFields();
+    //         const newData = [...users];
 
-    const cancel = () => {
-        fetchData();
-        setEditingKey(0);
-    };
-
-    const save = async (id: number) => {
-        try {
-            const row = await form.validateFields();
-            const newData = [...dataSource];
-
-            const index = newData.findIndex((item) => id === item.id);
-            if (index > -1) {
-                newData[index] = { ...newData[index], ...row };
-                fetch("/api/teams", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(newData[index]),
-                })
-                    .then((response) => response.json())
-                    .then((data) => {
-                        setDataSource(data);
-                        setEditingKey(0);
-                    });
-            }
-        } catch (errInfo) {
-            console.log("Validate Failed:", errInfo);
-        }
-    };
+    //         const index = newData.findIndex((item) => id === item.id);
+    //         if (index > -1) {
+    //             newData[index] = { ...newData[index], ...row };
+    //             fetch("/api/users", {
+    //                 method: "POST",
+    //                 headers: {
+    //                     "Content-Type": "application/json",
+    //                 },
+    //                 body: JSON.stringify(newData[index]),
+    //             })
+    //                 .then((response) => response.json())
+    //                 .then((data) => {
+    //                     setUsers(data);
+    //                     setEditingKey(0);
+    //                 });
+    //         }
+    //     } catch (errInfo) {
+    //         console.log("Validate Failed:", errInfo);
+    //     }
+    // };
 
     const handleDelete = (id: number) => {
         deleteData(id);
     };
 
     const handleAdd = () => {
-        const count = dataSource.length > 0 ? dataSource[dataSource.length - 1].id + 1 : 1;
-        const newRow: teams = {
+        const count = users.length > 0 ? users[users.length - 1].id + 1 : 1;
+        const newRow: User = {
             id: count,
             name: "",
-            slack_channel_id: "",
+            email: "",
+            slack_user_id: "",
+            password: "",
+            roles: {
+                id: 0,
+                role_name: "",
+            },
+            user_team_mappings: [],
         };
-        setDataSource([...dataSource, newRow]);
-        edit(newRow);
+        setUsers([...users, newRow]);
+        handleEdit(newRow);
     };
 
-    const columns = [
+    const handleEdit = (user: User) => {
+        setEditingRow(user.id);
+        form.setFieldsValue({
+            name: user.name,
+            email: user.email,
+            slack_user_id: user.slack_user_id,
+            password: user.password,
+            team_ids: user.user_team_mappings.map((t) => t.team_id),
+            role_id: user.roles.id,
+        });
+    };
+
+    const handleSave = async (userId: number) => {
+        try {
+            const values = await form.validateFields();
+
+            console.log("values", values);
+
+            console.log("teams ", values.team_ids);
+            console.log("user email ", values.email);
+            console.log("user name ", values.name);
+
+            console.log("userId ", userId);
+
+            const updatedUser = {
+                id: userId,
+                name: values.name,
+                email: values.email,
+                slack_user_id: values.slack_user_id,
+                password: values.password,
+                user_team_mappings: values.team_ids,
+                role_id: values.role_id,
+            };
+
+            fetch("/api/users", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(updatedUser),
+            })
+                .then((response) => response.json())
+                .then(() => {
+                    resetAndFetch();
+                });
+
+            message.success("User updated");
+        } catch {
+            message.error("Validation failed");
+        }
+    };
+
+    const handleCancel = () => {
+        resetAndFetch();
+    };
+
+    const resetAndFetch = () => {
+        setEditingRow(0);
+        form.resetFields();
+        fetchData();
+    }
+
+    const columns: ColumnsType<User> = [
         {
             title: "Name",
             dataIndex: "name",
-            editable: true,
-            render: (_: unknown, record: teams) =>
-                isEditing(record) ? (
-                    <Form.Item
-                        name="name"
-                        style={{ margin: 0 }}
-                        rules={[{ required: true, message: "Please input a name!" }]}
-                    >
-                        <Input />
-                    </Form.Item>
-                ) : (
-                    record.name
-                ),
+            render: (_: unknown, record: User) => {
+                if (editingRow === record.id) {
+                    return (
+                        <Form.Item
+                            name="name"
+                            rules={[
+                                { required: true, message: "Name is required" },
+                                { min: 2, message: "Minimum 2 characters" },
+                            ]}
+                            style={{ margin: 0 }}
+                        >
+                            <Input />
+                        </Form.Item>
+                    );
+                }
+                return record.name;
+            },
         },
         {
-            title: "Slack Channel Id",
-            dataIndex: "slack_channel_id",
-            editable: true,
-            render: (_: unknown, record: teams) =>
-                isEditing(record) ? (
-                    <Form.Item
-                        name="slack_channel_id"
-                        style={{ margin: 0 }}
-                        rules={[
-                            { required: true, message: "Please input an slack channel id!" }
-                        ]}
-                    >
-                        <Input />
-                    </Form.Item>
-                ) : (
-                    record.slack_channel_id
-                ),
+            title: "Email",
+            dataIndex: "email",
+            render: (_: unknown, record: User) => {
+                if (editingRow === record.id) {
+                    return (
+                        <Form.Item
+                            name="email"
+                            rules={[
+                                { required: true, message: "Email is required" },
+                                { type: "email", message: "Invalid email" },
+                            ]}
+                            style={{ margin: 0 }}
+                        >
+                            <Input />
+                        </Form.Item>
+                    );
+                }
+                return record.email;
+            },
         },
         {
-            title: "Actions",
-            dataIndex: "actions",
-            render: (_: unknown, record: teams) => {
-                const editable = isEditing(record);
-                return editable ? (
+            title: "Slack User Id",
+            dataIndex: "slack_user_id",
+            render: (_: unknown, record: User) => {
+                if (editingRow === record.id) {
+                    return (
+                        <Form.Item
+                            name="slack_user_id"
+                            rules={[
+                                { required: true, message: "Slack User Id is required" },
+                            ]}
+                            style={{ margin: 0 }}
+                        >
+                            <Input />
+                        </Form.Item>
+                    );
+                }
+                return record.slack_user_id;
+            },
+        },
+        {
+            title: "Password",
+            dataIndex: "password",
+            render: (_: unknown, record: User) => {
+                if (editingRow === record.id) {
+                    return (
+                        <Form.Item
+                            name="password"
+                            rules={[
+                                { required: true, message: "Password is required" },
+                                { min: 6, message: "Minimum 6 characters" },
+                                { max: 20, message: "Maximum 20 characters" },
+                                { pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,}$/, message: "Password must contain at least one uppercase letter, one lowercase letter, and one number" },
+                            ]}
+                            style={{ margin: 0 }}
+                        >
+                            <Input />
+                        </Form.Item>
+                    );
+                }
+                return record.password;
+            },
+        },
+        {
+            title: "Role",
+            dataIndex: "roles",
+            render: (_: unknown, record: User) => {
+                if (editingRow === record.id) {
+                    return (
+                        <Form.Item
+                            name="role_id"
+                            rules={[
+                                { required: true, message: "Select at least one team" },
+                            ]}
+                            style={{ margin: 0 }}
+                        >
+                            <Select
+                                showSearch={false}
+                                allowClear
+                                style={{ width: "100%" }}
+                                placeholder="Select teams"
+                            >
+                                {rolesData.map((role) => (
+                                    <Option key={role.id} value={role.id}>
+                                        {role.role_name}
+                                    </Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                    );
+                }
+                return record.roles.role_name;
+            },
+        },
+        {
+            title: "Teams",
+            dataIndex: "user_team_mappings",
+            render: (_: unknown, record: User) => {
+                if (editingRow === record.id) {
+                    return (
+                        <Form.Item
+                            name="team_ids"
+                            rules={[
+                                { required: true, message: "Select at least one team" },
+                            ]}
+                            style={{ margin: 0 }}
+                        >
+                            <Select
+                                mode="multiple"
+                                showSearch={false}
+                                allowClear
+                                style={{ width: "100%" }}
+                                placeholder="Select teams"
+                            >
+                                {teams.map((team) => (
+                                    <Option key={team.id} value={team.id}>
+                                        {team.name}
+                                    </Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                    );
+                }
+                return record.user_team_mappings.map((t) => t.teams.name).join(", ");
+            },
+        },
+        {
+            title: "Action",
+            render: (_: unknown, record: User) => {
+                if (editingRow === record.id) {
+                    return (
+                        <Space>
+                            <Button
+                                type="primary"
+                                onClick={() => handleSave(record.id)}
+                            >
+                                Save
+                            </Button>
+                            <Button onClick={handleCancel}>Cancel</Button>
+                        </Space>
+                    );
+                }
+                return (
                     <Space>
-                        <Button onClick={() => save(record.id)} type="link">
-                            Save
-                        </Button>
-                        <Button onClick={cancel} type="link">
-                            Cancel
-                        </Button>
-                    </Space>
-                ) : (
-                    <Space>
-                        <Button disabled={editingKey !== 0} onClick={() => edit(record)} type="link">
+                        <Button onClick={() => handleEdit(record)} type="link">
                             Edit
                         </Button>
                         <Popconfirm title="Are you sure?" onConfirm={() => handleDelete(record.id)}>
-                            <Button disabled={editingKey !== 0} type="link" danger>
+                            <Button type="link" danger>
                                 Delete
                             </Button>
                         </Popconfirm>
@@ -176,21 +375,6 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
         },
     ];
 
-    const mergedColumns = columns.map((col) => {
-        if (!col.editable) return col;
-        return {
-            ...col,
-            onCell: (record: teams) => ({
-                record,
-                inputType: "text",
-                dataIndex: col.dataIndex,
-                title: col.title,
-                editing: isEditing(record),
-            }),
-        };
-    });
-
-
     return (
         <Layout>
             <Sidebar
@@ -198,6 +382,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                 canManageTeams={roles.can_manage_teams}
                 canManageUsers={roles.can_manage_users}
                 canViewReports={roles.can_view_reports}
+                canManageRoles={roles.can_manage_roles}
                 activeKey="userManagement"
             />
             <Layout>
@@ -246,16 +431,10 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                         </Button>
                         <Form form={form} component={false}>
                             <Table
-                                bordered
-                                dataSource={dataSource}
-                                columns={mergedColumns}
-                                rowClassName="editable-row"
-                                pagination={{ pageSize: 5 }}
-                                components={{
-                                    body: {
-                                        cell: ({ children, ...restProps }) => <td {...restProps}>{children}</td>,
-                                    },
-                                }}
+                                rowKey="id"
+                                dataSource={users}
+                                columns={columns}
+                                pagination={false}
                             />
                         </Form>
                     </div>
