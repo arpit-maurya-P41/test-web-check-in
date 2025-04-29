@@ -19,7 +19,6 @@ import {
 
 import dayjs, { Dayjs } from "dayjs";
 import { RangePickerProps } from "antd/lib/date-picker";
-import NotificationCard from "./NotificationCard";
 import Sidebar from "@/components/Sidebar";
 import { roles, teams, users } from "@prisma/client";
 
@@ -37,12 +36,18 @@ type Props = {
     users: users[];
 };
 
+type DashboardData = {
+    date: string;
+    user: string;
+    smartGoalsRate: number;
+};
+
 const Dashboard: React.FC<Props> = ({ roles, teams, users }) => {
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
 
     const [collapsed, setCollapsed] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [dashboardData, setDashboardData] = useState([]);
+    const [dashboardData, setDashboardData] = useState<DashboardData[]>([]);
     const [dates, setDates] = useState<[Dayjs, Dayjs]>(getDefaultDates());
     const [selectedTeams, setSelectedTeams] = useState<string>(teams[0]?.slack_channel_id);
     const [selectedUsers, setSelectedUsers] = useState([]);
@@ -66,7 +71,7 @@ const Dashboard: React.FC<Props> = ({ roles, teams, users }) => {
             color: { range: ["#62bb45", "#b1d34a", "#f15b3f", "#ffc20c", "#f58220"] },
         },
         label: {
-            text: (d) => d.smartGoalsRate,
+            text: (d: DashboardData) => d.smartGoalsRate,
             position: "inside",
             style: {
                 fill: "#fff",
