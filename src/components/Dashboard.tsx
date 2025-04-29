@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     MenuFoldOutlined,
     MenuUnfoldOutlined,
@@ -10,102 +10,103 @@ import {
     Button,
     Layout,
     theme,
-    // DatePicker,
-    // Col,
-    // Row,
-    // Space,
-    // Select,
+    DatePicker,
+    Col,
+    Row,
+    Space,
+    Select,
 } from "antd";
 
-// import dayjs from "dayjs";
-// import NotificationCard from "./NotificationCard";
+import dayjs, { Dayjs } from "dayjs";
+import { RangePickerProps } from "antd/lib/date-picker";
+import NotificationCard from "./NotificationCard";
 import Sidebar from "@/components/Sidebar";
-import { roles } from "@prisma/client";
+import { roles, teams, users } from "@prisma/client";
 
-// const { Option } = Select;
-// const { RangePicker } = DatePicker;
+import { Heatmap } from "@ant-design/charts";
+
+const { Option } = Select;
+const { RangePicker } = DatePicker;
 const { Header, Content } = Layout;
-// const getDefaultDates = () => [dayjs().subtract(6, "day"), dayjs()];
+const getDefaultDates = () => [dayjs().subtract(6, "day"), dayjs()] as [Dayjs, Dayjs];
 
 type Props = {
     userId: string;
-    roles: roles
-}
+    roles: roles;
+    teams: teams[];
+    users: users[];
+};
 
-const Dashboard: React.FC<Props> = ({roles}) => {
-  
-  const [collapsed, setCollapsed] = useState(false);
+const Dashboard: React.FC<Props> = ({ roles, teams, users }) => {
+    const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
 
-    const {
-        token: { colorBgContainer, borderRadiusLG },
-    } = theme.useToken();
+    const [collapsed, setCollapsed] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [dashboardData, setDashboardData] = useState([]);
+    const [dates, setDates] = useState<[Dayjs, Dayjs]>(getDefaultDates());
+    const [selectedTeams, setSelectedTeams] = useState<string>(teams[0]?.slack_channel_id);
+    const [selectedUsers, setSelectedUsers] = useState([]);
 
-    const [loading, ] = useState(true);
+    const handleTeamChange = (value: string) => setSelectedTeams(value ?? teams[0]?.slack_channel_id);
+    const handleUserChange = (value: never[]) => setSelectedUsers(value);
+    const handleRangeChange = (dates: RangePickerProps["value"]) => {
+        if (dates) setDates(dates as [Dayjs, Dayjs]);
+        else setDates(getDefaultDates());
+    }
 
-    // const [loading, setLoading] = useState(true);
-    // const [dashboardData, setData] = useState([]);
-    // const [dates, setDates] = useState(getDefaultDates());
-    // const [teams, setTeams] = useState([]);
-    // const [users, setUsers] = useState([]);
-    // const [selectedTeams, setSelectedTeams] = useState([]);
-    // const [selectedUsers, setSelectedUsers] = useState([]);
+    const config = {
+        data: dashboardData,
+        xField: "date",
+        yField: "user",
+        colorField: "smartGoalsRate",
+        mark: "cell",
+        style: { inset: 0.5 },
+        scale: {
+            size: { range: [0, 100] },
+            color: { range: ["#62bb45", "#b1d34a", "#f15b3f", "#ffc20c", "#f58220"] },
+        },
+        label: {
+            text: (d) => d.smartGoalsRate,
+            position: "inside",
+            style: {
+                fill: "#fff",
+                shadowBlur: 2,
+                shadowColor: "rgba(0, 0, 0, .45)",
+                pointerEvents: "none",
+            },
+        },
+        autoFit: true,
+    };
 
-    // const handleTeamChange = (value) => {
-    //     setSelectedTeams(value);
-    // };
 
-    // const handleUserChange = (value) => {
-    //     setSelectedUsers(value);
-    // };
+    useEffect(() => {
+        const fetchData = async () => {
+            const params = new URLSearchParams();
+            const formatted = dates.map((d) => d.format("YYYY-MM-DD"));
+            const [startDate, endDate] = formatted;
 
-    // const handleRangeChange = (values) => {
-    //     if (values === null) {
-    //         // If cleared, reset to default
-    //         const defaultDates = getDefaultDates();
-    //         setDates(defaultDates);
-    //     } else {
-    //         setDates(values);
-    //     }
-    // };
+            params.append("startDate", startDate);
+            params.append("endDate", endDate);
 
-    // useEffect(() => {
-    //     const fetchData = async () => {
-    //         const params = new URLSearchParams();
-    //         const formatted = dates.map((d) => d.format("YYYY-MM-DD"));
-    //         const [startDate, endDate] = formatted;
+            if (selectedTeams) {
+                params.append("teamChannelId", selectedTeams.toString());
+            }
 
-    //         params.append("startDate", startDate);
-    //         params.append("endDate", endDate);
+            if (selectedUsers.length > 0) {
+                params.append("users", selectedUsers.join(","));
+            }
 
-    //         if (selectedTeams.length > 0) {
-    //             params.append("teams", selectedTeams.join(","));
-    //         }
+            const [dashboardRes] = await Promise.all([
+                fetch(`/api/dashboard?${params.toString()}`),
+            ]);
 
-    //         if (selectedUsers.length > 0) {
-    //             params.append("users", selectedUsers.join(","));
-    //         }
+            const data = await dashboardRes.json();
+            setDashboardData(JSON.parse(JSON.stringify(data)));
+            setLoading(false);
+        };
 
-    //         const [dashboardRes, teamsRes, usersRes] = await Promise.all([
-    //             fetch(`/api/dashboard?${params.toString()}`),
-    //             fetch("/api/teams"),
-    //             fetch("/api/users"),
-    //         ]);
-
-    //         const data = await dashboardRes.json();
-    //         const teamData = await teamsRes.json();
-    //         const userData = await usersRes.json();
-
-    //         setUsers(userData.data);
-    //         setTeams(teamData.data);
-    //         setData(JSON.parse(JSON.stringify(data.data)));
-
-    //         setLoading(false);
-    //     };
-
-    //     fetchData();
-    // }, [dates, selectedTeams, selectedUsers]);
-
-    // if (loading) return <>Loading...</>;
+        fetchData();
+    }, [dates, selectedTeams, selectedUsers]);
 
     return (
         <Layout>
@@ -164,7 +165,7 @@ const Dashboard: React.FC<Props> = ({roles}) => {
                         "Loading..."
                     ) : (
                         <>
-                            {/* <Row>
+                            <Row>
                                 <Col
                                     span={26}
                                     style={{ margin: "auto" }}>
@@ -181,7 +182,7 @@ const Dashboard: React.FC<Props> = ({roles}) => {
                                                 gap: 12,
                                             }}>
                                             <RangePicker
-                                                onChange={handleRangeChange}
+                                                onChange={(dates: RangePickerProps["value"]) => handleRangeChange(dates)}
                                                 value={dates}
                                                 format="YYYY-MM-DD"
                                                 style={{
@@ -189,22 +190,19 @@ const Dashboard: React.FC<Props> = ({roles}) => {
                                                     borderRadius: "8px",
                                                 }}
                                                 allowClear
+                                                maxDate={dayjs()}
                                             />
                                         </div>
 
                                         <Select
-                                            mode="multiple"
-                                            allowClear
                                             placeholder="Select Teams"
                                             value={selectedTeams}
                                             onChange={handleTeamChange}
                                             style={{ minWidth: 240 }}>
                                             {teams.map((team) => (
                                                 <Option
-                                                    key={team.id}
-                                                    value={
-                                                        team.slack_channel_id
-                                                    }>
+                                                    key={team.slack_channel_id}
+                                                    value={team.slack_channel_id}>
                                                     {team.name}
                                                 </Option>
                                             ))}
@@ -228,7 +226,7 @@ const Dashboard: React.FC<Props> = ({roles}) => {
                                     </Space>
                                 </Col>
                             </Row>
-                            <Row>
+                            {/* <Row>
                                 {dashboardData.map((data, index) => (
                                     <Col
                                         span={24}
@@ -238,6 +236,13 @@ const Dashboard: React.FC<Props> = ({roles}) => {
                                     </Col>
                                 ))}
                             </Row> */}
+                            <Row>
+                                <Col
+                                    span={24}
+                                    style={{ padding: 8 }}>
+                                    <Heatmap {...config} />
+                                </Col>
+                            </Row>
                         </>
                     )}
                 </Content>

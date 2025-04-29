@@ -1,134 +1,75 @@
-import { NextResponse } from "next/server";
-// import { PrismaClient } from "@prisma/client";
+import { NextResponse, NextRequest } from "next/server";
+import { prisma } from "@/prisma";
 
-// const prisma = new PrismaClient();
-
-export async function GET() {
+export async function GET(req: NextRequest) {
     console.log("Detected GET request");
 
     try {
-        // const url = new URL(req.url);
-        // const startDateParam = url.searchParams.get("startDate");
-        // const endDateParam = url.searchParams.get("endDate");
+        const url = new URL(req.url);
 
-        // const teamsParam = url.searchParams.get("teams")?.split(",") || [];
-        // const usersParam = url.searchParams.get("users")?.split(",") || [];
+        const startDateParam = url.searchParams.get("startDate") ?? "2025-01-01";
+        const endDateParam = url.searchParams.get("endDate");
+        const teamChannelId = url.searchParams.get("teamChannelId") ?? "";
+        const userSlackIds = url.searchParams.get("users")?.split(",") || [];
 
-        // const startDate = startDateParam ? new Date(startDateParam) : new Date("2025-01-01");
-        // const endDate = endDateParam ? new Date(endDateParam) : new Date();
+        const startDate = new Date(startDateParam);
+        let endDate = endDateParam ? new Date(endDateParam) : new Date();
 
-        // const checkins = await prisma.checkins.findMany(
-        //     {
-        //         where: {
-        //             created_at: {
-        //                 gte: new Date(startDate),
-        //                 lte: new Date(endDate)
-        //             },
-        //             slack_user_id: {
-        //                 in: usersParam.length > 0 ? usersParam : undefined
-        //             },
-        //             slack_channel_id: {
-        //                 in: teamsParam.length > 0 ? teamsParam : undefined
-        //             }
-        //         }
-        //     }
-        // );
+        if (endDate.getTime() > new Date().getTime()) {
+            endDate = new Date();
+        }
 
-        // const allDates = [];
-        // const currentDate = new Date(startDate);
-        // while (currentDate <= endDate) {
-        //     allDates.push(new Date(currentDate));
-        //     currentDate.setDate(currentDate.getDate() + 1);
-        // }
+        const checkins = await prisma.checkins.findMany({
+            where: {
+                created_at: {
+                    gte: startDate,
+                    lte: endDate,
+                },
+                slack_channel_id: teamChannelId,
+                slack_user_id: {
+                    in: userSlackIds.length > 0 ? userSlackIds : undefined,
+                },
+            },
+            select: {
+                slack_user_id: true,
+                slack_channel_id: true,
+                created_at: true,
+                users: {
+                    select: {
+                        slack_user_id: true,
+                        name: true,
+                        email: true,
+                    },
+                },
+                goals: {
+                    select: {
+                        id: true,
+                        is_smart: true,
+                    },
+                },
+            },
+            orderBy: {
+                created_at: "asc",
+            },
+        });
 
-        // const checkinsWithMissed: unknown = [];
+        const formattedCheckins = checkins.map((checkin) => ({
+            date: checkin.created_at?.toLocaleDateString(),
+            user: checkin.users?.name || "Unknown",
+            smartGoalsRate:
+                checkin.goals.length === 0
+                    ? 0
+                    : (checkin.goals.filter((goal) => goal.is_smart).length /
+                          checkin.goals.length) *
+                      100,
+        }));
 
-        // allDates.forEach(date => {
-        //     const currentDateCheckins = [];
-        //     checkins.forEach(c => {
-        //         if (new Date(c.date).toDateString() === date.toDateString()) currentDateCheckins.push(c);
-        //     });
-
-        //     if (currentDateCheckins.length > 0) {
-        //         currentDateCheckins.forEach(checkin => {
-        //             checkinsWithMissed.push({ ...checkin, missed: false });
-        //         });
-        //     } else {
-        //         checkinsWithMissed.push({ date, missed: true });
-        //     }
-        // });
-
-
-        // const checkouts = await prisma.checkouts.findMany(
-        //     {
-        //         where: {
-        //             created_at: {
-        //                 gte: new Date(startDate),
-        //                 lte: new Date(endDate)
-        //             },
-        //             slac: {
-        //                 in: usersParam.length > 0 ? usersParam : undefined
-        //             },
-        //             slack_channel_id: {
-        //                 in: teamsParam.length > 0 ? teamsParam : undefined
-        //             }
-        //         }
-        //     }
-        // );
-
-        // const checkoutsWithMissed = [];
-
-        // allDates.forEach(date => {
-        //     const currentDateCheckouts = [];
-        //     checkouts.forEach(c => {
-        //         if (new Date(c.date).toDateString() === date.toDateString()) currentDateCheckouts.push(c);
-        //     });
-
-        //     if (currentDateCheckouts.length > 0) {
-        //         currentDateCheckouts.forEach(checkin => {
-        //             checkoutsWithMissed.push({ ...checkin, missed: false });
-        //         });
-        //     } else {
-        //         checkoutsWithMissed.push({ date, missed: true });
-        //     }
-        // });
-
-        // console.log("here")
-
-
-        // const users = await prisma.users.findMany();
-
-        // let combinedData: unknown = [];
-
-        // checkinsWithMissed.forEach(checkin => {
-        //     let checkout = checkoutsWithMissed.find(c => new Date(c.date).toDateString() === checkin.date.toDateString()
-        //         && c.slack_user_id === checkin.slack_user_id && c.slack_channel_id === checkin.slack_channel_id);
-
-        //     if (!checkout) {
-        //         checkout = {
-        //             date: checkin.date,
-        //             missed: true,
-        //         }
-        //     }
-
-        //     const user = users.find(u => u.slack_user_id === checkin.slack_user_id);
-
-        //     combinedData.push({
-        //         date: checkin.date,
-        //         checkin,
-        //         checkout,
-        //         user
-        //     })
-        // });
-
-        // combinedData = combinedData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-        // return NextResponse.json({ data: combinedData });
-        return NextResponse.json({ data: [] });
-
-    }
-    catch (error) {
+        return NextResponse.json(formattedCheckins );
+    } catch (error) {
         console.error("Error Detacted in dashboard GET Request", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json(
+            { error: "Internal Server Error" },
+            { status: 500 }
+        );
     }
 }

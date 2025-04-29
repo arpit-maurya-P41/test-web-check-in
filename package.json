@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ant-design/charts": "^2.2.7",
     "@ant-design/icons": "^6.0.0",
     "@auth/prisma-adapter": "^2.8.0",
     "@prisma/client": "^6.6.0",
