@@ -34,6 +34,7 @@ export async function GET(req: NextRequest) {
                 slack_user_id: true,
                 slack_channel_id: true,
                 created_at: true,
+                blocker: true,
                 users: {
                     select: {
                         slack_user_id: true,
@@ -64,7 +65,15 @@ export async function GET(req: NextRequest) {
                       100,
         }));
 
-        return NextResponse.json(formattedCheckins );
+
+        const userBlockStatusByDate = checkins.map((checkin) => ({
+            date: checkin.created_at?.toLocaleDateString(),
+            user: checkin.users?.name || 'Unknown', 
+            blocked: checkin.blocker && checkin.blocker.length !== 0 ? 1 : 0,
+        }));
+
+        return NextResponse.json({formattedCheckins, userBlockStatusByDate});
+    
     } catch (error) {
         console.error("Error Detacted in dashboard GET Request", error);
         return NextResponse.json(

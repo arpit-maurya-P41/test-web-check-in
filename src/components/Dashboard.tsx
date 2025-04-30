@@ -106,7 +106,7 @@ const Dashboard: React.FC<Props> = ({ roles, teams, users }) => {
             ]);
 
             const data = await dashboardRes.json();
-            setDashboardData(JSON.parse(JSON.stringify(data)));
+            setDashboardData(JSON.parse(JSON.stringify(data.formattedCheckins)));
             setLoading(false);
         };
 
