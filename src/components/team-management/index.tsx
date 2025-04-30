@@ -5,6 +5,7 @@ import { MenuFoldOutlined, MenuUnfoldOutlined, LogoutOutlined } from "@ant-desig
 import { Button, Layout, theme, Table, Input, Popconfirm, Form, Space, Typography } from "antd";
 import { roles, teams } from "@prisma/client";
 import Sidebar from "../Sidebar";
+import { logoutUser } from "@/app/actions/authActions";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -210,7 +211,7 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
                     <Button
                         type="text"
                         icon={<LogoutOutlined />}
-                        // TODO: Add onclick handler onClick={() => setCollapsed(!collapsed)}
+                        onClick={() => logoutUser()}
                         style={{
                             fontSize: "16px",
                             width: 64,

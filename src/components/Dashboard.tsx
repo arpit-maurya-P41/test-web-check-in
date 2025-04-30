@@ -21,6 +21,7 @@ import dayjs, { Dayjs } from "dayjs";
 import { RangePickerProps } from "antd/lib/date-picker";
 import Sidebar from "@/components/Sidebar";
 import { roles, teams, users } from "@prisma/client";
+import { logoutUser } from "@/app/actions/authActions";
 
 import { Heatmap } from "@ant-design/charts";
 
@@ -145,7 +146,7 @@ const Dashboard: React.FC<Props> = ({ roles, teams, users }) => {
                     <Button
                         type="text"
                         icon={<LogoutOutlined />}
-                        // TODO: Add onclick handler onClick={() => setCollapsed(!collapsed)}
+                        onClick={() => logoutUser()}
                         style={{
                             fontSize: "16px",
                             width: 64,

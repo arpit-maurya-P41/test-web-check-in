@@ -6,6 +6,7 @@ import { Button, Layout, theme, Table, Input, Popconfirm, Form, Space, Typograph
 import { roles } from "@prisma/client";
 import Sidebar from "../Sidebar";
 import { ColumnsType } from "antd/es/table";
+import { logoutUser } from "@/app/actions/authActions";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -193,7 +194,7 @@ const RoleManagementIndex: React.FC<Props> = ({ roles }) => {
                     <Button
                         type="text"
                         icon={<LogoutOutlined />}
-                        // TODO: Add onclick handler onClick={() => setCollapsed(!collapsed)}
+                        onClick={() => logoutUser()}
                         style={{
                             fontSize: "16px",
                             width: 64,

@@ -1,6 +1,6 @@
 "use server";
 
-import { signIn } from "@/auth";
+import { signIn, signOut } from "@/auth";
 
 export async function loginUser(email: string, password: string) {
         await signIn("credentials", {
@@ -8,4 +8,10 @@ export async function loginUser(email: string, password: string) {
             password,
             redirectTo: "/",
         });
+}
+
+export async function logoutUser() {
+    await signOut({
+        redirectTo: "/login",
+    });
 }
