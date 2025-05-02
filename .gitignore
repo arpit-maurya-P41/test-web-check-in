@@ -39,3 +39,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.terraform
+*.tfvars*
+*.tfstate*
+
+*.diff
+*.bak
+
+.DS_Store
+.envrc
+.external_modules/
