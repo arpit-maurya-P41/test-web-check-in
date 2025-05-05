@@ -15,6 +15,7 @@ import {
     Row,
     Space,
     Select,
+    Typography,
 } from "antd";
 
 import dayjs, { Dayjs } from "dayjs";
@@ -24,6 +25,8 @@ import { roles, teams, users } from "@prisma/client";
 import { logoutUser } from "@/app/actions/authActions";
 
 import { Heatmap } from "@ant-design/charts";
+import BlockerChart from "./BlockerChart";
+const { Title } = Typography;
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -43,6 +46,11 @@ type DashboardData = {
     smartGoalsRate: number;
 };
 
+type BlockedUsersCount = {
+    date: string;
+    blocked: number;
+};
+
 const Dashboard: React.FC<Props> = ({ roles, teams, users }) => {
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
 
@@ -52,6 +60,7 @@ const Dashboard: React.FC<Props> = ({ roles, teams, users }) => {
     const [dates, setDates] = useState<[Dayjs, Dayjs]>(getDefaultDates());
     const [selectedTeams, setSelectedTeams] = useState<string>(teams[0]?.slack_channel_id);
     const [selectedUsers, setSelectedUsers] = useState([]);
+    const [blockedUsersData, setBlockedUsersData] = useState<BlockedUsersCount[]>([]);
 
     const handleTeamChange = (value: string) => setSelectedTeams(value ?? teams[0]?.slack_channel_id);
     const handleUserChange = (value: never[]) => setSelectedUsers(value);
@@ -108,6 +117,7 @@ const Dashboard: React.FC<Props> = ({ roles, teams, users }) => {
 
             const data = await dashboardRes.json();
             setDashboardData(JSON.parse(JSON.stringify(data.formattedCheckins)));
+            setBlockedUsersData(JSON.parse(JSON.stringify(data.blockedUsersCount)));
             setLoading(false);
         };
 
@@ -251,6 +261,8 @@ const Dashboard: React.FC<Props> = ({ roles, teams, users }) => {
                             </Row>
                         </>
                     )}
+                    <Title level={2}>Blockers</Title>
+                    <BlockerChart blockedUsersCount={blockedUsersData} />
                 </Content>
             </Layout>
         </Layout>
