@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/prisma";
+import { getDateRange } from "@/utils/dateUtils";
 
 export async function GET(req: NextRequest) {
     console.log("Detected GET request");
@@ -65,14 +66,41 @@ export async function GET(req: NextRequest) {
                       100,
         }));
 
+        const teamUserCount = await prisma.user_team_mappings.count({
+            where: {
+              teams: {
+                slack_channel_id: teamChannelId
+              }
+            }
+          });
 
-        const userBlockStatusByDate = checkins.map((checkin) => ({
-            date: checkin.created_at?.toLocaleDateString(),
-            user: checkin.users?.name || 'Unknown', 
-            blocked: checkin.blocker && checkin.blocker.length !== 0 ? 1 : 0,
-        }));
+        const blockedMap: Record<string, number> = {};
 
-        return NextResponse.json({formattedCheckins, userBlockStatusByDate});
+        checkins.forEach((checkin) => {
+            const date = checkin.created_at?.toLocaleDateString();
+            const blocked = checkin.blocker?.length ? 1 : 0;
+            if(date)
+            {
+                blockedMap[date] = (blockedMap[date] ?? 0) + blocked;
+            }
+        }, []);
+
+        const dateRange = getDateRange(startDateParam, endDateParam ?? "");
+        let selectedUsersCount = userSlackIds.length;
+        if(selectedUsersCount === 0)
+        {
+            selectedUsersCount = teamUserCount;
+        }
+        const blockedUsersCount = dateRange.map(date => {
+            const blockedCount = blockedMap[date] ?? 0;
+
+            const blocked = blockedMap[date] !== 0
+              ? Math.floor((blockedCount / selectedUsersCount) * 100)
+              : 0;
+            return { date, blocked };
+          });
+          
+        return NextResponse.json({formattedCheckins, blockedUsersCount});
     
     } catch (error) {
         console.error("Error Detacted in dashboard GET Request", error);
