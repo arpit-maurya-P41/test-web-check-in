@@ -1,0 +1,45 @@
+---
+name: Main
+
+permissions:
+  id-token: write
+  contents: read
+  security-events: write
+  pull-requests: write
+
+on:
+  workflow_dispatch:
+
+  pull_request:
+    branches:
+      - "*"
+    paths-ignore:
+      - "**.md"
+      - ".github/**"
+
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "**.md"
+      - ".github/**"
+
+jobs:
+  tf-fmt-check:
+    uses: Particle41/github-actions/.github/workflows/tf-fmt-check.yml@main
+    with:
+      runs-on: ubuntu-latest
+      working-directory: terraform
+
+  build:
+    uses: Particle41/github-actions/.github/workflows/aws-ecr-push-image.yml@main
+    with:
+      runs-on: ubuntu-latest
+      aws-region: ${{ vars.AWS_REGION }}
+      parent-role-to-assume: ${{ vars.AWS_IAM_ROLE_ARN }}
+      role-to-assume: ${{ vars.AWS_IAM_ROLE_ARN_P41_INTERNALS }}
+      role-chaining: true
+      ecr-repo-name: p41-daily-status/web-app
+      context-dir: .
+      ecr-registry-type: private
+      image-artifact: image-private

@@ -1,4 +1,35 @@
+# daily-status-check-in-web-app
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+## Infra Prerequisites
+
+- Install the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html)
+
+```sh
+brew install awscli
+```
+
+- Install [terraform](https://developer.hashicorp.com/terraform)
+
+```sh
+brew tap hashicorp/tap
+brew install hashicorp/tap/terraform
+```
+
+- Install [terraform-docs](https://terraform-docs.io/)
+
+```sh
+brew install terraform-docs
+```
+
+- Install the [EditorConfig](https://editorconfig.org/) extension for your editor (e.g., [EditorConfig for VS Code](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig))
+
+- Copy the project `pre-commit` git hook to your local `.git`:
+
+```sh
+cp .git-hooks/pre-commit .git/hooks/pre-commit
+```
 
 ## Getting Started
 
