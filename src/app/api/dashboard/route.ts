@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/prisma";
+import { getDateRange } from "@/utils/dateUtils";
 
 export async function GET(req: NextRequest) {
     console.log("Detected GET request");
@@ -72,18 +73,6 @@ export async function GET(req: NextRequest) {
               }
             }
           });
-
-        function getDateRange(start: string, end: string) {
-            const result = [];
-            let current = new Date(start);
-            const endDate = new Date(end);
-        
-            while (current <= endDate) {
-                result.push(current.toLocaleDateString());
-                current.setDate(current.getDate() + 1);
-            }
-            return result;
-        }
 
         const blockedMap: Record<string, number> = {};
 
