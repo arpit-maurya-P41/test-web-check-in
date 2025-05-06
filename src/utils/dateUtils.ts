@@ -1,6 +1,6 @@
 export function getDateRange(start: string, end: string): string[] {
     const result: string[] = [];
-    let current = new Date(start);
+    const current = new Date(start);
     const endDate = new Date(end);
   
     while (current <= endDate) {

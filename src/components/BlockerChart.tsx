@@ -1,3 +1,4 @@
+import React from 'react';
 import { Line } from "@ant-design/charts";
 
 type BlockedUsersCount = {
@@ -9,7 +10,7 @@ const BlockerChart: React.FC<{ blockedUsersCount: BlockedUsersCount[] }> = ({blo
     
     const config = {
         data: blockedUsersCount,
-        xField: (d: any) => new Date(d.date),
+        xField: (d: BlockedUsersCount) => new Date(d.date),
         yField: 'blocked',
         style: {
             lineWidth: 2,
@@ -24,6 +25,5 @@ const BlockerChart: React.FC<{ blockedUsersCount: BlockedUsersCount[] }> = ({blo
         <Line {...config} />
     )
 }
-
 
 export default BlockerChart;
