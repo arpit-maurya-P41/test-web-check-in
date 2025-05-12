@@ -11,8 +11,8 @@ INSERT INTO roles (role_name, can_manage_teams, can_manage_users, can_view_repor
 
 -- Seed Data for Users
 INSERT INTO users (name, email, password, slack_user_id, role_id) VALUES 
-('Vivek', 'vivek@example.com', 'password123', 'D08F2KGSK8V', (SELECT id FROM roles WHERE role_name = 'Admin')),
-('Kajal', 'kajal@example.com', 'password123', 'D08H3T0DQE4', (SELECT id FROM roles WHERE role_name = 'QA'));
+('Vivek', 'vivek@example.com', 'password123', 'U08F2KGPG7P', (SELECT id FROM roles WHERE role_name = 'Admin')),
+('Kajal', 'kajal@example.com', 'password123', 'U08H3T0547J', (SELECT id FROM roles WHERE role_name = 'QA'));
 
 -- Seed Data for User & Team Mappings
 INSERT INTO user_team_mappings (user_id, team_id) VALUES
