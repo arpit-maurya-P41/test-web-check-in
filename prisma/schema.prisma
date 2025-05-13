@@ -84,11 +84,18 @@ model user_team_mappings {
 
 model users {
   id                 Int                  @id @default(autoincrement())
-  name               String               @db.VarChar(255)
+  first_name         String               @db.VarChar(255)
   email              String               @unique @db.VarChar(255)
   password           String               @db.VarChar(255)
   slack_user_id      String               @unique @db.VarChar(255)
   role_id            Int
+  check_in_time      DateTime             @default(now()) @db.Time(6)
+  check_out_time     DateTime             @default(now()) @db.Time(6)
+  timezone           String?
+  about_you          String?
+  location           String?
+  last_name          String?
+  title              String?
   checkins           checkins[]
   sessions           sessions[]
   user_team_mappings user_team_mappings[]

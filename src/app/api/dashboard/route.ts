@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
                 users: {
                     select: {
                         slack_user_id: true,
-                        name: true,
+                        first_name: true,
                         email: true,
                     },
                 },
@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
 
         const formattedCheckins = checkins.map((checkin) => ({
             date: checkin.created_at?.toLocaleDateString(),
-            user: checkin.users?.name || "Unknown",
+            user: checkin.users?.first_name || "Unknown",
             smartGoalsRate:
                 checkin.goals.length === 0
                     ? 0

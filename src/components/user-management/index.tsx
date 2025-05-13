@@ -31,7 +31,7 @@ type UserTeamMapping = {
 
 type User = {
     id: number;
-    name: string;
+    first_name: string;
     email: string;
     slack_user_id: string;
     password: string;
@@ -120,7 +120,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
         const count = users.length > 0 ? users[users.length - 1].id + 1 : 1;
         const newRow: User = {
             id: count,
-            name: "",
+            first_name: "",
             email: "",
             slack_user_id: "",
             password: "",
@@ -137,7 +137,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
     const handleEdit = (user: User) => {
         setEditingRow(user.id);
         form.setFieldsValue({
-            name: user.name,
+            name: user.first_name,
             email: user.email,
             slack_user_id: user.slack_user_id,
             password: user.password,
@@ -215,7 +215,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                         </Form.Item>
                     );
                 }
-                return record.name;
+                return record.first_name;
             },
         },
         {
