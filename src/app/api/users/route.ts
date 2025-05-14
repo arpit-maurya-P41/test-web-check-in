@@ -9,7 +9,8 @@ export async function GET() {
             orderBy: { id: "asc" },
             select: {
                 id: true,
-                name: true,
+                first_name: true,
+                last_name: true,
                 email: true,
                 slack_user_id: true,
                 password: true,
@@ -56,7 +57,8 @@ export async function POST(req: Request) {
             await prisma.users.update({
                 where: { id: body.id },
                 data: {
-                    name: body.name,
+                    first_name: body.name,
+                    last_name: body.name,
                     email: body.email,
                     slack_user_id: body.slack_user_id,
                     password: body.password,
@@ -77,7 +79,8 @@ export async function POST(req: Request) {
         else {
             const user = await prisma.users.create({
                 data: {
-                    name: body.name,
+                    first_name : body.name,
+                    last_name: body.name,
                     email: body.email,
                     slack_user_id: body.slack_user_id,
                     password: body.password,
