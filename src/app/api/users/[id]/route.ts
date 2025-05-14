@@ -12,7 +12,8 @@ export async function DELETE(req: Request) {
             orderBy: { id: "asc" },
             select: {
                 id: true,
-                name: true,
+                first_name: true,
+                last_name: true,
                 email: true,
                 slack_user_id: true,
                 password: true,
