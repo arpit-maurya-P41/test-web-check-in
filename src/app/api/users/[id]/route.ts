@@ -13,6 +13,7 @@ export async function DELETE(req: Request) {
             select: {
                 id: true,
                 first_name: true,
+                last_name: true,
                 email: true,
                 slack_user_id: true,
                 password: true,

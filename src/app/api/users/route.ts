@@ -10,6 +10,7 @@ export async function GET() {
             select: {
                 id: true,
                 first_name: true,
+                last_name: true,
                 email: true,
                 slack_user_id: true,
                 password: true,
@@ -55,6 +56,7 @@ export async function POST(req: Request) {
                 where: { id: body.id },
                 data: {
                     first_name: body.name,
+                    last_name: body.name,
                     email: body.email,
                     slack_user_id: body.slack_user_id,
                     password: body.password,
@@ -75,7 +77,8 @@ export async function POST(req: Request) {
         else {
             const user = await prisma.users.create({
                 data: {
-                    first_name: body.name,
+                    first_name : body.name,
+                    last_name: body.name,
                     email: body.email,
                     slack_user_id: body.slack_user_id,
                     password: body.password,

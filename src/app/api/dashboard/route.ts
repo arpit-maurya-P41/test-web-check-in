@@ -40,6 +40,7 @@ export async function GET(req: NextRequest) {
                     select: {
                         slack_user_id: true,
                         first_name: true,
+                        last_name: true,
                         email: true,
                     },
                 },
