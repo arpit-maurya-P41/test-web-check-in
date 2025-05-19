@@ -13,7 +13,6 @@ export async function GET() {
                 last_name: true,
                 email: true,
                 slack_user_id: true,
-                password: true,
                 user_team_mappings: {
                     select: {
                         team_id: true,
@@ -51,8 +50,6 @@ export async function POST(req: Request) {
             where: { id: body.id },
         });
 
-        console.log("Detected POST request", body);
-
         if (existingUser) {
             await prisma.users.update({
                 where: { id: body.id },
@@ -61,7 +58,6 @@ export async function POST(req: Request) {
                     last_name: body.name,
                     email: body.email,
                     slack_user_id: body.slack_user_id,
-                    password: body.password,
                     role_id: body.role_id
                 },
             });
@@ -83,7 +79,7 @@ export async function POST(req: Request) {
                     last_name: body.name,
                     email: body.email,
                     slack_user_id: body.slack_user_id,
-                    password: body.password,
+                    password: "Password123",
                     role_id: body.role_id
                 },
             });
@@ -94,34 +90,8 @@ export async function POST(req: Request) {
                 })),
             });
         }
-
-
-        const existingTeam = await prisma.teams.findUnique({
-            where: { id: body.id },
-        });
-
-        
-
-        if (existingTeam) {
-            await prisma.teams.update({
-                where: { id: body.id },
-                data: {
-                    name: body.name,
-                    slack_channel_id: body.slack_channel_id,
-                },
-            });
-        }
-        else {
-            await prisma.teams.create({
-                data: {
-                    name: body.name,
-                    slack_channel_id: body.slack_channel_id,
-                },
-            });
-        }
-
-        const teams = await prisma.teams.findMany({ orderBy: { id: "asc" } });
-        return NextResponse.json(teams);
+        const users = await prisma.users.findMany({orderBy: { id: "asc" }});
+        return NextResponse.json(users);
     } catch (error) {
         console.error("Error Detacted in dashboard POST Request", error);
         return NextResponse.json(

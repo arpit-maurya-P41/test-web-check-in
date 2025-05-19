@@ -74,3 +74,15 @@ CREATE TABLE sessions (
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     expires_at TIMESTAMP NOT NULL
 );
+
+ALTER TABLE users
+ADD COLUMN check_in_time VARCHAR(5) NOT NULL DEFAULT '10:00',
+ADD COLUMN check_out_time VARCHAR(5) NOT NULL DEFAULT '18:00',
+ADD COLUMN timezone TEXT,
+ADD COLUMN about_you TEXT,
+ADD COLUMN location TEXT,
+ADD COLUMN last_name TEXT,
+ADD COLUMN title TEXT;
+
+ALTER TABLE users 
+RENAME COLUMN name TO first_name;

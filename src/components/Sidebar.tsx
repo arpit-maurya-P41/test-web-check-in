@@ -1,5 +1,6 @@
 import React from "react";
 import {
+    EditOutlined,
     LineChartOutlined,
     TeamOutlined,
     UserSwitchOutlined,
@@ -71,6 +72,16 @@ const Sidebar: React.FC<Props> = ({ collapsed, canManageTeams, canManageUsers, c
         }
         sidebarItems.push(roleManagementItem);
     }
+    
+    const profileItem: DashboardItem = {
+        key: "profile",
+        icon: <EditOutlined />,
+        label: "Profile",
+    };
+    if (activeKey !== "profile") {
+        profileItem.onClick = () => (window.location.href = "/profile");
+    }
+    sidebarItems.push(profileItem);
 
     return (
         <Sider
