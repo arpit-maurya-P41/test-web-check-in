@@ -33,7 +33,7 @@ const Sidebar: React.FC<Props> = ({ collapsed, canManageTeams, canManageUsers, c
         label: "Dashboard",
     };
     if (activeKey !== "dashboard") {
-        dashboardItem.onClick = undefined; // Placeholder to avoid errors
+        dashboardItem.onClick = () => (window.location.href = "/dashboard");
     }
     sidebarItems.push(dashboardItem);
 
