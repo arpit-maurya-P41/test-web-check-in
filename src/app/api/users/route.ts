@@ -13,7 +13,6 @@ export async function GET() {
                 last_name: true,
                 email: true,
                 slack_user_id: true,
-                password: true,
                 user_team_mappings: {
                     select: {
                         team_id: true,
@@ -59,7 +58,6 @@ export async function POST(req: Request) {
                     last_name: body.name,
                     email: body.email,
                     slack_user_id: body.slack_user_id,
-                    password: body.password,
                     role_id: body.role_id
                 },
             });
@@ -81,7 +79,7 @@ export async function POST(req: Request) {
                     last_name: body.name,
                     email: body.email,
                     slack_user_id: body.slack_user_id,
-                    password: body.password,
+                    password: "Password123",
                     role_id: body.role_id
                 },
             });

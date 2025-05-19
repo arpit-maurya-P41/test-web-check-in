@@ -16,7 +16,6 @@ export async function DELETE(req: Request) {
                 last_name: true,
                 email: true,
                 slack_user_id: true,
-                password: true,
                 user_team_mappings: {
                     select: {
                         team_id: true,

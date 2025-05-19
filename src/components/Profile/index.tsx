@@ -1,5 +1,5 @@
 'use client'
-import { Button, Col, Form, Input, Layout, Row, Select, theme, TimePicker, Typography } from "antd";
+import { Button, Col, Form, Input, Layout, notification, Row, Select, theme, TimePicker, Typography } from "antd";
 import { roles } from "@prisma/client";
 import { LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
@@ -15,14 +15,16 @@ type Props = {
     roles: roles
 }
 
+type NotificationType = 'success' | 'info' | 'warning' | 'error';
+
 type FormValues = {
     FirstName: string;
     LastName: string;
     Title: string;
     Location: string;
     timezone: string;
-    checkIn: moment.Moment | null;
-    checkOut: moment.Moment | null;
+    checkIn: moment.Moment;
+    checkOut: moment.Moment;
     About: string;
 };
 
@@ -30,6 +32,7 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
     const [collapsed, setCollapsed] = useState<boolean>(false);
     const [form] = Form.useForm();
+    const [api, contextHolder] = notification.useNotification();
 
     const timezones = moment.tz.names().map(tz => {
         const offset = moment.tz(tz).format('Z');
@@ -51,16 +54,29 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                 LastName: user.last_name,
                 Location: user.location,
                 timezone: user.timezone,
-                checkIn: user.check_in_time ? moment(user.check_in_time) : null,
-                checkOut: user.check_out_time ? moment(user.check_out_time) : null,
+                checkIn: user.check_in_time ? moment(user.check_in_time, "HH:mm") : null,
+                checkOut: user.check_out_time ? moment(user.check_out_time, "HH:mm") : null,
                 About: user.about_you,
             });
         };
         fetchUser();
-    }, [userId]);
+    }, [userId, form]);
+
+    const showNotification = (type: NotificationType, message: string) => {
+        api[type]({
+          message
+        });
+      };
 
     const handleSave = async (values: FormValues) => {
+        
         try {
+            const { checkIn, checkOut, timezone } = values;
+            if (!checkIn || !checkOut || !timezone) {
+                throw new Error("Check-in, check-out, or timezone is missing.");
+            }
+            const checkInTime = checkIn?.format("HH:mm");
+            const checkOutTime = checkOut?.format("HH:mm");
             const response = await fetch(`/api/users/${userId}`, {
                 method: "POST",
                 headers: {
@@ -72,8 +88,8 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                     title: values.Title,
                     location: values.Location,
                     timezone: values.timezone,
-                    check_in_time: values.checkIn,
-                    check_out_time: values.checkOut,
+                    check_in_time: checkInTime,
+                    check_out_time: checkOutTime,
                     about_you: values.About,
                 }),
             });
@@ -81,9 +97,10 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
             const data = await response.json();
             if (!response.ok) {
                 console.error("Failed to update user:", data.error);
+                showNotification('error', 'Error while saving data');
                 return;
             }
-            form.resetFields();
+            showNotification('success', 'Data Updated Successfully');
         } catch (error) {
             console.error("Error submitting form:", error);
         }
@@ -140,6 +157,7 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                         gap: 16,
                     }}
                 >
+                    {contextHolder}
                     <Title level={4}>Profile</Title>
                     <Form layout="vertical" form={form} onFinish={handleSave}>
                         <Row gutter={16}>
@@ -215,7 +233,11 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                                             if (!value || !checkOut) {
                                                 return Promise.resolve();
                                             }
-                                            if (value.isBefore(checkOut)) {
+
+                                            const checkInTime = moment(value, 'HH:mm');
+                                            const checkOutTime = moment(checkOut, 'HH:mm');
+
+                                            if (checkInTime.isBefore(checkOutTime)) {
                                                 return Promise.resolve();
                                             }
                                             return Promise.reject(new Error('Check-in time must be before check-out time!'));
@@ -237,7 +259,10 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                                                 if (!value || !checkIn) {
                                                     return Promise.resolve();
                                                 }
-                                                if (value.isAfter(checkIn)) {
+                                                const checkInTime = moment(checkIn, 'HH:mm');
+                                                const checkOutTime = moment(value, 'HH:mm');
+
+                                                if (checkOutTime.isAfter(checkInTime)) {
                                                     return Promise.resolve();
                                                 }
                                                 return Promise.reject(new Error('Check-out time must be after check-in time!'));

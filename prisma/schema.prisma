@@ -94,8 +94,8 @@ model users {
   location           String?
   last_name          String?
   title              String?
-  check_in_time      DateTime             @default(dbgenerated("'10:00:00'::time without time zone")) @db.Time(6)
-  check_out_time     DateTime             @default(dbgenerated("'18:00:00'::time without time zone")) @db.Time(6)
+  check_in_time      String               @default("10:00")
+  check_out_time     String               @default("18:00")
   checkins           checkins[]
   sessions           sessions[]
   user_team_mappings user_team_mappings[]

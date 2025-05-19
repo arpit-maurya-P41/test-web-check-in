@@ -34,7 +34,6 @@ type User = {
     first_name: string;
     email: string;
     slack_user_id: string;
-    password: string;
     user_team_mappings: UserTeamMapping[];
     roles: Role;
 };
@@ -123,7 +122,6 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
             first_name: "",
             email: "",
             slack_user_id: "",
-            password: "",
             roles: {
                 id: 0,
                 role_name: "",
@@ -140,9 +138,8 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
             name: user.first_name,
             email: user.email,
             slack_user_id: user.slack_user_id,
-            password: user.password,
             team_ids: user.user_team_mappings.map((t) => t.team_id),
-            role_id: user.roles.id,
+            role_id: user.roles.id != 0 ? user.roles.id : undefined,
         });
     };
 
@@ -150,20 +147,11 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
         try {
             const values = await form.validateFields();
 
-            console.log("values", values);
-
-            console.log("teams ", values.team_ids);
-            console.log("user email ", values.email);
-            console.log("user name ", values.name);
-
-            console.log("userId ", userId);
-
             const updatedUser = {
                 id: userId,
                 name: values.name,
                 email: values.email,
                 slack_user_id: values.slack_user_id,
-                password: values.password,
                 user_team_mappings: values.team_ids,
                 role_id: values.role_id,
             };
@@ -260,29 +248,6 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
             },
         },
         {
-            title: "Password",
-            dataIndex: "password",
-            render: (_: unknown, record: User) => {
-                if (editingRow === record.id) {
-                    return (
-                        <Form.Item
-                            name="password"
-                            rules={[
-                                { required: true, message: "Password is required" },
-                                { min: 6, message: "Minimum 6 characters" },
-                                { max: 20, message: "Maximum 20 characters" },
-                                { pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,}$/, message: "Password must contain at least one uppercase letter, one lowercase letter, and one number" },
-                            ]}
-                            style={{ margin: 0 }}
-                        >
-                            <Input />
-                        </Form.Item>
-                    );
-                }
-                return record.password;
-            },
-        },
-        {
             title: "Role",
             dataIndex: "roles",
             render: (_: unknown, record: User) => {
@@ -291,7 +256,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                         <Form.Item
                             name="role_id"
                             rules={[
-                                { required: true, message: "Select at least one team" },
+                                { required: true, message: "Select at least one role" },
                             ]}
                             style={{ margin: 0 }}
                         >
@@ -299,7 +264,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                                 showSearch={false}
                                 allowClear
                                 style={{ width: "100%" }}
-                                placeholder="Select teams"
+                                placeholder="Select role"
                             >
                                 {rolesData.map((role) => (
                                     <Option key={role.id} value={role.id}>
