@@ -95,13 +95,37 @@ export async function GET(req: NextRequest) {
         const blockedUsersCount = dateRange.map(date => {
             const blockedCount = blockedMap[date] ?? 0;
 
-            const blocked = blockedMap[date] !== 0
+            const percentage = blockedMap[date] !== 0
               ? Math.floor((blockedCount / selectedUsersCount) * 100)
               : 0;
-            return { date, blocked };
+            return { date, percentage };
+          });
+
+          const checkinsPerDate: Record<string, Set<string>> = {};
+
+          checkins.forEach((checkin) => {
+              const date = checkin.created_at?.toLocaleDateString();
+              if (date) {
+                  if (!checkinsPerDate[date]) {
+                      checkinsPerDate[date] = new Set();
+                  }
+                  checkinsPerDate[date].add(checkin.slack_user_id);
+              }
           });
           
-        return NextResponse.json({formattedCheckins, blockedUsersCount});
+          const checkinUserPercentageByDate = dateRange.map((date) => {
+            const userCount = checkinsPerDate[date]?.size || 0;
+            const percentage = selectedUsersCount > 0
+                ? Math.floor((userCount / selectedUsersCount) * 100)
+                : 0;
+            
+            return {
+                date,
+                percentage
+            };
+        });
+          
+        return NextResponse.json({formattedCheckins, blockedUsersCount, checkinUserPercentageByDate});
     
     } catch (error) {
         console.error("Error Detacted in dashboard GET Request", error);

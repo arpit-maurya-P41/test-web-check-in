@@ -25,7 +25,7 @@ import { roles, teams, users } from "@prisma/client";
 import { logoutUser } from "@/app/actions/authActions";
 
 import { Heatmap } from "@ant-design/charts";
-import BlockerChart from "./BlockerChart";
+import PercentageLineChart from "./PercentageLineChart";
 const { Title } = Typography;
 
 const { Option } = Select;
@@ -46,9 +46,9 @@ type DashboardData = {
     smartGoalsRate: number;
 };
 
-type BlockedUsersCount = {
+type PercentageData = {
     date: string;
-    blocked: number;
+    percentage: number;
 };
 
 const Dashboard: React.FC<Props> = ({ roles, teams, users }) => {
@@ -60,7 +60,8 @@ const Dashboard: React.FC<Props> = ({ roles, teams, users }) => {
     const [dates, setDates] = useState<[Dayjs, Dayjs]>(getDefaultDates());
     const [selectedTeams, setSelectedTeams] = useState<string>(teams[0]?.slack_channel_id);
     const [selectedUsers, setSelectedUsers] = useState([]);
-    const [blockedUsersData, setBlockedUsersData] = useState<BlockedUsersCount[]>([]);
+    const [blockedData, setBlockedData] = useState<PercentageData[]>([]);
+    const [checkinData, setCheckinData] = useState<PercentageData[]>([]);
 
     const handleTeamChange = (value: string) => setSelectedTeams(value ?? teams[0]?.slack_channel_id);
     const handleUserChange = (value: never[]) => setSelectedUsers(value);
@@ -117,7 +118,8 @@ const Dashboard: React.FC<Props> = ({ roles, teams, users }) => {
 
             const data = await dashboardRes.json();
             setDashboardData(JSON.parse(JSON.stringify(data.formattedCheckins)));
-            setBlockedUsersData(JSON.parse(JSON.stringify(data.blockedUsersCount)));
+            setBlockedData(JSON.parse(JSON.stringify(data.blockedUsersCount)));
+            setCheckinData(JSON.parse(JSON.stringify(data.checkinUserPercentageByDate)));
             setLoading(false);
         };
 
@@ -257,12 +259,24 @@ const Dashboard: React.FC<Props> = ({ roles, teams, users }) => {
                                     span={24}
                                     style={{ padding: 8 }}>
                                     <Heatmap {...config} />
+                                    <Title level={2}>Blockers</Title>
+                                    <PercentageLineChart
+                                    title="Blocked Users Percentage"
+                                    data={blockedData}
+                                    yLabel="Blocked Users (%)"
+                                    color="#f5222d"
+                                    />
+                                    <Title level={2}>Participation</Title>
+                                    <PercentageLineChart
+                                        title="Check-in Users Percentage"
+                                        data={checkinData}
+                                        yLabel="Check-in Users (%)"
+                                        color="#52c41a"
+                                    />
                                 </Col>
                             </Row>
                         </>
                     )}
-                    <Title level={2}>Blockers</Title>
-                    <BlockerChart blockedUsersCount={blockedUsersData} />
                 </Content>
             </Layout>
         </Layout>
