@@ -1,7 +1,6 @@
 region         = "us-east-1"
 bucket         = "p41-tfstate"
 key            = "p41-internals-dev/daily-status-check-in-web-app/us-east-1/terraform.tfstate"
-encrypt        = true
 use_lockfile   = true
 encrypt        = true
 kms_key_id     = "alias/p41-tfstate"
