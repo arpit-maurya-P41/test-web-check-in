@@ -6,6 +6,7 @@ permissions:
   contents: read
   security-events: write
   pull-requests: write
+  actions: read
 
 on:
   workflow_dispatch:
@@ -20,6 +21,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - "v*"
     paths-ignore:
       - "**.md"
       - ".github/**"
@@ -43,3 +46,104 @@ jobs:
       context-dir: .
       ecr-registry-type: private
       image-artifact: image-private
+
+  update-dev:
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - name: Get image URI
+        id: image-uri
+        uses: Particle41/github-actions/.github/actions/artifact-as-value@main
+        with:
+          key: image-private
+
+      - name: Update config parameter
+        uses: Particle41/github-actions/.github/actions/aws-ssm-put-param@main
+        with:
+          aws-region: ${{ vars.AWS_REGION }}
+          parent-role-to-assume: ${{ vars.AWS_IAM_ROLE_ARN }}
+          role-to-assume: ${{ vars.AWS_IAM_ROLE_ARN_P41_INTERNALS }}
+          role-chaining: true
+          parameter-type: String
+          parameter-name: ${{ vars.IMAGE_PARAMETER_NAME }}
+          parameter-value: ${{ steps.image-uri.outputs.value }}-arm64
+
+  update-live:
+    if: ${{ github.event_name == 'push' && github.ref_type == 'tag' }}
+
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment: live
+
+    steps:
+      - name: Get image URI
+        id: image-uri
+        uses: Particle41/github-actions/.github/actions/artifact-as-value@main
+        with:
+          key: image-private
+
+      - name: Update config parameter
+        uses: Particle41/github-actions/.github/actions/aws-ssm-put-param@main
+        with:
+          aws-region: ${{ vars.AWS_REGION }}
+          parent-role-to-assume: ${{ vars.AWS_IAM_ROLE_ARN }}
+          role-to-assume: ${{ vars.AWS_IAM_ROLE_ARN_P41_INTERNALS }}
+          role-chaining: true
+          parameter-type: String
+          parameter-name: ${{ vars.IMAGE_PARAMETER_NAME }}
+          parameter-value: ${{ steps.image-uri.outputs.value }}-arm64
+
+  tf-plan-dev:
+    needs: [tf-fmt-check, update-dev]
+    uses: Particle41/github-actions/.github/workflows/tf-plan.yml@main
+    with:
+      runs-on: ubuntu-latest
+      environment: dev
+      aws-region: ${{ vars.AWS_REGION }}
+      role-to-assume: ${{ vars.AWS_IAM_ROLE_ARN }}
+      working-directory: terraform/root/dev
+      tfbackend: dev.s3.tfbackend
+      tfplan: dev.tfplan
+      # checkov-skip-check: CKV_AWS_117,CKV_AWS_225,CKV_AWS_338
+
+  tf-apply-dev:
+    needs: [tf-plan-dev]
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+    uses: Particle41/github-actions/.github/workflows/tf-apply.yml@main
+    with:
+      runs-on: ubuntu-latest
+      environment: dev
+      aws-region: ${{ vars.AWS_REGION }}
+      role-to-assume: ${{ vars.AWS_IAM_ROLE_ARN }}
+      working-directory: terraform/root/dev
+      tfbackend: dev.s3.tfbackend
+      tfplan: ${{ needs.tf-plan-dev.outputs.tfplan }}
+
+  tf-plan-live:
+    needs: [tf-fmt-check, update-live]
+    uses: Particle41/github-actions/.github/workflows/tf-plan.yml@main
+    with:
+      runs-on: ubuntu-latest
+      environment: live
+      aws-region: ${{ vars.AWS_REGION }}
+      role-to-assume: ${{ vars.AWS_IAM_ROLE_ARN }}
+      working-directory: terraform/root/live
+      tfbackend: live.s3.tfbackend
+      tfplan: live.tfplan
+      # checkov-skip-check: CKV_AWS_117,CKV_AWS_225,CKV_AWS_338
+
+  tf-apply-live:
+    needs: [tf-plan-live]
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+    uses: Particle41/github-actions/.github/workflows/tf-apply.yml@main
+    with:
+      runs-on: ubuntu-latest
+      environment: live
+      aws-region: ${{ vars.AWS_REGION }}
+      role-to-assume: ${{ vars.AWS_IAM_ROLE_ARN }}
+      working-directory: terraform/root/live
+      tfbackend: live.s3.tfbackend
+      tfplan: ${{ needs.tf-plan-live.outputs.tfplan }}
