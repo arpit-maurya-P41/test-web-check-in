@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { logoutUser } from "@/app/actions/authActions";
 import Sidebar from "../Sidebar";
 import moment from 'moment-timezone';
+import { convertToUTC, convertUtcTimeToLocal } from "@/utils/dateUtils";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -54,8 +55,8 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                 LastName: user.last_name,
                 Location: user.location,
                 timezone: user.timezone,
-                checkIn: user.check_in_time ? moment(user.check_in_time, "HH:mm") : null,
-                checkOut: user.check_out_time ? moment(user.check_out_time, "HH:mm") : null,
+                checkIn:  convertUtcTimeToLocal(user.check_in_time),
+                checkOut: convertUtcTimeToLocal(user.check_out_time),
                 About: user.about_you,
             });
         };
@@ -75,8 +76,9 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
             if (!checkIn || !checkOut || !timezone) {
                 throw new Error("Check-in, check-out, or timezone is missing.");
             }
-            const checkInTime = checkIn?.format("HH:mm");
-            const checkOutTime = checkOut?.format("HH:mm");
+            const checkInTime = convertToUTC(checkIn, timezone);
+            const checkOutTime = convertToUTC(checkOut, timezone);
+
             const response = await fetch(`/api/users/${userId}`, {
                 method: "POST",
                 headers: {
