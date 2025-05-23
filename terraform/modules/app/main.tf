@@ -24,6 +24,16 @@ data "aws_kms_alias" "default" {
   name = "alias/${local.kms_key_name}"
 }
 
+data "aws_ssm_parameter" "database_url" {
+  name            = "/${local.name}/database_url"
+  with_decryption = true
+}
+
+data "aws_ssm_parameter" "auth_secret" {
+  name            = "/${local.name}/auth_secret"
+  with_decryption = true
+}
+
 module "lambda_base" {
   source = "../lambda-base"
   name   = local.name
@@ -47,7 +57,8 @@ module "lambda" {
   kms_key_arn = data.aws_kms_alias.default.target_key_arn
 
   lambda_env = {
-    ## TODO
+    DATABASE_URL = data.aws_ssm_parameter.database_url.value
+    AUTH_SECRET  = data.aws_ssm_parameter.auth_secret.value
   }
 }
 
