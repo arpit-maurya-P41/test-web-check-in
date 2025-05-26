@@ -55,6 +55,7 @@ export async function GET(req: NextRequest) {
                 created_at: "asc",
             },
         });
+        const dateRange = getDateRange(startDateParam, endDateParam ?? "");
 
         const formattedCheckins = checkins.map((checkin) => ({
             date: checkin.created_at?.toLocaleDateString(),
@@ -62,10 +63,31 @@ export async function GET(req: NextRequest) {
             smartGoalsRate:
                 checkin.goals.length === 0
                     ? 0
-                    : (checkin.goals.filter((goal) => goal.is_smart).length /
+                    : Math.floor((checkin.goals.filter((goal) => goal.is_smart).length /
                           checkin.goals.length) *
-                      100,
+                      100),
         }));
+
+        const uniqueUsers = [...new Set(formattedCheckins.map((c) => c.user))];
+        const filledCheckins = [];
+
+        for (const date of dateRange) {
+            for (const user of uniqueUsers) {
+                const existing = formattedCheckins.find(
+                    (c) => c.date === date && c.user === user
+                );
+
+                filledCheckins.push(
+                    existing || {
+                        date,
+                        user,
+                        smartGoalsRate: null, 
+                    }
+                );
+            }
+        }
+
+        const smartCheckins = formattedCheckins;
 
         const teamUserCount = await prisma.user_team_mappings.count({
             where: {
@@ -86,7 +108,6 @@ export async function GET(req: NextRequest) {
             }
         }, []);
 
-        const dateRange = getDateRange(startDateParam, endDateParam ?? "");
         let selectedUsersCount = userSlackIds.length;
         if(selectedUsersCount === 0)
         {
@@ -125,7 +146,7 @@ export async function GET(req: NextRequest) {
             };
         });
           
-        return NextResponse.json({formattedCheckins, blockedUsersCount, checkinUserPercentageByDate});
+        return NextResponse.json({smartCheckins, blockedUsersCount, checkinUserPercentageByDate});
     
     } catch (error) {
         console.error("Error Detacted in dashboard GET Request", error);

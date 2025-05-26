@@ -1,5 +1,6 @@
 import React from "react";
 import {
+    CheckCircleOutlined,
     EditOutlined,
     LineChartOutlined,
     TeamOutlined,
@@ -36,6 +37,16 @@ const Sidebar: React.FC<Props> = ({ collapsed, canManageTeams, canManageUsers, c
         dashboardItem.onClick = () => (window.location.href = "/dashboard");
     }
     sidebarItems.push(dashboardItem);
+
+    const checkIns: DashboardItem = {
+        key: "checkins",
+        icon: <CheckCircleOutlined />,
+        label: "CheckIns",
+    };
+    if (activeKey !== "checkins") {
+        checkIns.onClick = () => (window.location.href = "/checkins");
+    }
+    sidebarItems.push(checkIns);
 
     if (canManageTeams) {
         const teamManagementItem: DashboardItem = {

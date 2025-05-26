@@ -14,7 +14,6 @@ type Props = {
 };
 
 const PercentageLineChart: React.FC<Props> = ({ title, data, yLabel = 'Percentage (%)', color }) => {
-  console.log(data);
   const config = {
     data,
     xField: (d: PercentageDataPoint) => new Date(d.date),
@@ -31,7 +30,6 @@ const PercentageLineChart: React.FC<Props> = ({ title, data, yLabel = 'Percentag
       y: { title: yLabel },
       x: { title: 'Date' }
     },
-    annotations: [],
     smooth: true,
     title: {
       visible: true,

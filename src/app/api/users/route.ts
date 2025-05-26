@@ -54,8 +54,8 @@ export async function POST(req: Request) {
             await prisma.users.update({
                 where: { id: body.id },
                 data: {
-                    first_name: body.name,
-                    last_name: body.name,
+                    first_name: body.first_name,
+                    last_name: body.last_name,
                     email: body.email,
                     slack_user_id: body.slack_user_id,
                     role_id: body.role_id
@@ -75,8 +75,8 @@ export async function POST(req: Request) {
         else {
             const user = await prisma.users.create({
                 data: {
-                    first_name : body.name,
-                    last_name: body.name,
+                    first_name : body.first_name,
+                    last_name: body.last_name,
                     email: body.email,
                     slack_user_id: body.slack_user_id,
                     password: "Password123",

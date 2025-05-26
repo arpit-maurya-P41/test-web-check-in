@@ -240,14 +240,18 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
                         </Button>
                         <Form form={form} component={false}>
                             <Table
+                                rowKey="id"
                                 bordered
                                 dataSource={dataSource}
                                 columns={mergedColumns}
                                 rowClassName="editable-row"
-                                pagination={{ pageSize: 5 }}
+                                pagination={{ pageSize: 10 }}
                                 components={{
                                     body: {
-                                        cell: ({ children, ...restProps }) => <td {...restProps}>{children}</td>,
+                                        cell: (props) => {
+                                            const { inputType, editing, dataIndex, title, record, index, ...restProps } = props;
+                                            return <td {...restProps}>{props.children}</td>;
+                                          },
                                     },
                                 }}
                             />
