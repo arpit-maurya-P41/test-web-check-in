@@ -10,7 +10,8 @@ locals {
 }
 
 locals {
-  name            = "p41-daily-status-web"
+  project_name    = "p41-daily-status"
+  app_name        = "${local.project_name}-web"
   image_parameter = "/images/p41-daily-status/web-app"
   kms_policy_name = "kms-default-readonly-${local.region}"
   kms_key_name    = "p41-default"
@@ -24,19 +25,27 @@ data "aws_kms_alias" "default" {
   name = "alias/${local.kms_key_name}"
 }
 
-data "aws_ssm_parameter" "database_url" {
-  name            = "/${local.name}/database_url"
+data "aws_ssm_parameter" "auth_secret" {
+  name            = "/${local.project_name}/auth-secret"
   with_decryption = true
 }
 
-data "aws_ssm_parameter" "auth_secret" {
-  name            = "/${local.name}/auth_secret"
-  with_decryption = true
+data "aws_secretsmanager_secret" "db_credentials" {
+  name = "/${local.project_name}/db"
+}
+
+data "aws_secretsmanager_secret_version" "db_credentials" {
+  secret_id = data.aws_secretsmanager_secret.db_credentials.id
+}
+
+locals {
+  db_credentials       = jsondecode(data.aws_secretsmanager_secret_version.db_credentials.secret_string)
+  db_connection_string = "postgresql://${local.db_credentials.DB_USER}:${local.db_credentials.DB_PASSWORD}@${local.db_credentials.DB_HOST}:${local.db_credentials.DB_PORT}/${local.db_credentials.DB_NAME}"
 }
 
 module "lambda_base" {
   source = "../lambda-base"
-  name   = local.name
+  name   = local.app_name
 }
 
 resource "aws_iam_role_policy_attachment" "kms_default" {
@@ -48,7 +57,7 @@ module "lambda" {
   depends_on = [aws_iam_role_policy_attachment.kms_default]
 
   source          = "../lambda"
-  name            = local.name
+  name            = local.app_name
   image_parameter = local.image_parameter
 
   iam_role_arn   = module.lambda_base.iam_role.arn
@@ -57,7 +66,7 @@ module "lambda" {
   kms_key_arn = data.aws_kms_alias.default.target_key_arn
 
   lambda_env = {
-    DATABASE_URL = data.aws_ssm_parameter.database_url.value
+    DATABASE_URL = local.db_connection_string
     AUTH_SECRET  = data.aws_ssm_parameter.auth_secret.value
   }
 }
