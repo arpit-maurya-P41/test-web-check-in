@@ -249,7 +249,7 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
                                 components={{
                                     body: {
                                         cell: (props) => {
-                                            const { inputType, editing, dataIndex, title, record, index, ...restProps } = props;
+                                            const {  ...restProps } = props;
                                             return <td {...restProps}>{props.children}</td>;
                                           },
                                     },
