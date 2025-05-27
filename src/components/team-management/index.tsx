@@ -6,6 +6,7 @@ import { Button, Layout, theme, Table, Input, Popconfirm, Form, Space, Typograph
 import { roles, teams } from "@prisma/client";
 import Sidebar from "../Sidebar";
 import { logoutUser } from "@/app/actions/authActions";
+import './teams.css'
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -196,30 +197,22 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
                 activeKey="teamManagement"
             />
             <Layout>
-                <Header style={{ padding: 0, background: colorBgContainer }}>
+            <Header style={{ padding: 0, background: colorBgContainer }}>
+                <div className="header-container">
                     <Button
-                        type="text"
-                        icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                        onClick={() => setCollapsed(!collapsed)}
-                        style={{
-                            fontSize: "16px",
-                            width: 64,
-                            height: 64,
-                        }}
+                    type="text"
+                    icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                    onClick={() => setCollapsed(!collapsed)}
+                    className="header-button"
                     />
-
                     <Button
-                        type="text"
-                        icon={<LogoutOutlined />}
-                        onClick={() => logoutUser()}
-                        style={{
-                            fontSize: "16px",
-                            width: 64,
-                            height: 64,
-                            position: "absolute",
-                            right: 0,
-                        }}
+                    type="text"
+                    icon={<LogoutOutlined />}
+                    onClick={() => logoutUser()}
+                    className="header-button logout-button"
+                    aria-label="Logout"
                     />
+                </div>
                 </Header>
                 <Content
                     style={{
@@ -238,24 +231,27 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
                         <Button onClick={handleAdd} type="primary" style={{ marginBottom: 16 }}>
                             Add new Team
                         </Button>
-                        <Form form={form} component={false}>
-                            <Table
-                                rowKey="id"
-                                bordered
-                                dataSource={dataSource}
-                                columns={mergedColumns}
-                                rowClassName="editable-row"
-                                pagination={{ pageSize: 10 }}
-                                components={{
-                                    body: {
-                                        cell: (props) => {
-                                            const {  ...restProps } = props;
-                                            return <td {...restProps}>{props.children}</td>;
-                                          },
-                                    },
-                                }}
-                            />
-                        </Form>
+                    <div className="table-wrapper" style={{ width: "100%" }}>
+                    <Form form={form} component={false}>
+                        <Table
+                        rowKey="id"
+                        bordered
+                        dataSource={dataSource}
+                        columns={mergedColumns}
+                        rowClassName="editable-row"
+                        pagination={{ pageSize: 10 }}
+                        scroll={{ x: 'max-content' }}
+                        components={{
+                            body: {
+                            cell: (props) => {
+                                const { ...restProps } = props;
+                                return <td {...restProps}>{props.children}</td>;
+                            },
+                            },
+                        }}
+                        />
+                    </Form>
+                    </div>
                     </div>
                 </Content>
             </Layout>

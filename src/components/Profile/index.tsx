@@ -56,8 +56,8 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                 LastName: user.last_name,
                 Location: user.location,
                 timezone: user.timezone,
-                checkIn:  convertUtcTimeToLocal(user.check_in_time),
-                checkOut: convertUtcTimeToLocal(user.check_out_time),
+                checkIn:  convertUtcTimeToLocal(user.check_in_time, user.timezone),
+                checkOut: convertUtcTimeToLocal(user.check_out_time, user.timezone),
                 About: user.about_you,
             });
         };
@@ -233,18 +233,20 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                                     ({ getFieldValue }) => ({
                                         validator(_, value) {
                                             const checkOut = getFieldValue('checkOut');
-                                            if (!value || !checkOut) {
-                                                return Promise.resolve();
-                                            }
-
+                                            if (!value || !checkOut) return Promise.resolve();
+                                        
                                             const checkInTime = moment(value, 'HH:mm');
                                             const checkOutTime = moment(checkOut, 'HH:mm');
-
-                                            if (checkInTime.isBefore(checkOutTime)) {
-                                                return Promise.resolve();
+                                        
+                                            // If checkout is earlier than checkin, assume next day
+                                            if (checkOutTime.isSameOrBefore(checkInTime)) {
+                                              checkOutTime.add(1, 'day');
                                             }
-                                            return Promise.reject(new Error('Check-in time must be before check-out time!'));
-                                        },
+                                        
+                                            return checkInTime.isBefore(checkOutTime)
+                                              ? Promise.resolve()
+                                              : Promise.reject(new Error('Check-in time must be before check-out time!'));
+                                          },
                                     }),
                                     ]}
                                 >
@@ -259,17 +261,19 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                                         ({ getFieldValue }) => ({
                                             validator(_, value) {
                                                 const checkIn = getFieldValue('checkIn');
-                                                if (!value || !checkIn) {
-                                                    return Promise.resolve();
-                                                }
-                                                const checkInTime = moment(checkIn, 'HH:mm');
+
+                                                if (!value || !checkIn) return Promise.resolve();
+
                                                 const checkOutTime = moment(value, 'HH:mm');
+                                                const checkInTime = moment(checkIn, 'HH:mm');
 
                                                 if (checkOutTime.isAfter(checkInTime)) {
                                                     return Promise.resolve();
                                                 }
+
                                                 return Promise.reject(new Error('Check-out time must be after check-in time!'));
-                                            },
+
+                                              },
                                         })
                                     ]}
                                 >
