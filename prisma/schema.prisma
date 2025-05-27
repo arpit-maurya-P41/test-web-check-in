@@ -83,21 +83,34 @@ model user_team_mappings {
 }
 
 model users {
-  id                 Int                  @id @default(autoincrement())
-  first_name         String               @db.VarChar(255)
-  email              String               @unique @db.VarChar(255)
-  password           String               @db.VarChar(255)
-  slack_user_id      String               @unique @db.VarChar(255)
-  role_id            Int
-  timezone           String?
-  about_you          String?
-  location           String?
-  last_name          String?
-  title              String?
-  check_in_time      DateTime             @default(dbgenerated("'10:00:00'::time without time zone")) @db.Time(6)
-  check_out_time     DateTime             @default(dbgenerated("'18:00:00'::time without time zone")) @db.Time(6)
-  checkins           checkins[]
-  sessions           sessions[]
-  user_team_mappings user_team_mappings[]
-  roles              roles                @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id                  Int                   @id @default(autoincrement())
+  first_name          String                @db.VarChar(255)
+  email               String                @unique @db.VarChar(255)
+  password            String                @db.VarChar(255)
+  slack_user_id       String                @unique @db.VarChar(255)
+  role_id             Int
+  timezone            String?
+  about_you           String?
+  location            String?
+  last_name           String?
+  title               String?
+  check_in_time       DateTime              @default(now()) @db.Time(6)
+  check_out_time      DateTime              @default(now()) @db.Time(6)
+  checkins            checkins[]
+  sessions            sessions[]
+  user_team_mappings  user_team_mappings[]
+  roles               roles                 @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users_notifications users_notifications[]
+}
+
+model users_notifications {
+  id                  Int       @id @default(autoincrement())
+  user_id             Int
+  notification_type   String    @db.VarChar(255)
+  notification_status String    @default("pending") @db.VarChar(255)
+  retry_count         Int       @default(0)
+  error_message       String?   @db.VarChar(255)
+  created_at          DateTime? @default(now()) @db.Timestamp(6)
+  updated_at          DateTime? @default(now()) @db.Timestamp(6)
+  users               users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
