@@ -239,7 +239,7 @@ const Dashboard: React.FC<Props> = ({ roles, teams, users }) => {
                                             placeholder="Select Users"
                                             value={selectedUsers}
                                             onChange={handleUserChange}
-                                            style={{ minWidth: 240 }}>
+                                            style={{ minWidth: 240, maxWidth: 500 }}>
                                             {users.map((user) => (
                                                 <Option
                                                     key={user.id}
