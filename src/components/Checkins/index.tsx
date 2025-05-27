@@ -63,7 +63,7 @@ const Checkins: React.FC<Props> = ({ roles, teams }) => {
     const groupedByDate = (goalsSummary || []).reduce(
         (acc: Record<string, Record<string, Goal[]>>, entry) => {
           const date = new Date(entry.created_at).toLocaleDateString();
-          const fullName = `${entry.users.first_name} ${entry.users.last_name}`;
+          const fullName = `${entry.users.first_name} ${entry.users.last_name ?? ""}`;
 
           if (!acc[date]) acc[date] = {};
           if (!acc[date][fullName]) acc[date][fullName] = [];

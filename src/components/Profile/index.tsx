@@ -62,7 +62,7 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
             });
         };
         fetchUser();
-    }, [userId, form]);
+    }, []);
 
     const showNotification = (type: NotificationType, message: string) => {
         api[type]({
