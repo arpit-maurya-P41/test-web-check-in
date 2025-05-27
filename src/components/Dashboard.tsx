@@ -79,10 +79,17 @@ const Dashboard: React.FC<Props> = ({ roles, teams, users }) => {
         style: { inset: 0.5 },
         scale: {
             size: { range: [0, 100] },
-            color: { range: ["#62bb45", "#b1d34a", "#f15b3f", "#ffc20c", "#f58220"] },
+            color: { 
+                type: 'threshold',
+                domain: [0, 20, 40, 60, 80, 100],
+                range: ["#7a0000", "#b80000", "#e63946", "#ee6c6c", "#f4a6a6", "#fde0e0"],
+                unknown: '#D3D3D3',
+            },
         },
         label: {
-            text: (d: DashboardData) => d.smartGoalsRate,
+            text: (d: DashboardData) => d.smartGoalsRate === null
+            ? ''
+            : `${d.smartGoalsRate}`,
             position: "inside",
             style: {
                 fill: "#fff",
@@ -117,7 +124,7 @@ const Dashboard: React.FC<Props> = ({ roles, teams, users }) => {
             ]);
 
             const data = await dashboardRes.json();
-            setDashboardData(JSON.parse(JSON.stringify(data.formattedCheckins)));
+            setDashboardData(JSON.parse(JSON.stringify(data.smartCheckins)));
             setBlockedData(JSON.parse(JSON.stringify(data.blockedUsersCount)));
             setCheckinData(JSON.parse(JSON.stringify(data.checkinUserPercentageByDate)));
             setLoading(false);

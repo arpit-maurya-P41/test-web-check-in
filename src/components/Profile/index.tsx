@@ -34,6 +34,7 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
     const [collapsed, setCollapsed] = useState<boolean>(false);
     const [form] = Form.useForm();
     const [api, contextHolder] = notification.useNotification();
+    const format = 'HH:mm';
 
     const timezones = moment.tz.names().map(tz => {
         const offset = moment.tz(tz).format('Z');
@@ -247,7 +248,7 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                                     }),
                                     ]}
                                 >
-                                    <TimePicker format="HH:mm" minuteStep={15} />
+                                    <TimePicker format={format} minuteStep={15} />
                                 </Form.Item>
                             </Col>
                             <Col xs={24} sm={12} md={8}>
@@ -272,7 +273,7 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                                         })
                                     ]}
                                 >
-                                    <TimePicker format="HH:mm" minuteStep={15} />
+                                    <TimePicker format={format} minuteStep={15} />
                                 </Form.Item>
                             </Col>
                         </Row>

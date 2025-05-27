@@ -32,6 +32,7 @@ type UserTeamMapping = {
 type User = {
     id: number;
     first_name: string;
+    last_name: string;
     email: string;
     slack_user_id: string;
     user_team_mappings: UserTeamMapping[];
@@ -84,33 +85,6 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
 
     }
 
-
-    // const save = async (id: number) => {
-    //     try {
-    //         const row = await form.validateFields();
-    //         const newData = [...users];
-
-    //         const index = newData.findIndex((item) => id === item.id);
-    //         if (index > -1) {
-    //             newData[index] = { ...newData[index], ...row };
-    //             fetch("/api/users", {
-    //                 method: "POST",
-    //                 headers: {
-    //                     "Content-Type": "application/json",
-    //                 },
-    //                 body: JSON.stringify(newData[index]),
-    //             })
-    //                 .then((response) => response.json())
-    //                 .then((data) => {
-    //                     setUsers(data);
-    //                     setEditingKey(0);
-    //                 });
-    //         }
-    //     } catch (errInfo) {
-    //         console.log("Validate Failed:", errInfo);
-    //     }
-    // };
-
     const handleDelete = (id: number) => {
         deleteData(id);
     };
@@ -120,6 +94,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
         const newRow: User = {
             id: count,
             first_name: "",
+            last_name: "",
             email: "",
             slack_user_id: "",
             roles: {
@@ -135,7 +110,8 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
     const handleEdit = (user: User) => {
         setEditingRow(user.id);
         form.setFieldsValue({
-            name: user.first_name,
+            first_name: user.first_name,
+            last_name: user.last_name,
             email: user.email,
             slack_user_id: user.slack_user_id,
             team_ids: user.user_team_mappings.map((t) => t.team_id),
@@ -149,7 +125,8 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
 
             const updatedUser = {
                 id: userId,
-                name: values.name,
+                first_name: values.first_name,
+                last_name: values.last_name,
                 email: values.email,
                 slack_user_id: values.slack_user_id,
                 user_team_mappings: values.team_ids,
@@ -186,13 +163,13 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
 
     const columns: ColumnsType<User> = [
         {
-            title: "Name",
-            dataIndex: "name",
+            title: "FirstName",
+            dataIndex: "first_name",
             render: (_: unknown, record: User) => {
                 if (editingRow === record.id) {
                     return (
                         <Form.Item
-                            name="name"
+                            name="first_name"
                             rules={[
                                 { required: true, message: "Name is required" },
                                 { min: 2, message: "Minimum 2 characters" },
@@ -204,6 +181,26 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                     );
                 }
                 return record.first_name;
+            },
+        },
+        {
+            title: "LastName",
+            dataIndex: "last_name",
+            render: (_: unknown, record: User) => {
+                if (editingRow === record.id) {
+                    return (
+                        <Form.Item
+                            name="last_name"
+                            rules={[
+                                { required: false},
+                            ]}
+                            style={{ margin: 0 }}
+                        >
+                            <Input />
+                        </Form.Item>
+                    );
+                }
+                return record.last_name;
             },
         },
         {
