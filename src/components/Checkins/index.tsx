@@ -5,6 +5,7 @@ import Sidebar from "../Sidebar";
 import { useEffect, useState } from "react";
 import { DownOutlined, LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import { logoutUser } from "@/app/actions/authActions";
+import "./Checkins.css";
 
 const { Header, Content } = Layout;
 
@@ -102,92 +103,98 @@ const Checkins: React.FC<Props> = ({ roles, teams }) => {
                 activeKey="checkins"
             />
             <Layout>
-                <Header style={{ padding: 0, background: colorBgContainer }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                    <Button
-                        type="text"
-                        icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                        onClick={() => setCollapsed(!collapsed)}
-                        style={{
-                            fontSize: "16px",
-                            width: 64,
-                            height: 64,
-                        }}
-                    />
-                    <span
+            <Header style={{ padding: 0, background: colorBgContainer }}>
+            <div
+                style={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+                padding: "0 16px",
+                }}
+            >
+                <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <Button
+                    type="text"
+                    icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                    onClick={() => setCollapsed(!collapsed)}
+                    style={{ fontSize: 16, width: 48, height: 48 }}
+                />
+                <span
                     style={{
-                        fontWeight: 500,
-                        cursor: "pointer",
-                        fontSize: "16px",
-                        color: selectedTeam ? "#1890ff" : "black",
+                    fontWeight: 500,
+                    cursor: "pointer",
+                    fontSize: "16px",
+                    color: selectedTeam ? "#1890ff" : "black",
                     }}
                     onClick={handleAllTeamsClick}
-                    >
-                    All Teams
-                    </span>
-
-                    <Dropdown
-                    menu={{ items: teamMenuItems, onClick: handleMenuClick }}
-                    trigger={['click']}
-                    >
-                        <Button type="text">
-                            {selectedTeam?.name || "Select Team"} <DownOutlined />
-                        </Button>
-                    </Dropdown>
-                    
-                    <Button
-                        type="text"
-                        icon={<LogoutOutlined />}
-                        onClick={() => logoutUser()}
-                        style={{
-                            fontSize: "16px",
-                            width: 64,
-                            height: 64,
-                            position: "absolute",
-                            right: 0,
-                        }}
-                    />
-                    </div>
-                </Header>
-                <Content
-                    style={{
-                        margin: "24px 16px",
-                        padding: 24,
-                        minHeight: 280,
-                        background: colorBgContainer,
-                        borderRadius: borderRadiusLG,
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 16,
-                    }}
                 >
-                    {Object.entries(groupedByDate).map(([date, users]) => (
-                        <Card key={date} style={{ border: "1px solid #eee", padding: 16, borderRadius: 8, backgroundColor: "#fff",
-                            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)" }}>
-                        <h2 style={{ marginBottom: 16 }}>{date}</h2>
-                        {Object.entries(users).map(([fullName, goals]) => (
-                            <div key={fullName} style={{ marginBottom: 16 }}>
-                            <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-                            <span style={{ marginRight: 8, fontSize: 18 }}>👤</span>
-                            <strong style={{ fontSize: 16 }}>{fullName}</strong>
-                            </div>
-                            {goals.length > 0 ? (
-                                <ul style={{ paddingLeft: 20 }}>
-                                {goals.map((goal, idx) => (
-                                    <li key={idx}>
-                                    {goal.goal_text} {goal.goal_progress.length > 0 &&
-                                    (goal.goal_progress[0].is_met ? "✅" : "❌")}
-                                    </li>
-                                ))}
-                                </ul>
-                            ) : (
-                                <p>No goals.</p>
-                            )}
-                            </div>
+                    All Teams
+                </span>
+
+                <Dropdown menu={{ items: teamMenuItems, onClick: handleMenuClick }} trigger={['click']}>
+                    <Button type="text" style={{ fontSize: 16 }}>
+                    {selectedTeam?.name || "Select Team"} <DownOutlined />
+                    </Button>
+                </Dropdown>
+                </div>
+
+                <Button
+                type="text"
+                icon={<LogoutOutlined />}
+                onClick={() => logoutUser()}
+                style={{ fontSize: 16, width: 48, height: 48 }}
+                />
+            </div>
+            </Header>
+            <Content
+            style={{
+                margin: "24px 16px",
+                padding: 16,
+                minHeight: 280,
+                background: colorBgContainer,
+                borderRadius: borderRadiusLG,
+                display: "flex",
+                flexDirection: "column",
+                gap: 16,
+            }}
+            >
+            {Object.entries(groupedByDate).map(([date, users]) => (
+                <Card
+                key={date}
+                style={{
+                    border: "1px solid #eee",
+                    padding: "16px",
+                    borderRadius: 8,
+                    backgroundColor: "#fff",
+                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
+                }}
+                >
+                <h2 style={{ marginBottom: 16 }}>{date}</h2>
+                {Object.entries(users).map(([fullName, goals]) => (
+                    <div key={fullName} style={{ marginBottom: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", marginBottom: 8, flexWrap: "wrap" }}>
+                        <span style={{ marginRight: 8, fontSize: 18 }}>👤</span>
+                        <strong style={{ fontSize: 16 }}>{fullName}</strong>
+                    </div>
+                    {goals.length > 0 ? (
+                        <ul style={{ paddingLeft: 20 }}>
+                        {goals.map((goal, idx) => (
+                            <li key={idx}>
+                            {goal.goal_text}{" "}
+                            {goal.goal_progress.length > 0 && (goal.goal_progress[0].is_met ? "✅" : "❌")}
+                            </li>
                         ))}
-                        </Card>
-                    ))}
-                </Content>
+                        </ul>
+                    ) : (
+                        <p>No goals.</p>
+                    )}
+                    </div>
+                ))}
+                </Card>
+            ))}
+            </Content>
             </Layout>
         </Layout>
     )

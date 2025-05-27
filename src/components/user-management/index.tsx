@@ -376,32 +376,33 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                     />
                 </Header>
                 <Content
-                    style={{
+                style={{
                         margin: "24px 16px",
-                        padding: 24,
+                        padding: 16,
                         minHeight: 280,
                         background: colorBgContainer,
                         borderRadius: borderRadiusLG,
                         display: "flex",
                         flexDirection: "column",
                         gap: 16,
+                        overflowX: "auto"
                     }}
-
                 >
-                    <div style={{ padding: 24 }}>
-                        <Title level={4}>Users</Title>
-                        <Button onClick={handleAdd} type="primary" style={{ marginBottom: 16 }}>
-                            Add new User
-                        </Button>
-                        <Form form={form} component={false}>
-                            <Table
-                                rowKey="id"
-                                dataSource={users}
-                                columns={columns}
-                                pagination={false}
-                            />
-                        </Form>
-                    </div>
+                    <div style={{ padding: "16px", overflowX: "auto" }}>
+                    <Title level={4}>Users</Title>
+                    <Button onClick={handleAdd} type="primary" style={{ marginBottom: 16, width: "100%", maxWidth: 200 }}>
+                        Add new User
+                    </Button>
+                    <Form form={form} component={false}>
+                        <Table
+                            rowKey="id"
+                            dataSource={users}
+                            columns={columns}
+                            pagination={false}
+                            scroll={{ x: 1000 }}
+                        />
+                    </Form>
+                </div>
                 </Content>
             </Layout>
         </Layout>

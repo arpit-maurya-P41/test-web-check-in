@@ -39,11 +39,9 @@ export function convertToUTC(time : Moment, timezone : string) {
     return userDateTime.clone().utc().toISOString();
 }
 
-export function convertUtcTimeToLocal(utcTime: string): moment.Moment {
-    const todayUtc = moment.utc().startOf("day"); 
-    const date = new Date(utcTime);
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    const utcMoment = todayUtc.clone().add(hours, "hours").add(minutes, "minutes");
-    return utcMoment;
+export function convertUtcTimeToLocal(utcTime: string, timezone: string): moment.Moment {
+  const utcMoment = moment.utc(utcTime);
+  const localMoment = utcMoment.tz(timezone);
+
+  return localMoment;
 }
