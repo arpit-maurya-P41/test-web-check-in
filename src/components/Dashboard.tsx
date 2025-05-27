@@ -43,7 +43,7 @@ type Props = {
 type DashboardData = {
     date: string;
     user: string;
-    smartGoalsRate: number;
+    percentage: number;
 };
 
 type PercentageData = {
@@ -74,7 +74,7 @@ const Dashboard: React.FC<Props> = ({ roles, teams, users }) => {
         data: dashboardData,
         xField: "date",
         yField: "user",
-        colorField: "smartGoalsRate",
+        colorField: "percentage",
         mark: "cell",
         style: { inset: 0.5 },
         scale: {
@@ -82,14 +82,14 @@ const Dashboard: React.FC<Props> = ({ roles, teams, users }) => {
             color: { 
                 type: 'threshold',
                 domain: [0, 20, 40, 60, 80, 100],
-                range: ["#7a0000", "#b80000", "#e63946", "#ee6c6c", "#f4a6a6", "#fde0e0"],
+                range: ["#7a0000", "#e63946", "#f28c28", "#d4aa00", "#a8c66c", "#4caf50"],
                 unknown: '#D3D3D3',
             },
         },
         label: {
-            text: (d: DashboardData) => d.smartGoalsRate === null
+            text: (d: DashboardData) => d.percentage === null
             ? ''
-            : `${d.smartGoalsRate}`,
+            : `${d.percentage}`,
             position: "inside",
             style: {
                 fill: "#fff",
@@ -265,6 +265,7 @@ const Dashboard: React.FC<Props> = ({ roles, teams, users }) => {
                                 <Col
                                     span={24}
                                     style={{ padding: 8 }}>
+                                    <Title level={2}>Smart Goals</Title>
                                     <Heatmap {...config} />
                                     <Title level={2}>Blockers</Title>
                                     <PercentageLineChart
