@@ -283,7 +283,6 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                                 <Form.Item
                                     label="About you"
                                     name="About"
-                                    rules={[{ required: true, message: 'Please input!' }]}
                                 >
                                     <Input.TextArea rows={4} />
                                 </Form.Item>

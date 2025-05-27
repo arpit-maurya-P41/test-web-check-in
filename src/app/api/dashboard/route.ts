@@ -60,32 +60,13 @@ export async function GET(req: NextRequest) {
         const formattedCheckins = checkins.map((checkin) => ({
             date: checkin.created_at?.toLocaleDateString(),
             user: checkin.users?.first_name || "Unknown",
-            smartGoalsRate:
+            percentage:
                 checkin.goals.length === 0
                     ? 0
                     : Math.floor((checkin.goals.filter((goal) => goal.is_smart).length /
                           checkin.goals.length) *
                       100),
         }));
-
-        const uniqueUsers = [...new Set(formattedCheckins.map((c) => c.user))];
-        const filledCheckins = [];
-
-        for (const date of dateRange) {
-            for (const user of uniqueUsers) {
-                const existing = formattedCheckins.find(
-                    (c) => c.date === date && c.user === user
-                );
-
-                filledCheckins.push(
-                    existing || {
-                        date,
-                        user,
-                        smartGoalsRate: null, 
-                    }
-                );
-            }
-        }
 
         const smartCheckins = formattedCheckins;
 
