@@ -86,3 +86,10 @@ ADD COLUMN title TEXT;
 
 ALTER TABLE users 
 RENAME COLUMN name TO first_name;
+
+ALTER TABLE goals
+    ADD CONSTRAINT fk_goals_checkin FOREIGN KEY (checkin_id) REFERENCES checkins (id);
+
+ALTER TABLE goal_progress
+ADD CONSTRAINT uq_goals_progress_goal_id
+UNIQUE (goal_id);

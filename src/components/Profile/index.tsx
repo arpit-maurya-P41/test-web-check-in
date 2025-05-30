@@ -7,6 +7,7 @@ import { logoutUser } from "@/app/actions/authActions";
 import Sidebar from "../Sidebar";
 import moment from 'moment-timezone';
 import { convertToUTC, convertUtcTimeToLocal } from "@/utils/dateUtils";
+import { Dayjs } from "dayjs";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -24,8 +25,8 @@ type FormValues = {
     Title: string;
     Location: string;
     timezone: string;
-    checkIn: moment.Moment;
-    checkOut: moment.Moment;
+    checkIn: Dayjs;
+    checkOut: Dayjs;
     About: string;
 };
 
@@ -62,7 +63,7 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
             });
         };
         fetchUser();
-    }, []);
+    }, [userId, form]);
 
     const showNotification = (type: NotificationType, message: string) => {
         api[type]({
@@ -229,25 +230,7 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                                 <Form.Item
                                     label="Check-in Time"
                                     name="checkIn"
-                                    rules={[{ required: true, message: 'Please select check-in time!' },
-                                    ({ getFieldValue }) => ({
-                                        validator(_, value) {
-                                            const checkOut = getFieldValue('checkOut');
-                                            if (!value || !checkOut) return Promise.resolve();
-                                        
-                                            const checkInTime = moment(value, 'HH:mm');
-                                            const checkOutTime = moment(checkOut, 'HH:mm');
-                                        
-                                            // If checkout is earlier than checkin, assume next day
-                                            if (checkOutTime.isSameOrBefore(checkInTime)) {
-                                              checkOutTime.add(1, 'day');
-                                            }
-                                        
-                                            return checkInTime.isBefore(checkOutTime)
-                                              ? Promise.resolve()
-                                              : Promise.reject(new Error('Check-in time must be before check-out time!'));
-                                          },
-                                    }),
+                                    rules={[{ required: true, message: 'Please select check-in time!' }
                                     ]}
                                 >
                                     <TimePicker format={format} minuteStep={15} />
@@ -261,19 +244,18 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                                         ({ getFieldValue }) => ({
                                             validator(_, value) {
                                                 const checkIn = getFieldValue('checkIn');
-
-                                                if (!value || !checkIn) return Promise.resolve();
-
-                                                const checkOutTime = moment(value, 'HH:mm');
-                                                const checkInTime = moment(checkIn, 'HH:mm');
-
-                                                if (checkOutTime.isAfter(checkInTime)) {
+                                                if (!checkIn || !value) {
                                                     return Promise.resolve();
                                                 }
 
-                                                return Promise.reject(new Error('Check-out time must be after check-in time!'));
+                                                const normalizedCheckIn = checkIn.set('year', 1970).set('month', 0).set('date', 1);
+                                                const normalizedCheckOut = value.set('year', 1970).set('month', 0).set('date', 1);
 
-                                              },
+                                                if (normalizedCheckOut.isAfter(normalizedCheckIn)) {
+                                                    return Promise.resolve();
+                                                }
+                                                return Promise.reject(new Error('Check-out time must be after check-in time'));
+                                            }
                                         })
                                     ]}
                                 >
