@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
             : undefined,
             select: {
                 slack_user_id: true,
-                created_at: true,
+                checkin_date: true,
                 blocker: true,
                 feeling: true,
                 goals: {
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
                 }
             },
             orderBy: {
-                created_at: "desc",
+                checkin_date: "desc",
             },
         });
         

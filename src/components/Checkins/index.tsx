@@ -31,7 +31,7 @@ type Goal = {
   
   type CheckinEntry = {
     slack_user_id: string;
-    created_at: string;
+    checkin_date: string;
     blocker: string | null;
     feeling: string | null;
     goals: Goal[];
@@ -63,7 +63,7 @@ const Checkins: React.FC<Props> = ({ roles, teams }) => {
 
     const groupedByDate = (goalsSummary || []).reduce(
         (acc: Record<string, Record<string, Goal[]>>, entry) => {
-          const date = new Date(entry.created_at).toLocaleDateString("en-US", {
+          const date = new Date(entry.checkin_date).toLocaleDateString("en-US", {
             year: "numeric",
             month: "long",
             day: "numeric"
@@ -183,7 +183,7 @@ const Checkins: React.FC<Props> = ({ roles, teams }) => {
                         {goals.map((goal, idx) => (
                             <li key={idx}>
                             {goal.goal_text}{" "}
-                            {goal.goal_progress.length > 0 && (goal.goal_progress[0].is_met ? "✅" : "❌")}
+                            {goal.goal_progress?.length > 0 && (goal.goal_progress[0].is_met ? "✅" : "❌")}
                             </li>
                         ))}
                         </ul>
