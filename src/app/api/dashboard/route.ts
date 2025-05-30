@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 
         const checkins = await prisma.checkins.findMany({
             where: {
-                created_at: {
+                checkin_date: {
                     gte: startDate,
                     lte: endDate,
                 },
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
             select: {
                 slack_user_id: true,
                 slack_channel_id: true,
-                created_at: true,
+                checkin_date: true,
                 blocker: true,
                 users: {
                     select: {
@@ -52,14 +52,14 @@ export async function GET(req: NextRequest) {
                 },
             },
             orderBy: {
-                created_at: "asc",
+                checkin_date: "asc",
             },
         });
         const dateRange = getDateRange(startDateParam, endDateParam ?? "");
 
         const smartCheckins = checkins.map((checkin) => {             
             return {
-                date: checkin.created_at?.toLocaleDateString(),
+                date: checkin.checkin_date?.toLocaleDateString(),
                 user: {
                     name: `${checkin.users?.first_name} ${checkin.users?.last_name ?? ""}` || "Unknown",
                     id: checkin.users?.slack_user_id || "no-id"
@@ -86,7 +86,7 @@ export async function GET(req: NextRequest) {
         const blockedMap: Record<string, number> = {};
 
         checkins.forEach((checkin) => {
-            const date = checkin.created_at?.toLocaleDateString();
+            const date = checkin.checkin_date?.toLocaleDateString();
             const blocked = checkin.blocker?.length ? 1 : 0;
             if(date)
             {
@@ -111,7 +111,7 @@ export async function GET(req: NextRequest) {
           const checkinsPerDate: Record<string, Set<string>> = {};
 
           checkins.forEach((checkin) => {
-              const date = checkin.created_at?.toLocaleDateString();
+              const date = checkin.checkin_date?.toLocaleDateString();
               if (date) {
                   if (!checkinsPerDate[date]) {
                       checkinsPerDate[date] = new Set();
