@@ -57,18 +57,23 @@ export async function GET(req: NextRequest) {
         });
         const dateRange = getDateRange(startDateParam, endDateParam ?? "");
 
-        const formattedCheckins = checkins.map((checkin) => ({
-            date: checkin.created_at?.toLocaleDateString(),
-            user: checkin.users?.first_name || "Unknown",
-            percentage:
-                checkin.goals.length === 0
-                    ? 0
-                    : Math.floor((checkin.goals.filter((goal) => goal.is_smart).length /
-                          checkin.goals.length) *
-                      100),
-        }));
-
-        const smartCheckins = formattedCheckins;
+        const smartCheckins = checkins.map((checkin) => {             
+            return {
+                date: checkin.created_at?.toLocaleDateString(),
+                user: {
+                    name: `${checkin.users?.first_name} ${checkin.users?.last_name ?? ""}` || "Unknown",
+                    id: checkin.users?.slack_user_id || "no-id"
+                },
+                percentage:
+                    checkin.goals.length === 0
+                        ? 0
+                        : Math.floor(
+                              (checkin.goals.filter((goal) => goal.is_smart).length /
+                                  checkin.goals.length) *
+                                  100
+                          ),
+            };
+        });
 
         const teamUserCount = await prisma.user_team_mappings.count({
             where: {

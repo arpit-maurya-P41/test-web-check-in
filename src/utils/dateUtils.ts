@@ -1,4 +1,9 @@
-import moment, { Moment } from "moment-timezone";
+import dayjs, { Dayjs } from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export function getDateRange(start: string, end: string): string[] {
     const result: string[] = [];
@@ -13,35 +18,12 @@ export function getDateRange(start: string, end: string): string[] {
     return result;
   }
 
-export function convertToUTC(time : Moment, timezone : string) {
-    const hour = time.hour();
-    const minute = time.minute();
-  
-    const now = moment().tz(timezone);
-  
-    let userDateTime = moment.tz(
-      {
-        year: now.year(),
-        month: now.month(), 
-        day: now.date(),
-        hour,
-        minute,
-        second: 0,
-        millisecond: 0,
-      },
-      timezone
-    );
-  
-    if (userDateTime.isBefore(now)) {
-      userDateTime = userDateTime.add(1, "day");
-    }
-  
-    return userDateTime.clone().utc().toISOString();
+export function convertToUTC(time : Dayjs, timezone : string) {
+    return time.tz(timezone).utc().format();
 }
 
-export function convertUtcTimeToLocal(utcTime: string, timezone: string): moment.Moment {
-  const utcMoment = moment.utc(utcTime);
-  const localMoment = utcMoment.tz(timezone);
 
-  return localMoment;
+export function convertUtcTimeToLocal(utcTime: string, timezone: string) {
+  const utcMoment = dayjs.utc(utcTime).tz(timezone);
+  return utcMoment;
 }

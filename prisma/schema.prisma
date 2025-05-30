@@ -14,6 +14,7 @@ model checkins {
   feeling          String?     @db.VarChar(255)
   created_at       DateTime?   @default(now()) @db.Timestamp(6)
   blocker          String?
+  checkin_date     DateTime?   @db.Date
   teams            teams       @relation(fields: [slack_channel_id], references: [slack_channel_id], onDelete: Cascade, onUpdate: NoAction)
   users            users       @relation(fields: [slack_user_id], references: [slack_user_id], onDelete: Cascade, onUpdate: NoAction)
   checkouts        checkouts[]
@@ -26,13 +27,14 @@ model checkouts {
   feeling       String?         @db.VarChar(255)
   created_at    DateTime?       @default(now()) @db.Timestamp(6)
   blocker       String?
+  checkout_date DateTime?       @db.Date
   checkins      checkins        @relation(fields: [checkin_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   goal_progress goal_progress[]
 }
 
 model goal_progress {
   id          Int       @id @default(autoincrement())
-  goal_id     Int
+  goal_id     Int       @unique(map: "uq_goals_progress_goal_id")
   checkout_id Int
   is_met      Boolean?  @default(false)
   created_at  DateTime? @default(now()) @db.Timestamp(6)
@@ -41,12 +43,12 @@ model goal_progress {
 }
 
 model goals {
-  id            Int             @id @default(autoincrement())
+  id            Int            @id @default(autoincrement())
   checkin_id    Int
   goal_text     String
-  is_smart      Boolean?        @default(false)
-  goal_progress goal_progress[]
-  checkins      checkins        @relation(fields: [checkin_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  is_smart      Boolean?       @default(false)
+  goal_progress goal_progress?
+  checkins      checkins       @relation(fields: [checkin_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_goals_checkin")
 }
 
 model roles {

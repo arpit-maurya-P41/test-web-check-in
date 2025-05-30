@@ -40,9 +40,14 @@ type Props = {
     users: users[];
 };
 
+type UserDetail = {
+name : string;
+id : string;
+}
+
 type DashboardData = {
     date: string;
-    user: string;
+    user: UserDetail;
     percentage: number;
 };
 
@@ -73,7 +78,7 @@ const Dashboard: React.FC<Props> = ({ roles, teams, users }) => {
     const config = {
         data: dashboardData,
         xField: "date",
-        yField: "user",
+        yField: (d : DashboardData) => d.user.id,
         colorField: "percentage",
         mark: "cell",
         style: { inset: 0.5 },
@@ -86,6 +91,14 @@ const Dashboard: React.FC<Props> = ({ roles, teams, users }) => {
                 unknown: '#D3D3D3',
             },
         },
+        axis: {
+            y: {
+              labelFormatter: (id: string) => {
+                const user = dashboardData.find(d => d.user.id === id);
+                return user ? user.user.name : id;
+              }
+            }
+          },
         label: {
             text: (d: DashboardData) => d.percentage === null
             ? ''
