@@ -17,7 +17,6 @@ type Props = {
     canViewReports: boolean;
     canManageRoles: boolean;
     activeKey: string;
-    fullHeight?: boolean;
 };
 
 type DashboardItem = {
@@ -27,7 +26,7 @@ type DashboardItem = {
     onClick?: () => void;
 };
 
-const Sidebar: React.FC<Props> = ({ collapsed, canManageTeams, canManageUsers, canManageRoles, activeKey, fullHeight }) => {
+const Sidebar: React.FC<Props> = ({ collapsed, canManageTeams, canManageUsers, canManageRoles, activeKey }) => {
     const sidebarItems = [];
     const dashboardItem: DashboardItem = {
         key: "dashboard",
@@ -100,7 +99,9 @@ const Sidebar: React.FC<Props> = ({ collapsed, canManageTeams, canManageUsers, c
             trigger={null}
             collapsible
             collapsed={collapsed}
-            style={fullHeight ? { height: "100vh" } : undefined}>
+            style={{
+                minHeight: "100vh"
+            }}>
             <Menu
                 theme="dark"
                 mode="inline"
