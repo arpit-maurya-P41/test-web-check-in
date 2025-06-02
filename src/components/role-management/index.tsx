@@ -177,6 +177,7 @@ const RoleManagementIndex: React.FC<Props> = ({ roles }) => {
                 canViewReports={roles.can_view_reports}
                 canManageRoles={roles.can_manage_roles}
                 activeKey="roleManagement"
+                fullHeight={true}
             />
             <Layout>
                 <Header style={{ padding: 0, background: colorBgContainer }}>
