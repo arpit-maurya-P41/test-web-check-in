@@ -195,7 +195,6 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
                 canViewReports={roles.can_view_reports}
                 canManageRoles={roles.can_manage_roles}
                 activeKey="teamManagement"
-                fullHeight={true}
             />
             <Layout>
             <Header style={{ padding: 0, background: colorBgContainer }}>
