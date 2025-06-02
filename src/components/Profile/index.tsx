@@ -123,6 +123,7 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                 canViewReports={roles.can_view_reports}
                 canManageRoles={roles.can_manage_roles}
                 activeKey="profile"
+                fullHeight={true}
             />
             <Layout>
                 <Header style={{ padding: 0, background: colorBgContainer }}>
