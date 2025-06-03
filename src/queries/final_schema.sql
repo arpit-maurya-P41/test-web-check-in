@@ -18,12 +18,21 @@ CREATE TABLE roles (
 -- 🚀 Users Table
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+	title TEXT,
+    first_name VARCHAR(255) NOT NULL,
+	last_name TEXT,
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     slack_user_id VARCHAR(255) UNIQUE NOT NULL,
-    role_id INT NOT NULL REFERENCES roles(id) ON DELETE cascade
+    role_id INT NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+	check_in_time TIME NOT NULL DEFAULT NOW(),
+	check_out_time TIME NOT NULL DEFAULT NOW(),
+	timezone TEXT,
+	about_you TEXT,
+	location TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
+ 
 
 -- 🚀 User & Team Mappings Table (Renamed for consistency)
 CREATE TABLE user_team_mappings (
@@ -39,7 +48,8 @@ CREATE TABLE checkins (
     slack_channel_id VARCHAR(255) NOT NULL REFERENCES teams(slack_channel_id) ON DELETE CASCADE,
     feeling VARCHAR(255) NULL,
     created_at TIMESTAMP DEFAULT NOW(),
-    blocker TEXT NULL
+    blocker TEXT NULL,
+	checkin_date DATE NOT NULL
 );
 
 -- 🚀 Goals Table (Stores Goals for Check-ins)
@@ -56,40 +66,44 @@ CREATE TABLE checkouts (
     checkin_id INT NOT NULL REFERENCES checkins(id) ON DELETE CASCADE,
     feeling VARCHAR(255) NULL,
     created_at TIMESTAMP DEFAULT NOW(),
-    blocker TEXT NULL
+    blocker TEXT NULL,
+	checkout_date DATE NOT NULL
 );
 
 -- 🚀 Goal Progress Table (Tracks if a Goal was Met)
 CREATE TABLE goal_progress (
     id SERIAL PRIMARY KEY,
-    goal_id INT NOT NULL REFERENCES goals(id) ON DELETE CASCADE,
+    goal_id INT UNIQUE NOT NULL REFERENCES goals(id) ON DELETE CASCADE,
     checkout_id INT NOT NULL REFERENCES checkouts(id) ON DELETE CASCADE,
     is_met BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT NOW()
-);
+); 
 
--- 🚀 Sessions Table (User Authentication Tracking)
-CREATE TABLE sessions (
+CREATE TABLE users_notifications (
     id SERIAL PRIMARY KEY,
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    expires_at TIMESTAMP NOT NULL
+    notification_type VARCHAR(255) NOT NULL,
+    notification_status VARCHAR(255) NOT NULL DEFAULT 'pending', 
+    retry_count INT NOT NULL DEFAULT 0,
+    error_message VARCHAR(255),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
-ALTER TABLE users
-ADD COLUMN check_in_time VARCHAR(5) NOT NULL DEFAULT '10:00',
-ADD COLUMN check_out_time VARCHAR(5) NOT NULL DEFAULT '18:00',
-ADD COLUMN timezone TEXT,
-ADD COLUMN about_you TEXT,
-ADD COLUMN location TEXT,
-ADD COLUMN last_name TEXT,
-ADD COLUMN title TEXT;
+CREATE OR REPLACE FUNCTION check_retry_count()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF (NEW.retry_count > 3 AND NEW.notification_status != 'failure') THEN
+        UPDATE users_notifications 
+        SET notification_status = 'failure', updated_at = NOW()
+        WHERE id = NEW.id;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-ALTER TABLE users 
-RENAME COLUMN name TO first_name;
-
-ALTER TABLE goals
-    ADD CONSTRAINT fk_goals_checkin FOREIGN KEY (checkin_id) REFERENCES checkins (id);
-
-ALTER TABLE goal_progress
-ADD CONSTRAINT uq_goals_progress_goal_id
-UNIQUE (goal_id);
+CREATE TRIGGER trigger_check_retry_count
+AFTER UPDATE ON users_notifications
+FOR EACH ROW 
+WHEN (pg_trigger_depth() < 1)
+EXECUTE FUNCTION check_retry_count();
