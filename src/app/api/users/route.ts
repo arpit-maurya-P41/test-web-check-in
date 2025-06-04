@@ -24,6 +24,7 @@ export async function GET() {
                         },
                     },
                 },
+                timezone: true,
                 roles: {
                     select: {
                         id: true,
@@ -58,7 +59,10 @@ export async function POST(req: Request) {
                     last_name: body.last_name,
                     email: body.email,
                     slack_user_id: body.slack_user_id,
-                    role_id: body.role_id
+                    role_id: body.role_id,
+                    timezone: body.timezone,
+                    check_in_time: body.check_in_time,
+                    check_out_time: body.check_out_time
                 },
             });
 
@@ -80,7 +84,10 @@ export async function POST(req: Request) {
                     email: body.email,
                     slack_user_id: body.slack_user_id,
                     password: "Password123",
-                    role_id: body.role_id
+                    role_id: body.role_id,
+                    timezone: body.timezone,
+                    check_in_time: body.check_in_time,
+                    check_out_time: body.check_out_time
                 },
             });
             await prisma.user_team_mappings.createMany({

@@ -5,9 +5,9 @@ import { LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-desig
 import { useEffect, useState } from "react";
 import { logoutUser } from "@/app/actions/authActions";
 import Sidebar from "../Sidebar";
-import moment from 'moment-timezone';
 import { convertToUTC, convertUtcTimeToLocal } from "@/utils/dateUtils";
 import { Dayjs } from "dayjs";
+import { getTimeZones } from "@/utils/timeUtils";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -36,14 +36,6 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
     const [form] = Form.useForm();
     const [api, contextHolder] = notification.useNotification();
     const format = 'HH:mm';
-
-    const timezones = moment.tz.names().map(tz => {
-        const offset = moment.tz(tz).format('Z');
-        return {
-          label: `${tz} (GMT ${offset})`,
-          value: tz,
-        };
-    });
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -215,7 +207,7 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                                     rules={[{ required: true, message: 'Please select your timezone!' }]}
                                 >
                                     <Select showSearch placeholder="Select timezone">
-                                        {timezones.map(({ label, value }) => (
+                                        {getTimeZones().map(({ label, value }) => (
                                             <Select.Option key={value} value={value}>
                                                 {label}
                                             </Select.Option>
