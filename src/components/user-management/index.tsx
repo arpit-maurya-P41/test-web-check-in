@@ -9,6 +9,7 @@ import { logoutUser } from "@/app/actions/authActions";
 
 import { roles, teams } from "@prisma/client";
 import Sidebar from "../Sidebar";
+import { convertTimeToUTC, getTimeZones } from "@/utils/timeUtils";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -37,6 +38,7 @@ type User = {
     slack_user_id: string;
     user_team_mappings: UserTeamMapping[];
     roles: Role;
+    timezone: string;
 };
 
 const UserManagementIndex: React.FC<Props> = ({ roles }) => {
@@ -102,6 +104,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                 role_name: "",
             },
             user_team_mappings: [],
+            timezone: ""
         };
         setUsers([...users, newRow]);
         handleEdit(newRow);
@@ -116,6 +119,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
             slack_user_id: user.slack_user_id,
             team_ids: user.user_team_mappings.map((t) => t.team_id),
             role_id: user.roles.id != 0 ? user.roles.id : undefined,
+            timezone: user.timezone
         });
     };
 
@@ -131,6 +135,9 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                 slack_user_id: values.slack_user_id,
                 user_team_mappings: values.team_ids,
                 role_id: values.role_id,
+                timezone: values.timezone,
+                check_in_time: convertTimeToUTC("9:00", values.timezone),
+                check_out_time: convertTimeToUTC("18:00", values.timezone)
             };
 
             fetch("/api/users", {
@@ -242,6 +249,30 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                     );
                 }
                 return record.slack_user_id;
+            },
+        },
+        {
+            title: "TimeZone",
+            dataIndex: "timezone",
+            render: (_: unknown, record: User) => {
+                if (editingRow === record.id) {
+                    return (
+                        <Form.Item
+                            name="timezone"
+                            rules={[{ required: true, message: 'Please select timezone!' }]}
+                            style={{ margin: 0 }}
+                        >
+                            <Select showSearch placeholder="Select timezone">
+                                {getTimeZones().map(({ label, value }) => (
+                                    <Select.Option key={value} value={value}>
+                                        {label}
+                                    </Select.Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                    );
+                }
+                return record.timezone;
             },
         },
         {
