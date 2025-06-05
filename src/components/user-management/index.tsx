@@ -10,6 +10,7 @@ import { logoutUser } from "@/app/actions/authActions";
 import { roles, teams } from "@prisma/client";
 import Sidebar from "../Sidebar";
 import { convertTimeToUTC, getTimeZones } from "@/utils/timeUtils";
+import { useNotification } from "../NotificationProvider";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -50,6 +51,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
     const [users, setUsers] = useState<User[]>([]);
     const [rolesData, setRoles] = useState<Role[]>([]);
     const [editingRow, setEditingRow] = useState<number>(0);
+    const notify = useNotification();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -92,6 +94,15 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
     };
 
     const handleAdd = () => {
+        if(users.length > 0){
+            const teamCount = users.length - 1;
+            if(users[teamCount]?.slack_user_id === '' && users[teamCount]?.first_name === '')
+            {
+                notify("warning", "Please save or cancel the current user entry before adding a new one.");
+                return;
+            }
+        }
+
         const count = users.length > 0 ? users[users.length - 1].id + 1 : 1;
         const newRow: User = {
             id: count,
@@ -126,6 +137,13 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
     const handleSave = async (userId: number) => {
         try {
             const values = await form.validateFields();
+            if(users.find(user => user.id !== userId && ((user.slack_user_id === values.slack_user_id)
+            || (user.email === values.email))
+            ))
+            {
+                notify('error', 'The entry with the Slack User Id or Email already Exists');
+                return;
+            }
 
             const updatedUser = {
                 id: userId,
@@ -183,7 +201,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                             ]}
                             style={{ margin: 0 }}
                         >
-                            <Input />
+                            <Input placeholder="FirstName"/>
                         </Form.Item>
                     );
                 }
@@ -203,7 +221,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                             ]}
                             style={{ margin: 0 }}
                         >
-                            <Input />
+                            <Input placeholder="LastName"/>
                         </Form.Item>
                     );
                 }
@@ -224,7 +242,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                             ]}
                             style={{ margin: 0 }}
                         >
-                            <Input />
+                            <Input placeholder="Email"/>
                         </Form.Item>
                     );
                 }
@@ -244,7 +262,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                             ]}
                             style={{ margin: 0 }}
                         >
-                            <Input />
+                            <Input placeholder="Slack user id"/>
                         </Form.Item>
                     );
                 }
@@ -356,11 +374,11 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                 }
                 return (
                     <Space>
-                        <Button onClick={() => handleEdit(record)} type="link">
+                        <Button disabled={editingRow !== 0} onClick={() => handleEdit(record)} type="link">
                             Edit
                         </Button>
                         <Popconfirm title="Are you sure?" onConfirm={() => handleDelete(record.id)}>
-                            <Button type="link" danger>
+                            <Button disabled={editingRow !== 0} type="link" danger>
                                 Delete
                             </Button>
                         </Popconfirm>

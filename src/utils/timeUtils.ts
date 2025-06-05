@@ -20,6 +20,10 @@ export function getTimeZones() {
 export function convertTimeToUTC(timeStr: string, timezoneStr: string): string {
   const date = '2025-01-01'; 
   const dateTimeInZone = dayjs.tz(`${date} ${timeStr}`, 'YYYY-MM-DD HH:mm', timezoneStr);
-  console.log(dateTimeInZone.utc().format());
   return dateTimeInZone.utc().format();
+}
+
+export function convertUtcTimeToLocal(utcTime: string, timezone: string) {
+  const utcMoment = dayjs.utc(utcTime).tz(timezone);
+  return utcMoment;
 }

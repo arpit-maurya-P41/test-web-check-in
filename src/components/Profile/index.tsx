@@ -1,13 +1,13 @@
 'use client'
-import { Button, Col, Form, Input, Layout, notification, Row, Select, theme, TimePicker, Typography } from "antd";
+import { Button, Col, Form, Input, Layout, Row, Select, theme, TimePicker, Typography } from "antd";
 import { roles } from "@prisma/client";
 import { LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { logoutUser } from "@/app/actions/authActions";
 import Sidebar from "../Sidebar";
-import { convertToUTC, convertUtcTimeToLocal } from "@/utils/dateUtils";
 import { Dayjs } from "dayjs";
-import { getTimeZones } from "@/utils/timeUtils";
+import { convertTimeToUTC, getTimeZones, convertUtcTimeToLocal } from "@/utils/timeUtils";
+import { useNotification } from "../NotificationProvider";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -17,7 +17,6 @@ type Props = {
     roles: roles
 }
 
-type NotificationType = 'success' | 'info' | 'warning' | 'error';
 
 type FormValues = {
     FirstName: string;
@@ -34,8 +33,8 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
     const [collapsed, setCollapsed] = useState<boolean>(false);
     const [form] = Form.useForm();
-    const [api, contextHolder] = notification.useNotification();
     const format = 'HH:mm';
+    const notify = useNotification();
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -57,12 +56,6 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
         fetchUser();
     }, [userId, form]);
 
-    const showNotification = (type: NotificationType, message: string) => {
-        api[type]({
-          message
-        });
-      };
-
     const handleSave = async (values: FormValues) => {
         
         try {
@@ -70,8 +63,8 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
             if (!checkIn || !checkOut || !timezone) {
                 throw new Error("Check-in, check-out, or timezone is missing.");
             }
-            const checkInTime = convertToUTC(checkIn, timezone);
-            const checkOutTime = convertToUTC(checkOut, timezone);
+            const checkInTime = convertTimeToUTC(checkIn.format('HH:mm:ss'), timezone);
+            const checkOutTime = convertTimeToUTC(checkOut.format('HH:mm:ss'), timezone);
 
             const response = await fetch(`/api/users/${userId}`, {
                 method: "POST",
@@ -93,10 +86,10 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
             const data = await response.json();
             if (!response.ok) {
                 console.error("Failed to update user:", data.error);
-                showNotification('error', 'Error while saving data');
+                notify('error', 'Error while saving data.');
                 return;
             }
-            showNotification('success', 'Data Updated Successfully');
+            notify('success', 'The user was successfully added.');
         } catch (error) {
             console.error("Error submitting form:", error);
         }
@@ -153,7 +146,6 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                         gap: 16,
                     }}
                 >
-                    {contextHolder}
                     <Title level={4}>Profile</Title>
                     <Form layout="vertical" form={form} onFinish={handleSave}>
                         <Row gutter={16}>
