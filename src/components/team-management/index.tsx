@@ -7,6 +7,7 @@ import { roles, teams } from "@prisma/client";
 import Sidebar from "../Sidebar";
 import { logoutUser } from "@/app/actions/authActions";
 import './teams.css'
+import { useNotification } from "../NotificationProvider";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -23,6 +24,7 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
     const [collapsed, setCollapsed] = useState<boolean>(false);
     const [dataSource, setDataSource] = useState<teams[]>([]);
     const [editingKey, setEditingKey] = useState<number>(0);
+    const notify = useNotification();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -67,6 +69,11 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
     const save = async (id: number) => {
         try {
             const row = await form.validateFields();
+            if(dataSource.find(team => team.id !== id && (team.slack_channel_id === row.slack_channel_id)))
+            {
+                notify('error', 'The Slack Channel Id already Exists');
+                return;
+            }
             const newData = [...dataSource];
 
             const index = newData.findIndex((item) => id === item.id);
@@ -95,9 +102,18 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
     };
 
     const handleAdd = () => {
-        const count = dataSource.length > 0 ? dataSource[dataSource.length - 1].id + 1 : 1;
+        if(dataSource.length > 0){
+            const teamCount = dataSource.length - 1;
+            if(dataSource[teamCount]?.name === '' && dataSource[teamCount]?.slack_channel_id === '')
+            {
+                notify("warning", "Please save or cancel the current team entry before adding a new one.");
+                return;
+            }
+        }
+
+        const newId = dataSource.length > 0 ? dataSource[dataSource.length - 1].id + 1 : 1;
         const newRow: teams = {
-            id: count,
+            id: newId,
             name: "",
             slack_channel_id: "",
         };

@@ -1,4 +1,4 @@
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 
@@ -17,13 +17,3 @@ export function getDateRange(start: string, end: string): string[] {
   
     return result;
   }
-
-export function convertToUTC(time : Dayjs, timezone : string) {
-    return time.tz(timezone).utc().format();
-}
-
-
-export function convertUtcTimeToLocal(utcTime: string, timezone: string) {
-  const utcMoment = dayjs.utc(utcTime).tz(timezone);
-  return utcMoment;
-}

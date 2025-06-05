@@ -264,22 +264,18 @@ const Dashboard: React.FC<Props> = ({ roles, teams, users }) => {
                                     </Space>
                                 </Col>
                             </Row>
-                            {/* <Row>
-                                {dashboardData.map((data, index) => (
-                                    <Col
-                                        span={24}
-                                        key={index}
-                                        style={{ padding: 8 }}>
-                                        <NotificationCard data={data} />
-                                    </Col>
-                                ))}
-                            </Row> */}
                             <Row>
                                 <Col
                                     span={24}
                                     style={{ padding: 8 }}>
                                     <Title level={2}>Smart Goals</Title>
-                                    <Heatmap {...config} />
+                                    {
+                                        config.data && config.data.length > 0 ? (
+                                        <Heatmap {...config} />
+                                        ) : (
+                                        <div style={{ textAlign: 'center', padding: '8rem' }}>No data available</div>
+                                        )
+                                    }
                                     <Title level={2}>Blockers</Title>
                                     <PercentageLineChart
                                     title="Blocked Users Percentage"
