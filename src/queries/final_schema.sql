@@ -93,3 +93,6 @@ ALTER TABLE goals
 ALTER TABLE goal_progress
 ADD CONSTRAINT uq_goals_progress_goal_id
 UNIQUE (goal_id);
+
+ALTER TABLE user_team_mappings
+ADD CONSTRAINT unique_user_team UNIQUE (user_id, team_id);

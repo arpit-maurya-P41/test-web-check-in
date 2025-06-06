@@ -89,7 +89,7 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                 notify('error', 'Error while saving data.');
                 return;
             }
-            notify('success', 'The user was successfully added.');
+            notify('success', 'Data saved successfully.');
         } catch (error) {
             console.error("Error submitting form:", error);
         }
@@ -175,7 +175,6 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                                 <Form.Item
                                     label="Last Name"
                                     name="LastName"
-                                    rules={[{ required: true, message: 'Please input!' }]}
                                 >
                                     <Input />
                                 </Form.Item>

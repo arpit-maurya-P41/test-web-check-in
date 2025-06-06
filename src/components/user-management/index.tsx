@@ -52,6 +52,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
     const [rolesData, setRoles] = useState<Role[]>([]);
     const [editingRow, setEditingRow] = useState<number>(0);
     const notify = useNotification();
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -98,7 +99,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
             const teamCount = users.length - 1;
             if(users[teamCount]?.slack_user_id === '' && users[teamCount]?.first_name === '')
             {
-                notify("warning", "Please save or cancel the current user entry before adding a new one.");
+                notify("info", "Please save or cancel the current user entry before adding a new one.");
                 return;
             }
         }
@@ -117,7 +118,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
             user_team_mappings: [],
             timezone: ""
         };
-        setUsers([...users, newRow]);
+        setUsers([newRow, ...users]);
         handleEdit(newRow);
     };
 
@@ -136,12 +137,14 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
 
     const handleSave = async (userId: number) => {
         try {
+            setIsSaving(true);
             const values = await form.validateFields();
             if(users.find(user => user.id !== userId && ((user.slack_user_id === values.slack_user_id)
             || (user.email === values.email))
             ))
             {
                 notify('error', 'The entry with the Slack User Id or Email already Exists');
+                setIsSaving(false);
                 return;
             }
 
@@ -170,9 +173,10 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                     resetAndFetch();
                 });
 
-            message.success("User updated");
+            notify('success', 'Data saved successfully.');
         } catch {
             message.error("Validation failed");
+            setIsSaving(false);
         }
     };
 
@@ -184,6 +188,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
         setEditingRow(0);
         form.resetFields();
         fetchData();
+        setIsSaving(false);
     }
 
     const columns: ColumnsType<User> = [
@@ -365,10 +370,11 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                             <Button
                                 type="primary"
                                 onClick={() => handleSave(record.id)}
+                                loading={isSaving} disabled={isSaving} 
                             >
-                                Save
+                                {isSaving ? "Saving..." : "Save"}
                             </Button>
-                            <Button onClick={handleCancel}>Cancel</Button>
+                            <Button onClick={handleCancel} disabled={isSaving}>Cancel</Button>
                         </Space>
                     );
                 }
@@ -447,7 +453,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                             rowKey="id"
                             dataSource={users}
                             columns={columns}
-                            pagination={false}
+                            pagination={{ pageSize: 10 }}
                             scroll={{ x: 1000 }}
                         />
                     </Form>

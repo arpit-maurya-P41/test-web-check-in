@@ -7,7 +7,7 @@ export async function GET() {
     console.log("Detected GET request");
 
     try {
-        const teams = await prisma.teams.findMany({ orderBy: { id: "asc" } });
+        const teams = await prisma.teams.findMany({ orderBy: { id: "desc" } });
         return NextResponse.json(teams);
     } catch (error) {
         console.error("Error Detacted in dashboard GET Request", error);
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
             });
         }
 
-        const teams = await prisma.teams.findMany({ orderBy: { id: "asc" } });
+        const teams = await prisma.teams.findMany({ orderBy: { id: "desc" } });
         return NextResponse.json(teams);
     } catch (error) {
         console.error("Error Detacted in dashboard POST Request", error);

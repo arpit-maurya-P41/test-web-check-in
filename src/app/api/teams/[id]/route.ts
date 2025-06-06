@@ -8,7 +8,7 @@ export async function DELETE(req: Request) {
     try {
         await prisma.teams.delete({ where: { id: Number(id) } });
 
-        const teams = await prisma.teams.findMany({ orderBy: { id: "asc" } });
+        const teams = await prisma.teams.findMany({ orderBy: { id: "desc" } });
         return NextResponse.json(teams);
     } catch (error) {
         console.error("Error Detacted in dashboard DELETE Request", error);

@@ -8,6 +8,7 @@ import Sidebar from "../Sidebar";
 import { logoutUser } from "@/app/actions/authActions";
 import './teams.css'
 import { useNotification } from "../NotificationProvider";
+import { ColumnsType } from "antd/es/table";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -15,6 +16,12 @@ const { Title } = Typography;
 type Props = {
     userId: string;
     roles: roles
+}
+
+type Team = {
+    id: number;
+    name: string;
+    slack_channel_id: string;
 }
 
 const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
@@ -54,7 +61,7 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
 
     }
 
-    const isEditing = (record: teams) => record.id === editingKey;
+    const isEditing = (record: Team) => record.id === editingKey;
 
     const edit = (record: teams) => {
         form.setFieldsValue({ ...record });
@@ -62,8 +69,9 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
     };
 
     const cancel = () => {
-        fetchData();
         setEditingKey(0);
+        form.resetFields();
+        fetchData();
     };
 
     const save = async (id: number) => {
@@ -87,9 +95,11 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
                     body: JSON.stringify(newData[index]),
                 })
                     .then((response) => response.json())
-                    .then((data) => {
-                        setDataSource(data);
+                    .then(() => {
                         setEditingKey(0);
+                        form.resetFields();
+                        fetchData();
+                        notify('success', 'Data saved successfully.');
                     });
             }
         } catch (errInfo) {
@@ -103,31 +113,30 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
 
     const handleAdd = () => {
         if(dataSource.length > 0){
-            const teamCount = dataSource.length - 1;
-            if(dataSource[teamCount]?.name === '' && dataSource[teamCount]?.slack_channel_id === '')
+            const index = 0;
+            if(dataSource[index]?.name === '' && dataSource[index]?.slack_channel_id === '')
             {
-                notify("warning", "Please save or cancel the current team entry before adding a new one.");
+                notify("info", "Please save or cancel the current team entry before adding a new one.");
                 return;
             }
         }
 
-        const newId = dataSource.length > 0 ? dataSource[dataSource.length - 1].id + 1 : 1;
+        const newId = dataSource.length > 0 ? dataSource[0].id + 1 : 1;
         const newRow: teams = {
             id: newId,
             name: "",
             slack_channel_id: "",
         };
-        setDataSource([...dataSource, newRow]);
+        setDataSource([newRow, ...dataSource]);
         edit(newRow);
     };
 
-    const columns = [
+    const columns: ColumnsType<Team> = [
         {
             title: "Name",
             dataIndex: "name",
-            editable: true,
-            render: (_: unknown, record: teams) =>
-                isEditing(record) ? (
+            render: (_: unknown, record: Team) => {
+                return isEditing(record) ? (
                     <Form.Item
                         name="name"
                         style={{ margin: 0 }}
@@ -137,14 +146,13 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
                     </Form.Item>
                 ) : (
                     record.name
-                ),
+                )},
         },
         {
             title: "Slack Channel Id",
             dataIndex: "slack_channel_id",
-            editable: true,
-            render: (_: unknown, record: teams) =>
-                isEditing(record) ? (
+            render: (_: unknown, record: Team) => {
+                return isEditing(record) ? (
                     <Form.Item
                         name="slack_channel_id"
                         style={{ margin: 0 }}
@@ -156,7 +164,7 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
                     </Form.Item>
                 ) : (
                     record.slack_channel_id
-                ),
+                )},
         },
         {
             title: "Actions",
@@ -187,20 +195,6 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
             },
         },
     ];
-
-    const mergedColumns = columns.map((col) => {
-        if (!col.editable) return col;
-        return {
-            ...col,
-            onCell: (record: teams) => ({
-                record,
-                inputType: "text",
-                dataIndex: col.dataIndex,
-                title: col.title,
-                editing: isEditing(record),
-            }),
-        };
-    });
 
     return (
         <Layout>
@@ -253,18 +247,9 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
                         rowKey="id"
                         bordered
                         dataSource={dataSource}
-                        columns={mergedColumns}
-                        rowClassName="editable-row"
+                        columns={columns}
                         pagination={{ pageSize: 10 }}
                         scroll={{ x: 'max-content' }}
-                        components={{
-                            body: {
-                            cell: (props) => {
-                                const { ...restProps } = props;
-                                return <td {...restProps}>{props.children}</td>;
-                            },
-                            },
-                        }}
                         />
                     </Form>
                     </div>

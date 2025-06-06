@@ -9,7 +9,7 @@ export async function DELETE(req: Request) {
         await prisma.users.delete({ where: { id: Number(id) } });
 
         const users = await prisma.users.findMany({
-            orderBy: { id: "asc" },
+            orderBy: { id: "desc" },
             select: {
                 id: true,
                 first_name: true,
