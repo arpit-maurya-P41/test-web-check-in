@@ -13,6 +13,6 @@ export default async function ProfileManagement() {
         getRoles(session.user.id),
         getTeams(session.user.id)
     ]);
-
+    
     return <Checkins  userId={session.user.id} roles={roles} teams={teams} />;
 }

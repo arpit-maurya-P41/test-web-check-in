@@ -6,7 +6,7 @@ export async function GET() {
 
     try {
         const users = await prisma.users.findMany({
-            orderBy: { id: "asc" },
+            orderBy: { id: "desc" },
             select: {
                 id: true,
                 first_name: true,
