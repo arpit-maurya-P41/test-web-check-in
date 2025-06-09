@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { MenuFoldOutlined, MenuUnfoldOutlined, LogoutOutlined } from "@ant-design/icons";
-import { Button, Layout, theme, Table, Input, Popconfirm, Form, Space, Typography } from "antd";
+import { Button, Layout, theme, Table, Input, Popconfirm, Form, Space, Typography, Spin } from "antd";
 import { roles, teams } from "@prisma/client";
 import Sidebar from "../Sidebar";
 import { logoutUser } from "@/app/actions/authActions";
@@ -31,13 +31,22 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
     const [collapsed, setCollapsed] = useState<boolean>(false);
     const [dataSource, setDataSource] = useState<teams[]>([]);
     const [editingKey, setEditingKey] = useState<number>(0);
+    const [loading, setLoading] = useState(true);
     const notify = useNotification();
 
     useEffect(() => {
         const fetchData = async () => {
+            try{
             const response = await fetch("/api/teams");
             const data = await response.json();
             setDataSource(data);
+            }
+            catch(error){
+                console.error("Error fetching data", error);
+            }
+            finally{
+                setLoading(false);
+            }
         };
         fetchData();
     }, []);
@@ -77,9 +86,10 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
     const save = async (id: number) => {
         try {
             const row = await form.validateFields();
-            if(dataSource.find(team => team.id !== id && (team.slack_channel_id === row.slack_channel_id)))
+            if(dataSource.find(team => team.id !== id && (team.slack_channel_id === row.slack_channel_id || 
+                team.name === row.name)))
             {
-                notify('error', 'The Slack Channel Id already Exists');
+                notify('error', 'The Slack Channel ID or Team Name already exists.');
                 return;
             }
             const newData = [...dataSource];
@@ -197,6 +207,9 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
     ];
 
     return (
+        loading ? (
+            <Spin percent="auto" fullscreen size="large" />
+        ) :
         <Layout>
             <Sidebar
                 collapsed={collapsed}

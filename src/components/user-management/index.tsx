@@ -11,6 +11,7 @@ import { roles, teams } from "@prisma/client";
 import Sidebar from "../Sidebar";
 import { convertTimeToUTC, getTimeZones } from "@/utils/timeUtils";
 import { useNotification } from "../NotificationProvider";
+import { Spin } from "antd";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -53,9 +54,11 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
     const [editingRow, setEditingRow] = useState<number>(0);
     const notify = useNotification();
     const [isSaving, setIsSaving] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
+            try{
             const teamsAPIResponse = await fetch("/api/teams");
             const teamsData = await teamsAPIResponse.json();
             setTeams(teamsData);
@@ -67,6 +70,13 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
             const rolesAPIResponse = await fetch("/api/roles");
             const roledata = await rolesAPIResponse.json();
             setRoles(roledata);
+            }
+            catch(error){
+                console.error("Error fetching data", error);
+            }
+            finally{
+                setLoading(false);
+            }
         };
         fetchData();
     }, []);
@@ -96,15 +106,15 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
 
     const handleAdd = () => {
         if(users.length > 0){
-            const teamCount = users.length - 1;
-            if(users[teamCount]?.slack_user_id === '' && users[teamCount]?.first_name === '')
+            const index = 0;
+            if(users[index]?.slack_user_id === '' && users[index]?.first_name === '')
             {
                 notify("info", "Please save or cancel the current user entry before adding a new one.");
                 return;
             }
         }
 
-        const count = users.length > 0 ? users[users.length - 1].id + 1 : 1;
+        const count = users.length > 0 ? users[0].id + 1 : 1;
         const newRow: User = {
             id: count,
             first_name: "",
@@ -131,7 +141,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
             slack_user_id: user.slack_user_id,
             team_ids: user.user_team_mappings.map((t) => t.team_id),
             role_id: user.roles.id != 0 ? user.roles.id : undefined,
-            timezone: user.timezone
+            timezone: user.timezone || undefined
         });
     };
 
@@ -395,6 +405,9 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
     ];
 
     return (
+        loading ? (
+                <Spin percent="auto" fullscreen size="large" />
+        ) : 
         <Layout>
             <Sidebar
                 collapsed={collapsed}
