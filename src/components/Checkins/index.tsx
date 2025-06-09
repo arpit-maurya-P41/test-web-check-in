@@ -1,6 +1,6 @@
 'use client'
 import { roles } from "@prisma/client";
-import { Button, Card, Dropdown, Layout, MenuProps, theme } from "antd";
+import { Button, Card, Dropdown, Layout, MenuProps, Spin, theme } from "antd";
 import Sidebar from "../Sidebar";
 import { useEffect, useState } from "react";
 import { DownOutlined, LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
@@ -46,6 +46,7 @@ const Checkins: React.FC<Props> = ({ roles, teams }) => {
     const [collapsed, setCollapsed] = useState<boolean>(false);
     const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
     const [goalsSummary, setGoalsSummary] = useState<CheckinEntry[]>([]);
+    const [loading, setLoading] = useState(true);
 
     const handleMenuClick: MenuProps['onClick'] = (e) => {
         const team = teams.find((t) => t.id.toString() === e.key);
@@ -81,6 +82,7 @@ const Checkins: React.FC<Props> = ({ roles, teams }) => {
 
     useEffect(()=>{
         const fetchData = async () => {
+            try{
             const url = selectedTeam
             ? `/api/checkins?teamChannelId=${selectedTeam.slack_channel_id}`
             : `/api/checkins`;
@@ -89,10 +91,20 @@ const Checkins: React.FC<Props> = ({ roles, teams }) => {
             const data = await res.json();
             setGoalsSummary(JSON.parse(JSON.stringify(data)));
         }
+        catch(error){
+            console.error("Error fetching data", error);
+        }
+        finally{
+            setLoading(false);
+        }
+        }
         fetchData();
     },[selectedTeam])
 
     return(
+        loading ? (
+            <Spin percent="auto" fullscreen size="large" />
+        ) :
         <Layout>
             <Sidebar
                 collapsed={collapsed}
