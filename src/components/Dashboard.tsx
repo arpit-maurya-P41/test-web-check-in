@@ -21,11 +21,13 @@ import {
 import dayjs, { Dayjs } from "dayjs";
 import { RangePickerProps } from "antd/lib/date-picker";
 import Sidebar from "@/components/Sidebar";
-import { roles, teams, users } from "@prisma/client";
 import { logoutUser } from "@/app/actions/authActions";
 
 import { Heatmap } from "@ant-design/charts";
 import PercentageLineChart from "./PercentageLineChart";
+import { DashboardProps } from "@/type/PropTypes";
+import { DashboardData, PercentageData } from "@/type/types";
+
 const { Title } = Typography;
 
 const { Option } = Select;
@@ -33,30 +35,7 @@ const { RangePicker } = DatePicker;
 const { Header, Content } = Layout;
 const getDefaultDates = () => [dayjs().subtract(6, "day"), dayjs()] as [Dayjs, Dayjs];
 
-type Props = {
-    userId: string;
-    roles: roles;
-    teams: teams[];
-    users: users[];
-};
-
-type UserDetail = {
-name : string;
-id : string;
-}
-
-type DashboardData = {
-    date: string;
-    user: UserDetail;
-    percentage: number;
-};
-
-type PercentageData = {
-    date: string;
-    percentage: number;
-};
-
-const Dashboard: React.FC<Props> = ({ roles, teams, users }) => {
+const Dashboard: React.FC<DashboardProps> = ({ roles, teams, users }) => {
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
 
     const [collapsed, setCollapsed] = useState(false);

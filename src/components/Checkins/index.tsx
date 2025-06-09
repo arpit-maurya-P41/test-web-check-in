@@ -1,47 +1,16 @@
 'use client'
-import { roles } from "@prisma/client";
 import { Button, Card, Dropdown, Layout, MenuProps, Spin, theme } from "antd";
 import Sidebar from "../Sidebar";
 import { useEffect, useState } from "react";
 import { DownOutlined, LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import { logoutUser } from "@/app/actions/authActions";
 import "./Checkins.css";
+import { CheckinEntry, Goal} from "@/type/types";
+import { CheckinProps, Team } from "@/type/PropTypes";
 
 const { Header, Content } = Layout;
 
-type Team = {
-    id: number;
-    name: string;
-    slack_channel_id: string;
-  };
-
-type Props = {
-    userId: string;
-    roles: roles;
-    teams: Team[];
-}
-
-type Goal = {
-    goal_text: string;
-    is_smart: boolean;
-    goal_progress: {
-        is_met: boolean;
-      }[];
-  };
-  
-  type CheckinEntry = {
-    slack_user_id: string;
-    checkin_date: string;
-    blocker: string | null;
-    feeling: string | null;
-    goals: Goal[];
-    users: {
-        first_name: string;
-        last_name: string;
-      };
-  };
-
-const Checkins: React.FC<Props> = ({ roles, teams }) => {
+const Checkins: React.FC<CheckinProps> = ({ roles, teams }) => {
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
     const [collapsed, setCollapsed] = useState<boolean>(false);
     const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);

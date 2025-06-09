@@ -1,33 +1,16 @@
 'use client'
 import { Button, Col, Form, Input, Layout, Row, Select, theme, TimePicker, Typography } from "antd";
-import { roles } from "@prisma/client";
 import { LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { logoutUser } from "@/app/actions/authActions";
 import Sidebar from "../Sidebar";
-import { Dayjs } from "dayjs";
 import { convertTimeToUTC, getTimeZones, convertUtcTimeToLocal } from "@/utils/timeUtils";
 import { useNotification } from "../NotificationProvider";
+import { Props } from "@/type/PropTypes";
+import { FormValues } from "@/type/types";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
-
-type Props = {
-    userId: string;
-    roles: roles
-}
-
-
-type FormValues = {
-    FirstName: string;
-    LastName: string;
-    Title: string;
-    Location: string;
-    timezone: string;
-    checkIn: Dayjs;
-    checkOut: Dayjs;
-    About: string;
-};
 
 const Profile: React.FC<Props> = ({ roles, userId }) => {
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();

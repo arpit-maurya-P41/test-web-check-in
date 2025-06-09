@@ -7,26 +7,12 @@ import {
     UserSwitchOutlined,
 } from "@ant-design/icons";
 import { Layout, Menu } from "antd";
+import { SidebarProps } from "@/type/PropTypes";
+import { DashboardItem } from "@/type/types";
 
 const { Sider } = Layout;
 
-type Props = {
-    collapsed: boolean;
-    canManageTeams: boolean;
-    canManageUsers: boolean;
-    canViewReports: boolean;
-    canManageRoles: boolean;
-    activeKey: string;
-};
-
-type DashboardItem = {
-    key: string;
-    icon: React.ReactNode;
-    label: string;
-    onClick?: () => void;
-};
-
-const Sidebar: React.FC<Props> = ({ collapsed, canManageTeams, canManageUsers, canManageRoles, activeKey }) => {
+const Sidebar: React.FC<SidebarProps> = ({ collapsed, canManageTeams, canManageUsers, canManageRoles, activeKey }) => {
     const sidebarItems = [];
     const dashboardItem: DashboardItem = {
         key: "dashboard",
