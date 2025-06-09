@@ -2,46 +2,22 @@
 
 import React, { useState, useEffect } from "react";
 import { MenuFoldOutlined, MenuUnfoldOutlined, LogoutOutlined } from "@ant-design/icons";
-import { Button, Layout, theme, Table, Input, Popconfirm, Form, Space, Typography, Select, message } from "antd";
+import { Button, Layout, theme, Table, Input, Popconfirm, Form, Space, Typography, Select, message, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
 
 import { logoutUser } from "@/app/actions/authActions";
 
-import { roles, teams } from "@prisma/client";
+import { teams } from "@prisma/client";
 import Sidebar from "../Sidebar";
 import { convertTimeToUTC, getTimeZones } from "@/utils/timeUtils";
 import { useNotification } from "../NotificationProvider";
 import { Spin } from "antd";
+import { Props } from "@/type/PropTypes";
+import { Role, User } from "@/type/types";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
 const { Option } = Select;
-
-type Props = {
-    userId: string;
-    roles: roles
-}
-
-type Role = {
-    id: number;
-    role_name: string;
-}
-
-type UserTeamMapping = {
-    team_id: number;
-    teams: teams;
-};
-
-type User = {
-    id: number;
-    first_name: string;
-    last_name: string;
-    email: string;
-    slack_user_id: string;
-    user_team_mappings: UserTeamMapping[];
-    roles: Role;
-    timezone: string;
-};
 
 const UserManagementIndex: React.FC<Props> = ({ roles }) => {
     const [form] = Form.useForm();
@@ -298,7 +274,9 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                             <Select showSearch placeholder="Select timezone">
                                 {getTimeZones().map(({ label, value }) => (
                                     <Select.Option key={value} value={value}>
+                                        <Tooltip placement="topLeft" title={label}>
                                         {label}
+                                        </Tooltip>
                                     </Select.Option>
                                 ))}
                             </Select>
@@ -361,7 +339,9 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                             >
                                 {teams.map((team) => (
                                     <Option key={team.id} value={team.id}>
+                                        <Tooltip placement="topLeft" title={team.name}>
                                         {team.name}
+                                        </Tooltip>
                                     </Option>
                                 ))}
                             </Select>

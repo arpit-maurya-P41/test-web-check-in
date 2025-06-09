@@ -7,14 +7,10 @@ import { roles } from "@prisma/client";
 import Sidebar from "../Sidebar";
 import { ColumnsType } from "antd/es/table";
 import { logoutUser } from "@/app/actions/authActions";
+import { Props } from "@/type/PropTypes";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
-
-type Props = {
-    userId: string;
-    roles: roles
-}
 
 const RoleManagementIndex: React.FC<Props> = ({ roles }) => {
     const [form] = Form.useForm();

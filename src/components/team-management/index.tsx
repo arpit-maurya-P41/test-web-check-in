@@ -3,26 +3,16 @@
 import React, { useState, useEffect } from "react";
 import { MenuFoldOutlined, MenuUnfoldOutlined, LogoutOutlined } from "@ant-design/icons";
 import { Button, Layout, theme, Table, Input, Popconfirm, Form, Space, Typography, Spin } from "antd";
-import { roles, teams } from "@prisma/client";
+import { teams } from "@prisma/client";
 import Sidebar from "../Sidebar";
 import { logoutUser } from "@/app/actions/authActions";
 import './teams.css'
 import { useNotification } from "../NotificationProvider";
 import { ColumnsType } from "antd/es/table";
+import { Props, Team } from "@/type/PropTypes";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
-
-type Props = {
-    userId: string;
-    roles: roles
-}
-
-type Team = {
-    id: number;
-    name: string;
-    slack_channel_id: string;
-}
 
 const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
     const [form] = Form.useForm();

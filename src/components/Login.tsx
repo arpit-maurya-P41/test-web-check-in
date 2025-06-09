@@ -3,13 +3,9 @@
 import React, { useState } from "react";
 import { Card, Form, Input, Button, Typography, Space, message } from "antd";
 import { loginUser } from "@/app/actions/authActions";
+import { LoginFormValues } from "@/type/types";
 
 const { Title, Text } = Typography;
-
-type LoginFormValues = {
-    username: string;
-    password: string;
-}
 
 const Login = () => {
     const [form] = Form.useForm();

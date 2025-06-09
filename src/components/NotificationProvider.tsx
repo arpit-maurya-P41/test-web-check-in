@@ -1,8 +1,7 @@
 'use client';
 import { createContext, useContext } from 'react';
 import { notification } from 'antd';
-
-type NotificationType = 'success' | 'info' | 'warning' | 'error';
+import { NotificationType } from '@/type/types';
 
 interface NotificationContextType {
   notify: (type: NotificationType, message: string) => void;
