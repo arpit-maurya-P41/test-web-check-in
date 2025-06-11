@@ -18,7 +18,7 @@ const TeamManagementIndex: React.FC<Props> = ({ roles }) => {
     const [form] = Form.useForm();
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
 
-    const [collapsed, setCollapsed] = useState<boolean>(false);
+    const [collapsed, setCollapsed] = useState<boolean>(true);
     const [dataSource, setDataSource] = useState<teams[]>([]);
     const [editingKey, setEditingKey] = useState<number>(0);
     const [loading, setLoading] = useState(true);

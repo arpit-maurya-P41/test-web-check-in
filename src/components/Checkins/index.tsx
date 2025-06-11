@@ -12,7 +12,7 @@ const { Header, Content } = Layout;
 
 const Checkins: React.FC<CheckinProps> = ({ roles, teams }) => {
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
-    const [collapsed, setCollapsed] = useState<boolean>(false);
+    const [collapsed, setCollapsed] = useState<boolean>(true);
     const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
     const [goalsSummary, setGoalsSummary] = useState<CheckinEntry[]>([]);
     const [loading, setLoading] = useState(true);
