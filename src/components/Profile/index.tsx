@@ -14,7 +14,7 @@ const { Title } = Typography;
 
 const Profile: React.FC<Props> = ({ roles, userId }) => {
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
-    const [collapsed, setCollapsed] = useState<boolean>(false);
+    const [collapsed, setCollapsed] = useState<boolean>(true);
     const [form] = Form.useForm();
     const format = 'HH:mm';
     const notify = useNotification();
@@ -151,7 +151,7 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                                     name="FirstName"
                                     rules={[{ required: true, message: 'Please input!' }]}
                                 >
-                                    <Input />
+                                    <Input placeholder="First Name"/>
                                 </Form.Item>
                             </Col>
                             <Col xs={24} sm={12} md={8}>
@@ -159,7 +159,7 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                                     label="Last Name"
                                     name="LastName"
                                 >
-                                    <Input />
+                                    <Input placeholder="Last Name"/>
                                 </Form.Item>
                             </Col>
                         </Row>
@@ -171,7 +171,7 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                                     name="Location"
                                     rules={[{ required: true, message: 'Please input!' }]}
                                 >
-                                    <Input />
+                                    <Input placeholder="Location"/>
                                 </Form.Item>
                             </Col>
                             <Col xs={24} sm={12} md={8}>

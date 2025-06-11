@@ -16,6 +16,7 @@ import {
     Space,
     Select,
     Typography,
+    Spin,
 } from "antd";
 
 import dayjs, { Dayjs } from "dayjs";
@@ -38,7 +39,7 @@ const getDefaultDates = () => [dayjs().subtract(6, "day"), dayjs()] as [Dayjs, D
 const Dashboard: React.FC<DashboardProps> = ({ roles, teams, users }) => {
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
 
-    const [collapsed, setCollapsed] = useState(false);
+    const [collapsed, setCollapsed] = useState(true);
     const [loading, setLoading] = useState(true);
     const [dashboardData, setDashboardData] = useState<DashboardData[]>([]);
     const [dates, setDates] = useState<[Dayjs, Dayjs]>(getDefaultDates());
@@ -179,7 +180,7 @@ const Dashboard: React.FC<DashboardProps> = ({ roles, teams, users }) => {
                         gap: 16,
                     }}>
                     {loading ? (
-                        "Loading..."
+                        <Spin percent="auto" fullscreen size="large" />
                     ) : (
                         <>
                             <Row>

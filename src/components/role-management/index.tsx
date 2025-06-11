@@ -16,7 +16,7 @@ const RoleManagementIndex: React.FC<Props> = ({ roles }) => {
     const [form] = Form.useForm();
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
 
-    const [collapsed, setCollapsed] = useState<boolean>(false);
+    const [collapsed, setCollapsed] = useState<boolean>(true);
     const [dataSource, setDataSource] = useState<roles[]>([]);
     const [editingKey, setEditingKey] = useState<number>(0);
 

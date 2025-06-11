@@ -23,7 +23,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
     const [form] = Form.useForm();
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
 
-    const [collapsed, setCollapsed] = useState<boolean>(false);
+    const [collapsed, setCollapsed] = useState<boolean>(true);
     const [teams, setTeams] = useState<teams[]>([]);
     const [users, setUsers] = useState<User[]>([]);
     const [rolesData, setRoles] = useState<Role[]>([]);
@@ -179,7 +179,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
 
     const columns: ColumnsType<User> = [
         {
-            title: "FirstName",
+            title: "First Name",
             dataIndex: "first_name",
             render: (_: unknown, record: User) => {
                 if (editingRow === record.id) {
@@ -192,7 +192,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                             ]}
                             style={{ margin: 0 }}
                         >
-                            <Input placeholder="FirstName"/>
+                            <Input placeholder="First Name"/>
                         </Form.Item>
                     );
                 }
@@ -200,7 +200,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
             },
         },
         {
-            title: "LastName",
+            title: "Last Name",
             dataIndex: "last_name",
             render: (_: unknown, record: User) => {
                 if (editingRow === record.id) {
@@ -212,7 +212,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                             ]}
                             style={{ margin: 0 }}
                         >
-                            <Input placeholder="LastName"/>
+                            <Input placeholder="Last Name"/>
                         </Form.Item>
                     );
                 }
@@ -253,7 +253,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                             ]}
                             style={{ margin: 0 }}
                         >
-                            <Input placeholder="Slack user id"/>
+                            <Input placeholder="Slack User Id"/>
                         </Form.Item>
                     );
                 }
@@ -261,7 +261,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
             },
         },
         {
-            title: "TimeZone",
+            title: "Time Zone",
             dataIndex: "timezone",
             render: (_: unknown, record: User) => {
                 if (editingRow === record.id) {
@@ -271,7 +271,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                             rules={[{ required: true, message: 'Please select timezone!' }]}
                             style={{ margin: 0 }}
                         >
-                            <Select showSearch placeholder="Select timezone">
+                            <Select showSearch placeholder="Select Timezone">
                                 {getTimeZones().map(({ label, value }) => (
                                     <Select.Option key={value} value={value}>
                                         <Tooltip placement="topLeft" title={label}>
@@ -303,7 +303,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                                 showSearch={false}
                                 allowClear
                                 style={{ width: "100%" }}
-                                placeholder="Select role"
+                                placeholder="Select Role"
                             >
                                 {rolesData.map((role) => (
                                     <Option key={role.id} value={role.id}>
@@ -325,9 +325,6 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                     return (
                         <Form.Item
                             name="team_ids"
-                            rules={[
-                                { required: true, message: "Select at least one team" },
-                            ]}
                             style={{ margin: 0 }}
                         >
                             <Select
@@ -335,7 +332,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                                 showSearch={false}
                                 allowClear
                                 style={{ width: "100%" }}
-                                placeholder="Select teams"
+                                placeholder="Select Teams"
                             >
                                 {teams.map((team) => (
                                     <Option key={team.id} value={team.id}>
@@ -439,7 +436,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                     <div style={{ padding: "16px", overflowX: "auto" }}>
                     <Title level={4}>Users</Title>
                     <Button onClick={handleAdd} type="primary" style={{ marginBottom: 16, width: "100%", maxWidth: 200 }}>
-                        Add new User
+                        Add New User
                     </Button>
                     <Form form={form} component={false}>
                         <Table
@@ -448,6 +445,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                             columns={columns}
                             pagination={{ pageSize: 10 }}
                             scroll={{ x: 1000 }}
+                            size="small"
                         />
                     </Form>
                 </div>
