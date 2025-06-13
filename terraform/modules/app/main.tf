@@ -17,6 +17,15 @@ locals {
   kms_key_name    = "p41-default"
 }
 
+data "aws_ssm_parameter" "image_uri" {
+  name            = local.image_parameter
+  with_decryption = true
+}
+
+locals {
+  image_uri = data.aws_ssm_parameter.image_uri.value
+}
+
 data "aws_iam_policy" "kms_default" {
   name = local.kms_policy_name
 }
@@ -56,9 +65,9 @@ resource "aws_iam_role_policy_attachment" "kms_default" {
 module "lambda" {
   depends_on = [aws_iam_role_policy_attachment.kms_default]
 
-  source          = "../lambda"
-  name            = local.app_name
-  image_parameter = local.image_parameter
+  source    = "../lambda"
+  name      = local.app_name
+  image_uri = local.image_uri
 
   iam_role_arn   = module.lambda_base.iam_role.arn
   log_group_name = module.lambda_base.log_group.name

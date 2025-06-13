@@ -1,10 +1,6 @@
-data "aws_ssm_parameter" "image_uri" {
-  name            = var.image_parameter
-  with_decryption = true
-}
-
 locals {
-  image_uri = data.aws_ssm_parameter.image_uri.value
+  has_filesystem       = var.efs_access_point_arn != null && var.efs_access_point_arn != "" && var.efs_local_mount_path != null && var.efs_local_mount_path != ""
+  efs_local_mount_path = var.efs_local_mount_path == "" ? null : var.efs_local_mount_path
 }
 
 resource "aws_lambda_function" "this" {
@@ -12,7 +8,7 @@ resource "aws_lambda_function" "this" {
   function_name = var.name
   role          = var.iam_role_arn
   description   = var.description
-  image_uri     = local.image_uri
+  image_uri     = var.image_uri
   timeout       = var.timeout_seconds
   memory_size   = var.memory_size_mb
 
@@ -20,7 +16,22 @@ resource "aws_lambda_function" "this" {
 
   kms_key_arn = var.kms_key_arn
 
+  reserved_concurrent_executions = var.reserved_concurrent_executions
+
   publish = true
+
+  dynamic "file_system_config" {
+    for_each = local.has_filesystem ? [1] : []
+    content {
+      arn              = var.efs_access_point_arn
+      local_mount_path = local.efs_local_mount_path
+    }
+  }
+
+  vpc_config {
+    security_group_ids = var.security_group_ids
+    subnet_ids         = var.subnet_ids
+  }
 
   tracing_config {
     mode = "Active"
