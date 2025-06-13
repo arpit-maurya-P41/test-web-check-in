@@ -10,7 +10,7 @@ locals {
 }
 
 locals {
-  log_group_name = "${var.log_group_prefix}/${var.name}"
+  log_group_name = "${var.log_group_prefix}${var.name}"
   log_group_arn  = "arn:${local.partition}:logs:${local.region}:${local.account_id}:log-group:${local.log_group_name}:*"
 
   managed_policy_arn_prefix = "arn:${local.partition}:iam::aws:policy"
@@ -31,10 +31,10 @@ resource "aws_iam_role" "this" {
   name                  = var.name
   assume_role_policy    = data.aws_iam_policy_document.service_trust.json
   force_detach_policies = true
+  tags                  = var.tags
 }
 
 data "aws_iam_policy_document" "log_permissions" {
-
   statement {
     sid = "logs"
     actions = [
@@ -47,7 +47,6 @@ data "aws_iam_policy_document" "log_permissions" {
       "${local.log_group_arn}:*:*"
     ]
   }
-
 }
 
 data "aws_iam_policy_document" "vpc_permissions" {
@@ -82,10 +81,10 @@ resource "aws_iam_role_policy" "service_permissions" {
 resource "aws_cloudwatch_log_group" "this" {
   name              = local.log_group_name
   retention_in_days = var.log_retention_in_days
+  tags              = var.tags
 }
 
 locals {
-
   default_policy_names = [
     "AWSXrayWriteOnlyAccess",
     "CloudWatchLambdaInsightsExecutionRolePolicy",

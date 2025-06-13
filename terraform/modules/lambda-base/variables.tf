@@ -6,7 +6,7 @@ variable "name" {
 variable "log_group_prefix" {
   description = "The log group prefix"
   type        = string
-  default     = "/aws/lambda"
+  default     = "/aws/lambda/"
 }
 
 variable "log_retention_in_days" {
@@ -29,4 +29,10 @@ variable "vpc_permissions_enabled" {
   description = "(Optional) Whether to enable VPC permissions for the execution role"
   type        = bool
   default     = false
+}
+
+variable "tags" {
+  description = "(Optional) Map of tags to apply to created resources"
+  type        = map(string)
+  default     = {}
 }

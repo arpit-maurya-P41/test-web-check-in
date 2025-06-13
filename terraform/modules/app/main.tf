@@ -10,11 +10,21 @@ locals {
 }
 
 locals {
-  project_name    = "p41-daily-status"
-  app_name        = "${local.project_name}-web"
-  image_parameter = "/images/p41-daily-status/web-app"
-  kms_policy_name = "kms-default-readonly-${local.region}"
-  kms_key_name    = "p41-default"
+  project_name           = "p41-daily-status"
+  app_name               = "${local.project_name}-web"
+  image_parameter        = "/images/p41-daily-status/web-app"
+  kms_policy_name        = "kms-default-readonly-${local.region}"
+  kms_key_name           = "p41-default"
+  prv_subnet_name_prefix = "main-private-"
+}
+
+data "aws_ssm_parameter" "image_uri" {
+  name            = local.image_parameter
+  with_decryption = true
+}
+
+locals {
+  image_uri = data.aws_ssm_parameter.image_uri.value
 }
 
 data "aws_iam_policy" "kms_default" {
@@ -38,14 +48,26 @@ data "aws_secretsmanager_secret_version" "db_credentials" {
   secret_id = data.aws_secretsmanager_secret.db_credentials.id
 }
 
+data "aws_ssm_parameter" "db_security_group_id" {
+  name            = "/${local.project_name}/infra/db/security-group-id"
+  with_decryption = true
+}
+
+module "prv_subnets" {
+  source             = "../../modules/subnet-info"
+  subnet_name_prefix = local.prv_subnet_name_prefix
+}
+
 locals {
   db_credentials       = jsondecode(data.aws_secretsmanager_secret_version.db_credentials.secret_string)
   db_connection_string = "postgresql://${local.db_credentials.DB_USER}:${local.db_credentials.DB_PASSWORD}@${local.db_credentials.DB_HOST}:${local.db_credentials.DB_PORT}/${local.db_credentials.DB_NAME}"
+  db_security_group_id = data.aws_ssm_parameter.db_security_group_id.value
 }
 
 module "lambda_base" {
-  source = "../lambda-base"
-  name   = local.app_name
+  source                  = "../lambda-base"
+  name                    = local.app_name
+  vpc_permissions_enabled = true
 }
 
 resource "aws_iam_role_policy_attachment" "kms_default" {
@@ -56,14 +78,17 @@ resource "aws_iam_role_policy_attachment" "kms_default" {
 module "lambda" {
   depends_on = [aws_iam_role_policy_attachment.kms_default]
 
-  source          = "../lambda"
-  name            = local.app_name
-  image_parameter = local.image_parameter
+  source    = "../lambda"
+  name      = local.app_name
+  image_uri = local.image_uri
 
   iam_role_arn   = module.lambda_base.iam_role.arn
   log_group_name = module.lambda_base.log_group.name
 
   kms_key_arn = data.aws_kms_alias.default.target_key_arn
+
+  security_group_ids = [aws_security_group.this.id]
+  subnet_ids         = module.prv_subnets.subnet_ids
 
   lambda_env = {
     DATABASE_URL = local.db_connection_string
