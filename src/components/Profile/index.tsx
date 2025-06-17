@@ -1,6 +1,6 @@
 'use client'
-import { Button, Col, Form, Input, Layout, Row, Select, theme, TimePicker, Typography } from "antd";
-import { LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
+import { Button, Col, Form, Input, Layout, Row, Select, Switch, theme, TimePicker, Tooltip, Typography } from "antd";
+import { InfoCircleOutlined, LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { logoutUser } from "@/app/actions/authActions";
 import Sidebar from "../Sidebar";
@@ -34,6 +34,7 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                 checkIn:  convertUtcTimeToLocal(user.check_in_time, user.timezone),
                 checkOut: convertUtcTimeToLocal(user.check_out_time, user.timezone),
                 About: user.about_you,
+                IsAdmin: user.is_admin
             });
         };
         fetchUser();
@@ -63,6 +64,7 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                     check_in_time: checkInTime,
                     check_out_time: checkOutTime,
                     about_you: values.About,
+                    is_admin: values.IsAdmin 
                 }),
             });
     
@@ -91,6 +93,7 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                 canViewReports={roles.can_view_reports}
                 canManageRoles={roles.can_manage_roles}
                 activeKey="profile"
+                userId={userId}
             />
             <Layout>
                 <Header style={{ padding: 0, background: colorBgContainer }}>
@@ -237,6 +240,24 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                                     name="About"
                                 >
                                     <Input.TextArea rows={4} />
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                        <Row gutter={16}>
+                            <Col>
+                                <Form.Item
+                                    label={
+                                        <span>
+                                          Account Administrator&nbsp;
+                                          <Tooltip title="Account administrators can manage users, teams">
+                                            <InfoCircleOutlined style={{ color: '#999' }} />
+                                          </Tooltip>
+                                        </span>
+                                      }
+                                    name="IsAdmin"
+                                    valuePropName="checked"
+                                >
+                                    <Switch />
                                 </Form.Item>
                             </Col>
                         </Row>

@@ -12,7 +12,7 @@ import { DashboardItem } from "@/type/types";
 
 const { Sider } = Layout;
 
-const Sidebar: React.FC<SidebarProps> = ({ collapsed, canManageTeams, canManageUsers, canManageRoles, activeKey }) => {
+const Sidebar: React.FC<SidebarProps> = ({ userId, collapsed, canManageTeams, canManageUsers, canManageRoles, activeKey }) => {
     const sidebarItems = [];
     const dashboardItem: DashboardItem = {
         key: "dashboard",
@@ -76,7 +76,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, canManageTeams, canManageU
         label: "Profile",
     };
     if (activeKey !== "profile") {
-        profileItem.onClick = () => (window.location.href = "/profile");
+        profileItem.onClick = () => (window.location.href = `/profile/${userId}`);
     }
     sidebarItems.push(profileItem);
 

@@ -43,4 +43,5 @@ export type SidebarProps = {
     canViewReports: boolean;
     canManageRoles: boolean;
     activeKey: string;
+    userId: string;
 };

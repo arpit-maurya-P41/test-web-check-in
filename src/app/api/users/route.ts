@@ -12,7 +12,6 @@ export async function GET() {
                 first_name: true,
                 last_name: true,
                 email: true,
-                slack_user_id: true,
                 user_team_mappings: {
                     select: {
                         team_id: true,
@@ -23,14 +22,7 @@ export async function GET() {
                             },
                         },
                     },
-                },
-                timezone: true,
-                roles: {
-                    select: {
-                        id: true,
-                        role_name: true,
-                    },
-                },
+                }
             },
         });
         return NextResponse.json(users);
@@ -58,9 +50,6 @@ export async function POST(req: Request) {
                     first_name: body.first_name,
                     last_name: body.last_name,
                     email: body.email,
-                    slack_user_id: body.slack_user_id,
-                    role_id: body.role_id,
-                    timezone: body.timezone,
                     check_in_time: body.check_in_time,
                     check_out_time: body.check_out_time
                 },
@@ -82,12 +71,12 @@ export async function POST(req: Request) {
                     first_name : body.first_name,
                     last_name: body.last_name,
                     email: body.email,
-                    slack_user_id: body.slack_user_id,
+                    slack_user_id: "",
                     password: "Password123",
-                    role_id: body.role_id,
-                    timezone: body.timezone,
+                    role_id: 1,
                     check_in_time: body.check_in_time,
-                    check_out_time: body.check_out_time
+                    check_out_time: body.check_out_time,
+                    timezone: "Asia/Kolkata"
                 },
             });
             await prisma.user_team_mappings.createMany({

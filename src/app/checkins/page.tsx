@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 import { getRoles, getTeams } from "../actions/dashboardActions";
 import Checkins from "@/components/Checkins";
 
-export default async function ProfileManagement() {
+export default async function Checkin() {
     const session = await auth();
     if (!session?.user?.id) redirect("/login");
 
