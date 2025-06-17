@@ -90,7 +90,7 @@ model users {
   id                  Int                   @id @default(autoincrement())
   first_name          String                @db.VarChar(255)
   email               String                @unique @db.VarChar(255)
-  password            String                @db.VarChar(255)
+  password            String?               @db.VarChar(255)
   slack_user_id       String                @unique @db.VarChar(255)
   role_id             Int
   timezone            String?
@@ -100,7 +100,9 @@ model users {
   title               String?
   check_in_time       DateTime              @default(now()) @db.Time(6)
   check_out_time      DateTime              @default(now()) @db.Time(6)
-  is_active           Boolean?
+  is_active           Boolean?              @default(true)
+  slack_access_token  String?               @db.VarChar(255)
+  is_admin            Boolean               @default(false)
   checkins            checkins[]
   sessions            sessions[]
   user_team_mappings  user_team_mappings[]

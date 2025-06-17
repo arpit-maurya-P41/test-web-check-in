@@ -30,6 +30,7 @@ export type FormValues = {
     checkIn: Dayjs;
     checkOut: Dayjs;
     About: string;
+    IsAdmin: boolean;
 };
 
 export type Role = {
@@ -47,10 +48,7 @@ export type User = {
     first_name: string;
     last_name: string;
     email: string;
-    slack_user_id: string;
     user_team_mappings: UserTeamMapping[];
-    roles: Role;
-    timezone: string;
 };
 
 export type UserDetail = {

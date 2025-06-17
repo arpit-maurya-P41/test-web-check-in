@@ -9,25 +9,25 @@ import { logoutUser } from "@/app/actions/authActions";
 
 import { teams } from "@prisma/client";
 import Sidebar from "../Sidebar";
-import { convertTimeToUTC, getTimeZones } from "@/utils/timeUtils";
+import { convertTimeToUTC } from "@/utils/timeUtils";
 import { useNotification } from "../NotificationProvider";
 import { Spin } from "antd";
 import { Props } from "@/type/PropTypes";
-import { Role, User } from "@/type/types";
+import { User } from "@/type/types";
+import { useRouter } from "next/navigation";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
 const { Option } = Select;
 
-const UserManagementIndex: React.FC<Props> = ({ roles }) => {
+const UserManagementIndex: React.FC<Props> = ({ userId, roles }) => {
     const [form] = Form.useForm();
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
-
+    const router = useRouter();
     const [collapsed, setCollapsed] = useState<boolean>(true);
     const [teams, setTeams] = useState<teams[]>([]);
     const [users, setUsers] = useState<User[]>([]);
-    const [rolesData, setRoles] = useState<Role[]>([]);
-    const [editingRow, setEditingRow] = useState<number>(0);
+    const [editingRow, setEditingRow] = useState<{id: number, method: string}>({id: 0, method: "add"});
     const notify = useNotification();
     const [isSaving, setIsSaving] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -42,10 +42,6 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
             const usersAPIResponse = await fetch("/api/users");
             const usersData = await usersAPIResponse.json();
             setUsers(usersData);
-
-            const rolesAPIResponse = await fetch("/api/roles");
-            const roledata = await rolesAPIResponse.json();
-            setRoles(roledata);
             }
             catch(error){
                 console.error("Error fetching data", error);
@@ -83,7 +79,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
     const handleAdd = () => {
         if(users.length > 0){
             const index = 0;
-            if(users[index]?.slack_user_id === '' && users[index]?.first_name === '')
+            if(users[index]?.first_name === '')
             {
                 notify("info", "Please save or cancel the current user entry before adding a new one.");
                 return;
@@ -96,28 +92,19 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
             first_name: "",
             last_name: "",
             email: "",
-            slack_user_id: "",
-            roles: {
-                id: 0,
-                role_name: "",
-            },
-            user_team_mappings: [],
-            timezone: ""
+            user_team_mappings: []
         };
         setUsers([newRow, ...users]);
-        handleEdit(newRow);
+        handleEdit(newRow, "add");
     };
 
-    const handleEdit = (user: User) => {
-        setEditingRow(user.id);
+    const handleEdit = (user: User, method: string) => {
+        setEditingRow({id : user.id, method: method});
         form.setFieldsValue({
             first_name: user.first_name,
             last_name: user.last_name,
             email: user.email,
-            slack_user_id: user.slack_user_id,
             team_ids: user.user_team_mappings.map((t) => t.team_id),
-            role_id: user.roles.id != 0 ? user.roles.id : undefined,
-            timezone: user.timezone || undefined
         });
     };
 
@@ -125,11 +112,9 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
         try {
             setIsSaving(true);
             const values = await form.validateFields();
-            if(users.find(user => user.id !== userId && ((user.slack_user_id === values.slack_user_id)
-            || (user.email === values.email))
-            ))
+            if(users.find(user => user.id !== userId && (user.email === values.email)))
             {
-                notify('error', 'The entry with the Slack User Id or Email already Exists');
+                notify('error', 'The entry with the Email already Exists');
                 setIsSaving(false);
                 return;
             }
@@ -139,12 +124,9 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                 first_name: values.first_name,
                 last_name: values.last_name,
                 email: values.email,
-                slack_user_id: values.slack_user_id,
                 user_team_mappings: values.team_ids,
-                role_id: values.role_id,
-                timezone: values.timezone,
-                check_in_time: convertTimeToUTC("9:00", values.timezone),
-                check_out_time: convertTimeToUTC("18:00", values.timezone)
+                check_in_time: convertTimeToUTC("9:00", "Asia/Kolkata"),
+                check_out_time: convertTimeToUTC("18:00", "Asia/Kolkata")
             };
 
             fetch("/api/users", {
@@ -171,7 +153,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
     };
 
     const resetAndFetch = () => {
-        setEditingRow(0);
+        setEditingRow({id: 0, method: "add"});
         form.resetFields();
         fetchData();
         setIsSaving(false);
@@ -182,7 +164,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
             title: "First Name",
             dataIndex: "first_name",
             render: (_: unknown, record: User) => {
-                if (editingRow === record.id) {
+                if (editingRow.id === record.id && editingRow.method === "add") {
                     return (
                         <Form.Item
                             name="first_name"
@@ -196,14 +178,21 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                         </Form.Item>
                     );
                 }
-                return record.first_name;
+                return (
+                    <span
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => router.push(`/profile/${record.id}`)}
+                    >
+                        {record.first_name}
+                    </span>
+                )
             },
         },
         {
             title: "Last Name",
             dataIndex: "last_name",
             render: (_: unknown, record: User) => {
-                if (editingRow === record.id) {
+                if (editingRow.id === record.id && editingRow.method === "add") {
                     return (
                         <Form.Item
                             name="last_name"
@@ -216,14 +205,21 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                         </Form.Item>
                     );
                 }
-                return record.last_name;
+                return (
+                    <span
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => router.push(`/profile/${record.id}`)}
+                    >
+                        {record.last_name}
+                    </span>
+                )
             },
         },
         {
             title: "Email",
             dataIndex: "email",
             render: (_: unknown, record: User) => {
-                if (editingRow === record.id) {
+                if (editingRow.id === record.id && editingRow.method === "add") {
                     return (
                         <Form.Item
                             name="email"
@@ -237,91 +233,21 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                         </Form.Item>
                     );
                 }
-                return record.email;
-            },
-        },
-        {
-            title: "Slack User Id",
-            dataIndex: "slack_user_id",
-            render: (_: unknown, record: User) => {
-                if (editingRow === record.id) {
-                    return (
-                        <Form.Item
-                            name="slack_user_id"
-                            rules={[
-                                { required: true, message: "Slack User Id is required" },
-                            ]}
-                            style={{ margin: 0 }}
-                        >
-                            <Input placeholder="Slack User Id"/>
-                        </Form.Item>
-                    );
-                }
-                return record.slack_user_id;
-            },
-        },
-        {
-            title: "Time Zone",
-            dataIndex: "timezone",
-            render: (_: unknown, record: User) => {
-                if (editingRow === record.id) {
-                    return (
-                        <Form.Item
-                            name="timezone"
-                            rules={[{ required: true, message: 'Please select timezone!' }]}
-                            style={{ margin: 0 }}
-                        >
-                            <Select showSearch placeholder="Select Timezone">
-                                {getTimeZones().map(({ label, value }) => (
-                                    <Select.Option key={value} value={value}>
-                                        <Tooltip placement="topLeft" title={label}>
-                                        {label}
-                                        </Tooltip>
-                                    </Select.Option>
-                                ))}
-                            </Select>
-                        </Form.Item>
-                    );
-                }
-                return record.timezone;
-            },
-        },
-        {
-            title: "Role",
-            dataIndex: "roles",
-            render: (_: unknown, record: User) => {
-                if (editingRow === record.id) {
-                    return (
-                        <Form.Item
-                            name="role_id"
-                            rules={[
-                                { required: true, message: "Select at least one role" },
-                            ]}
-                            style={{ margin: 0 }}
-                        >
-                            <Select
-                                showSearch={false}
-                                allowClear
-                                style={{ width: "100%" }}
-                                placeholder="Select Role"
-                            >
-                                {rolesData.map((role) => (
-                                    <Option key={role.id} value={role.id}>
-                                        {role.role_name}
-                                    </Option>
-                                ))}
-                            </Select>
-                        </Form.Item>
-                    );
-                }
-                return record.roles.role_name;
+                return (
+                    <span
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => router.push(`/profile/${record.id}`)}
+                    >
+                        {record.email}
+                    </span>
+                )
             },
         },
         {
             title: "Teams",
             dataIndex: "user_team_mappings",
             render: (_: unknown, record: User) => {
-                if (editingRow === record.id) {
+                if (editingRow.id === record.id) {
                     return (
                         <Form.Item
                             name="team_ids"
@@ -345,13 +271,20 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                         </Form.Item>
                     );
                 }
-                return record.user_team_mappings.map((t) => t.teams.name).join(", ");
+                return (
+                    <span
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => router.push(`/profile/${record.id}`)}
+                    >
+                        { record.user_team_mappings.map((t) => t.teams.name).join(", ")}
+                    </span>
+                )
             },
         },
         {
             title: "Action",
             render: (_: unknown, record: User) => {
-                if (editingRow === record.id) {
+                if (editingRow.id === record.id) {
                     return (
                         <Space>
                             <Button
@@ -367,11 +300,11 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                 }
                 return (
                     <Space>
-                        <Button disabled={editingRow !== 0} onClick={() => handleEdit(record)} type="link">
+                        <Button disabled={editingRow.id !== 0} onClick={() => handleEdit(record, "edit")} type="link">
                             Edit
                         </Button>
                         <Popconfirm title="Are you sure?" onConfirm={() => handleDelete(record.id)}>
-                            <Button disabled={editingRow !== 0} type="link" danger>
+                            <Button disabled={editingRow.id !== 0} type="link" danger>
                                 Delete
                             </Button>
                         </Popconfirm>
@@ -393,6 +326,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                 canViewReports={roles.can_view_reports}
                 canManageRoles={roles.can_manage_roles}
                 activeKey="userManagement"
+                userId={userId}
             />
             <Layout>
                 <Header style={{ padding: 0, background: colorBgContainer }}>
@@ -433,7 +367,7 @@ const UserManagementIndex: React.FC<Props> = ({ roles }) => {
                         overflowX: "auto"
                     }}
                 >
-                    <div style={{ padding: "16px", overflowX: "auto" }}>
+                    <div style={{ padding: "16px", overflowX: "auto"}}>
                     <Title level={4}>Users</Title>
                     <Button onClick={handleAdd} type="primary" style={{ marginBottom: 16, width: "100%", maxWidth: 200 }}>
                         Add New User

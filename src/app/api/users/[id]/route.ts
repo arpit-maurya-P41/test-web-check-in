@@ -15,7 +15,6 @@ export async function DELETE(req: Request) {
                 first_name: true,
                 last_name: true,
                 email: true,
-                slack_user_id: true,
                 user_team_mappings: {
                     select: {
                         team_id: true,
@@ -62,7 +61,8 @@ export async function GET(req: Request) {
                 timezone: true,
                 check_in_time: true,
                 check_out_time: true,
-                about_you: true
+                about_you: true,
+                is_admin: true
             },
         });
 
@@ -98,7 +98,8 @@ export async function POST(req: Request) {
             timezone,
             check_in_time,
             check_out_time,
-            about_you
+            about_you,
+            is_admin
         } = body;
 
         const updatedUser = await prisma.users.update({
@@ -111,7 +112,8 @@ export async function POST(req: Request) {
                 timezone,
                 check_in_time,
                 check_out_time,
-                about_you
+                about_you,
+                is_admin
             }
         });
 

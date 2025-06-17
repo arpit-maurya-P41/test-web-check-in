@@ -10,7 +10,7 @@ import { CheckinProps, Team } from "@/type/PropTypes";
 
 const { Header, Content } = Layout;
 
-const Checkins: React.FC<CheckinProps> = ({ roles, teams }) => {
+const Checkins: React.FC<CheckinProps> = ({ userId, roles, teams }) => {
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
     const [collapsed, setCollapsed] = useState<boolean>(true);
     const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
@@ -82,6 +82,7 @@ const Checkins: React.FC<CheckinProps> = ({ roles, teams }) => {
                 canViewReports={roles.can_view_reports}
                 canManageRoles={roles.can_manage_roles}
                 activeKey="checkins"
+                userId={userId}
             />
             <Layout>
             <Header style={{ padding: 0, background: colorBgContainer }}>

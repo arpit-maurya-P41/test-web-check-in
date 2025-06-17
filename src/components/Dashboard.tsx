@@ -36,7 +36,7 @@ const { RangePicker } = DatePicker;
 const { Header, Content } = Layout;
 const getDefaultDates = () => [dayjs().subtract(6, "day"), dayjs()] as [Dayjs, Dayjs];
 
-const Dashboard: React.FC<DashboardProps> = ({ roles, teams, users }) => {
+const Dashboard: React.FC<DashboardProps> = ({ userId, roles, teams, users }) => {
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
 
     const [collapsed, setCollapsed] = useState(true);
@@ -135,6 +135,7 @@ const Dashboard: React.FC<DashboardProps> = ({ roles, teams, users }) => {
                 canViewReports={roles.can_view_reports}
                 canManageRoles={roles.can_manage_roles}
                 activeKey="dashboard"
+                userId={userId}
             />
             <Layout>
                 <Header style={{ padding: 0, background: colorBgContainer }}>
