@@ -12,6 +12,10 @@ export async function POST(req: Request) {
             },
         });
 
+        await prisma.user_team_mappings.deleteMany({
+            where: { team_id: body.id },
+        }); 
+
         const teams = await prisma.teams.findMany({ orderBy: { id: "desc" }, where : {is_active: true} });
         return NextResponse.json(teams);
 
