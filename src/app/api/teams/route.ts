@@ -7,7 +7,7 @@ export async function GET() {
     console.log("Detected GET request");
 
     try {
-        const teams = await prisma.teams.findMany({ orderBy: { id: "desc" } });
+        const teams = await prisma.teams.findMany({ orderBy: { id: "desc" }, where : { is_active: true} });
         return NextResponse.json(teams);
     } catch (error) {
         console.error("Error Detacted in dashboard GET Request", error);
@@ -22,15 +22,16 @@ export async function POST(req: Request) {
     try {
         const body: teams = await req.json();
         const existingTeam = await prisma.teams.findUnique({
-            where: { id: body.id },
+            where: { slack_channel_id: body.slack_channel_id },
         });
 
         if (existingTeam) {
             await prisma.teams.update({
-                where: { id: body.id },
+                where: { slack_channel_id: body.slack_channel_id },
                 data: {
                     name: body.name,
                     slack_channel_id: body.slack_channel_id,
+                    is_active: true
                 },
             });
         }
@@ -39,11 +40,12 @@ export async function POST(req: Request) {
                 data: {
                     name: body.name,
                     slack_channel_id: body.slack_channel_id,
+                    is_active: true
                 },
             });
         }
 
-        const teams = await prisma.teams.findMany({ orderBy: { id: "desc" } });
+        const teams = await prisma.teams.findMany({ orderBy: { id: "desc" }, where : { is_active: true} });
         return NextResponse.json(teams);
     } catch (error) {
         console.error("Error Detacted in dashboard POST Request", error);

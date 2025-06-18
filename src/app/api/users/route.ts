@@ -7,6 +7,7 @@ export async function GET() {
     try {
         const users = await prisma.users.findMany({
             orderBy: { id: "desc" },
+            where: {is_active: true},
             select: {
                 id: true,
                 first_name: true,
@@ -39,28 +40,34 @@ export async function POST(req: Request) {
     try {
         const body = await req.json();
 
-        const existingUser = await prisma.users.findUnique({
-            where: { id: body.id },
-        });
-
+        const existingUser = await prisma.users.findFirst({
+            where: {
+              email: {
+                equals: body.email,
+                mode: "insensitive",
+              },
+            },
+          });
+        
         if (existingUser) {
             await prisma.users.update({
-                where: { id: body.id },
+                where: { email: body.email },
                 data: {
                     first_name: body.first_name,
                     last_name: body.last_name,
                     email: body.email,
                     check_in_time: body.check_in_time,
-                    check_out_time: body.check_out_time
+                    check_out_time: body.check_out_time,
+                    is_active: body.is_active
                 },
             });
 
             await prisma.user_team_mappings.deleteMany({
-                where: { user_id: body.id },
+                where: { user_id: existingUser.id },
             }); 
             await prisma.user_team_mappings.createMany({
                 data: body.user_team_mappings.map((id: number) => ({
-                    user_id: body.id,
+                    user_id: existingUser.id,
                     team_id: id,
                 })),
             });
@@ -71,14 +78,15 @@ export async function POST(req: Request) {
                     first_name : body.first_name,
                     last_name: body.last_name,
                     email: body.email,
-                    slack_user_id: "",
                     password: "Password123",
                     role_id: 1,
                     check_in_time: body.check_in_time,
                     check_out_time: body.check_out_time,
-                    timezone: "Asia/Kolkata"
+                    timezone: "Asia/Kolkata",
+                    is_active: true
                 },
             });
+
             await prisma.user_team_mappings.createMany({
                 data: body.user_team_mappings.map((id: number) => ({
                     user_id: user.id,
@@ -86,7 +94,7 @@ export async function POST(req: Request) {
                 })),
             });
         }
-        const users = await prisma.users.findMany({orderBy: { id: "asc" }});
+        const users = await prisma.users.findMany({orderBy: { id: "asc" }, where: {is_active: true}});
         return NextResponse.json(users);
     } catch (error) {
         console.error("Error Detacted in dashboard POST Request", error);
