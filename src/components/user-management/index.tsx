@@ -302,7 +302,7 @@ const UserManagementIndex: React.FC<Props> = ({ userId, roles }) => {
             },
         },
         {
-            title: "Action",
+            title: "Actions",
             render: (_: unknown, record: User) => {
                 if (editingRow.id === record.id) {
                     return (

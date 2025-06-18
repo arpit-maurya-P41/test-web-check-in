@@ -251,7 +251,7 @@ const TeamManagementIndex: React.FC<Props> = ({ userId, roles }) => {
                     <div style={{ padding: 24 }}>
                         <Title level={4}>Teams</Title>
                         <Button onClick={handleAdd} type="primary" style={{ marginBottom: 16 }}>
-                            Add new Team
+                            Add New Team
                         </Button>
                     <div className="table-wrapper" style={{ width: "100%" }}>
                     <Form form={form} component={false}>

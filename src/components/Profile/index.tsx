@@ -236,7 +236,7 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
                         <Row gutter={16}>
                             <Col span={24}>
                                 <Form.Item
-                                    label="About you"
+                                    label="About You"
                                     name="About"
                                 >
                                     <Input.TextArea rows={4} />
