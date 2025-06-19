@@ -61,15 +61,23 @@ const UserManagementIndex: React.FC<Props> = ({ userId, roles }) => {
             });
     };
 
-    const deleteData = (id: number) => {
-        fetch(`/api/users/${id}`, {
-            method: "DELETE",
-        })
-            .then((response) => response.json())
-            .then((data) => {
-                setUsers(data);
-            });
 
+    const deleteData = (id: number) => {
+
+        const deleteUser = {
+            id: id
+        }
+        fetch(`/api/users/${id}/deactivate`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(deleteUser),
+        })
+        .then((response) => response.json())
+        .then(() => {
+            resetAndFetch();
+        });
     }
 
     const handleDelete = (id: number) => {
@@ -112,21 +120,33 @@ const UserManagementIndex: React.FC<Props> = ({ userId, roles }) => {
         try {
             setIsSaving(true);
             const values = await form.validateFields();
-            if(users.find(user => user.id !== userId && (user.email === values.email)))
-            {
-                notify('error', 'The entry with the Email already Exists');
+
+            const isAdding = editingRow.method === "add";
+
+            const emailToCheck = isAdding
+            ? values.email?.toLowerCase()
+            : users.find(u => u.id === userId)?.email?.toLowerCase();
+
+            if (isAdding &&
+                users.find(
+                    user => user.id !== userId &&
+                        user.email?.toLowerCase() === emailToCheck
+                )
+            ) {
+                notify("error", "The entry with the Email already exists");
                 setIsSaving(false);
                 return;
             }
 
             const updatedUser = {
                 id: userId,
-                first_name: values.first_name,
-                last_name: values.last_name,
-                email: values.email,
+                first_name: isAdding ? values.first_name : users.find(u => u.id === userId)?.first_name || "",
+                last_name: isAdding ? values.last_name : users.find(u => u.id === userId)?.last_name || "",
+                email: emailToCheck,
                 user_team_mappings: values.team_ids,
                 check_in_time: convertTimeToUTC("9:00", "Asia/Kolkata"),
-                check_out_time: convertTimeToUTC("18:00", "Asia/Kolkata")
+                check_out_time: convertTimeToUTC("18:00", "Asia/Kolkata"),
+                is_active: true
             };
 
             fetch("/api/users", {
@@ -282,7 +302,7 @@ const UserManagementIndex: React.FC<Props> = ({ userId, roles }) => {
             },
         },
         {
-            title: "Action",
+            title: "Actions",
             render: (_: unknown, record: User) => {
                 if (editingRow.id === record.id) {
                     return (

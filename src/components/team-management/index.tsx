@@ -50,12 +50,19 @@ const TeamManagementIndex: React.FC<Props> = ({ userId, roles }) => {
     };
 
     const deleteData = (id: number) => {
-        fetch(`/api/teams/${id}`, {
-            method: "DELETE",
+        const deleteTeam = {
+            id: id
+        }
+        fetch(`/api/teams/${id}/deactivate`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(deleteTeam)
         })
             .then((response) => response.json())
-            .then((data) => {
-                setDataSource(data);
+            .then(() => {
+                cancel();
             });
 
     }
@@ -76,8 +83,8 @@ const TeamManagementIndex: React.FC<Props> = ({ userId, roles }) => {
     const save = async (id: number) => {
         try {
             const row = await form.validateFields();
-            if(dataSource.find(team => team.id !== id && (team.slack_channel_id === row.slack_channel_id || 
-                team.name === row.name)))
+            if(dataSource.find(team => team.id !== id && (team.slack_channel_id.toLowerCase() === row.slack_channel_id.toLowerCase() || 
+                team.name.toLowerCase() === row.name.toLowerCase())))
             {
                 notify('error', 'The Slack Channel ID or Team Name already exists.');
                 return;
@@ -126,6 +133,7 @@ const TeamManagementIndex: React.FC<Props> = ({ userId, roles }) => {
             id: newId,
             name: "",
             slack_channel_id: "",
+            is_active: true
         };
         setDataSource([newRow, ...dataSource]);
         edit(newRow);
@@ -243,7 +251,7 @@ const TeamManagementIndex: React.FC<Props> = ({ userId, roles }) => {
                     <div style={{ padding: 24 }}>
                         <Title level={4}>Teams</Title>
                         <Button onClick={handleAdd} type="primary" style={{ marginBottom: 16 }}>
-                            Add new Team
+                            Add New Team
                         </Button>
                     <div className="table-wrapper" style={{ width: "100%" }}>
                     <Form form={form} component={false}>

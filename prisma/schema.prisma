@@ -72,6 +72,7 @@ model teams {
   id                 Int                  @id @default(autoincrement())
   name               String               @db.VarChar(255)
   slack_channel_id   String               @unique @db.VarChar(255)
+  is_active          Boolean              @default(true)
   checkins           checkins[]
   user_team_mappings user_team_mappings[]
 }
@@ -91,7 +92,7 @@ model users {
   first_name          String                @db.VarChar(255)
   email               String                @unique @db.VarChar(255)
   password            String?               @db.VarChar(255)
-  slack_user_id       String                @unique @db.VarChar(255)
+  slack_user_id       String?               @unique @db.VarChar(255)
   role_id             Int
   timezone            String?
   about_you           String?

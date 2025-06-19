@@ -15,6 +15,7 @@ export type Team = {
     id: number;
     name: string;
     slack_channel_id: string;
+    is_active: boolean;
   };
 
 export type DashboardProps = {

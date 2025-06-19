@@ -111,4 +111,8 @@ EXECUTE FUNCTION check_retry_count();
 ALTER TABLE user_team_mappings
 ADD CONSTRAINT unique_user_team UNIQUE (user_id, team_id);
 
-ALTER TABLE users ADD column is_admin BOOLEAN NOT NULL DEFAULT false
+ALTER TABLE users ADD column is_admin BOOLEAN NOT NULL DEFAULT false;
+
+ALTER TABLE teams ADD column is_active BOOLEAN NOT NULL DEFAULT true
+
+ALTER TABLE users ALTER COLUMN slack_user_id DROP NOT NULL;
