@@ -20,7 +20,7 @@ const { Header, Content } = Layout;
 const { Title } = Typography;
 const { Option } = Select;
 
-const UserManagementIndex: React.FC<Props> = ({ userId, roles }) => {
+const UserManagementIndex: React.FC<Props> = ({ userId }) => {
     const [form] = Form.useForm();
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
     const router = useRouter();
@@ -31,17 +31,19 @@ const UserManagementIndex: React.FC<Props> = ({ userId, roles }) => {
     const notify = useNotification();
     const [isSaving, setIsSaving] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [newUserId, setNewUserId] = useState(1);
 
     useEffect(() => {
         const fetchData = async () => {
             try{
             const teamsAPIResponse = await fetch("/api/teams");
             const teamsData = await teamsAPIResponse.json();
-            setTeams(teamsData);
+            setTeams(teamsData.teams);
 
             const usersAPIResponse = await fetch("/api/users");
             const usersData = await usersAPIResponse.json();
-            setUsers(usersData);
+            setUsers(usersData.users);
+            setNewUserId(usersData.latestUserId);
             }
             catch(error){
                 console.error("Error fetching data", error);
@@ -57,13 +59,13 @@ const UserManagementIndex: React.FC<Props> = ({ userId, roles }) => {
         fetch("/api/users")
             .then((response) => response.json())
             .then((data) => {
-                setUsers(data);
+                setUsers(data.users);
+                setNewUserId(data.latestUserId)
             });
     };
 
 
-    const deleteData = (id: number) => {
-
+    const handleDelete = (id: number) => {
         const deleteUser = {
             id: id
         }
@@ -78,10 +80,6 @@ const UserManagementIndex: React.FC<Props> = ({ userId, roles }) => {
         .then(() => {
             resetAndFetch();
         });
-    }
-
-    const handleDelete = (id: number) => {
-        deleteData(id);
     };
 
     const handleAdd = () => {
@@ -94,13 +92,13 @@ const UserManagementIndex: React.FC<Props> = ({ userId, roles }) => {
             }
         }
 
-        const count = users.length > 0 ? users[0].id + 1 : 1;
         const newRow: User = {
-            id: count,
+            id: newUserId,
             first_name: "",
             last_name: "",
             email: "",
-            user_team_mappings: []
+            user_team_mappings: [],
+            user_team_role: []
         };
         setUsers([newRow, ...users]);
         handleEdit(newRow, "add");
@@ -341,10 +339,10 @@ const UserManagementIndex: React.FC<Props> = ({ userId, roles }) => {
         <Layout>
             <Sidebar
                 collapsed={collapsed}
-                canManageTeams={roles.can_manage_teams}
-                canManageUsers={roles.can_manage_users}
-                canViewReports={roles.can_view_reports}
-                canManageRoles={roles.can_manage_roles}
+                canManageTeams={true}
+                canManageUsers={true}
+                canViewReports={true}
+                canManageRoles={true}
                 activeKey="userManagement"
                 userId={userId}
             />

@@ -1,13 +1,16 @@
-import { roles, teams, users } from "@prisma/client";
+import { teams, users } from "@prisma/client";
 
 export type Props = {
     userId: string;
-    roles: roles
+}
+
+export type teamProfileProps = {
+    userId: string;
+    teamId: string;
 }
 
 export type CheckinProps = {
     userId: string;
-    roles: roles;
     teams: Team[];
 }
 
@@ -16,11 +19,11 @@ export type Team = {
     name: string;
     slack_channel_id: string;
     is_active: boolean;
+    teaminfo: string| null;
   };
 
 export type DashboardProps = {
     userId: string;
-    roles: roles;
     teams: teams[];
     users: users[];
 };
@@ -43,6 +46,6 @@ export type SidebarProps = {
     canManageUsers: boolean;
     canViewReports: boolean;
     canManageRoles: boolean;
-    activeKey: string;
+    activeKey?: string;
     userId: string;
 };

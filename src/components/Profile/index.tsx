@@ -12,7 +12,7 @@ import { FormValues } from "@/type/types";
 const { Header, Content } = Layout;
 const { Title } = Typography;
 
-const Profile: React.FC<Props> = ({ roles, userId }) => {
+const Profile: React.FC<Props> = ({ userId }) => {
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
     const [collapsed, setCollapsed] = useState<boolean>(true);
     const [form] = Form.useForm();
@@ -88,10 +88,10 @@ const Profile: React.FC<Props> = ({ roles, userId }) => {
         <Layout>
             <Sidebar
                 collapsed={collapsed}
-                canManageTeams={roles.can_manage_teams}
-                canManageUsers={roles.can_manage_users}
-                canViewReports={roles.can_view_reports}
-                canManageRoles={roles.can_manage_roles}
+                canManageTeams={true}
+                canManageUsers={true}
+                canViewReports={true}
+                canManageRoles={true}
                 activeKey="profile"
                 userId={userId}
             />

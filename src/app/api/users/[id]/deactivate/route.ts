@@ -16,6 +16,10 @@ export async function POST(req: Request) {
             where: { user_id: body.id },
         }); 
 
+        await prisma.user_team_role.deleteMany({
+            where: { user_id: body.id },
+        }); 
+
         const users = await prisma.users.findMany({orderBy: { id: "asc" }, where: {is_active: true}});
 
         return NextResponse.json(users);
