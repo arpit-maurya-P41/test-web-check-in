@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import Dashboard from "@/components/Dashboard";
 import { auth } from "@/auth";
-import { getTeams, getTeamUsers } from "../actions/dashboardActions";
+import { getTeams, getTeamUsers, isUserAdmin } from "../actions/dashboardActions";
 
 export default async function Administrator() {
     const session = await auth();
@@ -15,5 +15,7 @@ export default async function Administrator() {
 
     const users = await getTeamUsers(teams[0]?.id ?? 0);
 
-    return <Dashboard userId={session.user.id} users={users} teams={teams}/>
+    const isAdmin = await isUserAdmin(session.user.id);
+
+    return <Dashboard userId={session.user.id} users={users} teams={teams} isAdmin={isAdmin}/>
 }

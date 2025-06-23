@@ -36,7 +36,7 @@ const layout = {
   wrapperCol: { span: 16 },
 };
 
-const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId }) => {
+const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) => {
   const [collapsed, setCollapsed] = useState<boolean>(true);
   const {
     token: { colorBgContainer, borderRadiusLG },
@@ -130,7 +130,7 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId }) => {
       loadMoreData();
       initialLoad.current = true;
     }
-  });
+  },[]);
 
   const roleMenuItems = userRoles.map((role) => ({
     value: role.id.toString(),
@@ -204,11 +204,8 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId }) => {
     <Layout>
       <Sidebar
         collapsed={collapsed}
-        canManageTeams={true}
-        canManageUsers={true}
-        canViewReports={true}
-        canManageRoles={true}
         userId={userId}
+        isAdmin={isAdmin}
       />
       <Layout>
         <Header style={{ padding: 0, background: colorBgContainer }}>

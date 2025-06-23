@@ -12,7 +12,7 @@ import Sidebar from "../Sidebar";
 import { convertTimeToUTC } from "@/utils/timeUtils";
 import { useNotification } from "../NotificationProvider";
 import { Spin } from "antd";
-import { Props } from "@/type/PropTypes";
+import { UserProps } from "@/type/PropTypes";
 import { User } from "@/type/types";
 import { useRouter } from "next/navigation";
 
@@ -20,7 +20,7 @@ const { Header, Content } = Layout;
 const { Title } = Typography;
 const { Option } = Select;
 
-const UserManagementIndex: React.FC<Props> = ({ userId }) => {
+const UserManagementIndex: React.FC<UserProps> = ({ userId, isAdmin }) => {
     const [form] = Form.useForm();
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
     const router = useRouter();
@@ -339,12 +339,9 @@ const UserManagementIndex: React.FC<Props> = ({ userId }) => {
         <Layout>
             <Sidebar
                 collapsed={collapsed}
-                canManageTeams={true}
-                canManageUsers={true}
-                canViewReports={true}
-                canManageRoles={true}
                 activeKey="userManagement"
                 userId={userId}
+                isAdmin={isAdmin}
             />
             <Layout>
                 <Header style={{ padding: 0, background: colorBgContainer }}>

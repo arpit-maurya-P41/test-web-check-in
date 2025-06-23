@@ -6,19 +6,19 @@ import { logoutUser } from "@/app/actions/authActions";
 import Sidebar from "../Sidebar";
 import { convertTimeToUTC, getTimeZones, convertUtcTimeToLocal } from "@/utils/timeUtils";
 import { useNotification } from "../NotificationProvider";
-import { Props } from "@/type/PropTypes";
+import { ProfileProps } from "@/type/PropTypes";
 import { FormValues } from "@/type/types";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
 
-const Profile: React.FC<Props> = ({ userId }) => {
+const Profile: React.FC<ProfileProps> = ({ userId, isAdmin }) => {
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
     const [collapsed, setCollapsed] = useState<boolean>(true);
     const [form] = Form.useForm();
     const format = 'HH:mm';
     const notify = useNotification();
-
+    
     useEffect(() => {
         const fetchUser = async () => {
             if (!userId) return;
@@ -88,12 +88,9 @@ const Profile: React.FC<Props> = ({ userId }) => {
         <Layout>
             <Sidebar
                 collapsed={collapsed}
-                canManageTeams={true}
-                canManageUsers={true}
-                canViewReports={true}
-                canManageRoles={true}
                 activeKey="profile"
                 userId={userId}
+                isAdmin={isAdmin}
             />
             <Layout>
                 <Header style={{ padding: 0, background: colorBgContainer }}>
@@ -243,7 +240,7 @@ const Profile: React.FC<Props> = ({ userId }) => {
                                 </Form.Item>
                             </Col>
                         </Row>
-                        <Row gutter={16}>
+                        {isAdmin && <Row gutter={16}>
                             <Col>
                                 <Form.Item
                                     label={
@@ -260,7 +257,7 @@ const Profile: React.FC<Props> = ({ userId }) => {
                                     <Switch />
                                 </Form.Item>
                             </Col>
-                        </Row>
+                        </Row>}
 
                         <Row justify="center" gutter={16}>
                             <Col>
