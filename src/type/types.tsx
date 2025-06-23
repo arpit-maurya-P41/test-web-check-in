@@ -43,12 +43,17 @@ export type UserTeamMapping = {
     teams: teams;
 };
 
+export type UserTeamRole = {
+    role_id: number;
+};
+
 export type User = {
     id: number;
     first_name: string;
     last_name: string;
     email: string;
     user_team_mappings: UserTeamMapping[];
+    user_team_role: UserTeamRole[];
 };
 
 export type UserDetail = {
@@ -80,3 +85,18 @@ export type DashboardItem = {
     label: string;
     onClick?: () => void;
 };
+
+export type TeamDetailsForm = {
+    TeamName: string;
+    TeamInfo: string;
+    ChannelId: string;
+};
+
+export type TeamWithUserCount = {
+    name: string;
+    id: number;
+    slack_channel_id: string;
+    is_active: boolean;
+    teaminfo: string | null;
+    userCount: number
+}

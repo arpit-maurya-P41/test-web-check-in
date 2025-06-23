@@ -1,29 +1,40 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/prisma";
 
-export async function POST(req: Request) {
-    try {
-        const body = await req.json();
+export async function POST(req: NextRequest) {
+  try {
+    const url = new URL(req.url);
+    const pathname = url.pathname;
 
-        await prisma.teams.update({
-            where: { id: body.id },
-            data: {
-                is_active: false
-            },
-        });
+    const segments = pathname.split("/");
+    const teamIdStr = segments[3];
+    const teamId = parseInt(teamIdStr, 10);
 
-        await prisma.user_team_mappings.deleteMany({
-            where: { team_id: body.id },
-        }); 
-
-        const teams = await prisma.teams.findMany({ orderBy: { id: "desc" }, where : {is_active: true} });
-        return NextResponse.json(teams);
-
-    } catch (error) {
-        console.error("Error Detacted in dashboard POST Request", error);
-        return NextResponse.json(
-            { error: "Internal Server Error" },
-            { status: 500 }
-        );
+    if (isNaN(teamId) || !teamId) {
+      return NextResponse.json({ error: "Invalid team ID" }, { status: 400 });
     }
+
+    await prisma.teams.update({
+      where: { id: teamId },
+      data: {
+        is_active: false,
+      },
+    });
+
+    await prisma.user_team_mappings.deleteMany({
+      where: { team_id: teamId },
+    });
+
+    await prisma.user_team_role.deleteMany({
+      where: { team_id: teamId },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error in deactivate route POST request:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
 }

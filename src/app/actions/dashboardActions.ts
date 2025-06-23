@@ -2,16 +2,6 @@
 
 import { prisma } from "@/prisma";
 
-export async function getRoles(userId: string) {
-    const userDetails = await prisma.users.findUnique({
-        where: { id: Number(userId) },
-        include: { roles: true },
-    });
-
-    if (!userDetails) throw new Error("User not found");
-
-    return userDetails.roles;
-}
 
 export async function getDashboardData(userId: string) {
     await getTeams(userId);

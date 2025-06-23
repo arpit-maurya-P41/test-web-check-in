@@ -92,7 +92,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userId, collapsed, canManageTeams, ca
                 theme="dark"
                 mode="inline"
                 style={{ flex: 1 }}
-                defaultSelectedKeys={[activeKey]}
+                defaultSelectedKeys={[activeKey || ""]}
                 items={sidebarItems}
             />
         </Sider>

@@ -12,7 +12,7 @@ import { Props } from "@/type/PropTypes";
 const { Header, Content } = Layout;
 const { Title } = Typography;
 
-const RoleManagementIndex: React.FC<Props> = ({ userId, roles }) => {
+const RoleManagementIndex: React.FC<Props> = ({ userId }) => {
     const [form] = Form.useForm();
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
 
@@ -168,10 +168,10 @@ const RoleManagementIndex: React.FC<Props> = ({ userId, roles }) => {
         <Layout>
             <Sidebar
                 collapsed={collapsed}
-                canManageTeams={roles.can_manage_teams}
-                canManageUsers={roles.can_manage_users}
-                canViewReports={roles.can_view_reports}
-                canManageRoles={roles.can_manage_roles}
+                canManageTeams={true}
+                canManageUsers={true}
+                canViewReports={true}
+                canManageRoles={true}
                 activeKey="roleManagement"
                 userId={userId}
             />

@@ -116,3 +116,19 @@ ALTER TABLE users ADD column is_admin BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE teams ADD column is_active BOOLEAN NOT NULL DEFAULT true
 
 ALTER TABLE users ALTER COLUMN slack_user_id DROP NOT NULL;
+
+ALTER TABLE teams ADD column teaminfo Text;
+
+ CREATE TABLE user_team_role (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  team_id INTEGER NOT NULL,
+  role_id INTEGER NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+  FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
+);
+
+alter table users drop column role_id;
+
+
