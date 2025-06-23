@@ -15,6 +15,14 @@ export async function isUserAdmin(userId: string) {
   return isAdmin;
 }
 
+export async function UserExists(userId: string){
+  const user = await prisma.users.findUnique({
+    where: { id: Number(userId) },
+    select: { id: true },
+  });
+  return user ? true : false;
+}
+
 export async function getDashboardData(userId: string) {
   await getTeams(userId);
   return userId;
