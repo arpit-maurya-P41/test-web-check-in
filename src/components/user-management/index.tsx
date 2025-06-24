@@ -85,6 +85,10 @@ const UserManagementIndex: React.FC<UserProps> = ({ userId, isAdmin }) => {
   };
 
   const handleDelete = (id: number) => {
+    if (id === Number(userId)) {
+      notify("error", "You cannot delete your own account.");
+      return;
+    }
     const deleteUser = {
       id: id,
     };
@@ -173,31 +177,17 @@ const UserManagementIndex: React.FC<UserProps> = ({ userId, isAdmin }) => {
         is_active: true,
       };
 
-      if (isAdding) {
-        fetch("/api/users/new", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(updatedUser),
-        })
-          .then((response) => response.json())
-          .then(() => {
-            resetAndFetch();
-          });
-      } else {
-        fetch("/api/users", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(updatedUser),
-        })
-          .then((response) => response.json())
-          .then(() => {
-            resetAndFetch();
-          });
-      }
+      fetch("/api/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedUser),
+      })
+        .then((response) => response.json())
+        .then(() => {
+          resetAndFetch();
+        });
 
       notify("success", "Data saved successfully.");
     } catch {
