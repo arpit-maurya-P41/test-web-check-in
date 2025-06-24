@@ -22,6 +22,7 @@ import { ColumnsType } from "antd/es/table";
 import { TeamProps } from "@/type/PropTypes";
 import { useRouter } from "next/navigation";
 import { TeamWithUserCount } from "@/type/types";
+import { useFetch } from "@/utils/useFetch";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -37,21 +38,14 @@ const TeamManagementIndex: React.FC<TeamProps> = ({ userId, isAdmin }) => {
   const [dataSource, setDataSource] = useState<TeamWithUserCount[]>([]);
   const [newTeamId, setNewTeamId] = useState(1);
 
+  const { data: teamsData } = useFetch<{ teams: TeamWithUserCount[], latestTeamId: number }>('/api/teams');
+
   useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      const response = await fetch("/api/teams");
-      const data = await response.json();
-      setDataSource(data.teams);
-      setNewTeamId(data.latestTeamId);
-
-    } catch (error) {
-      console.error("Error fetching data", error);
+    if (teamsData) {
+      setDataSource(teamsData.teams);
+      setNewTeamId(teamsData.latestTeamId);
     }
-  };
+  }, [teamsData]);
 
   const handleAdd = () => {
     router.push(`/team-management/${newTeamId}`);

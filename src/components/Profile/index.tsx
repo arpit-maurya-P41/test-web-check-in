@@ -19,7 +19,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
 } from "@ant-design/icons";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { logoutUser } from "@/app/actions/authActions";
 import Sidebar from "../Sidebar";
 import { useSidebarStore } from "@/store/sidebarStore";
@@ -30,7 +30,8 @@ import {
 } from "@/utils/timeUtils";
 import { useNotification } from "../NotificationProvider";
 import { ProfileProps } from "@/type/PropTypes";
-import { FormValues } from "@/type/types";
+import { FormValues, UserData } from "@/type/types";
+import { useFetch } from "@/utils/useFetch";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -44,35 +45,35 @@ const Profile: React.FC<ProfileProps> = ({ userId, isAdmin }) => {
   const format = "HH:mm";
   const notify = useNotification();
 
+  const { data: userData, error: userError } = useFetch<UserData>(
+    userId ? `/api/users/${userId}` : '',
+    { 
+      dependencies: [userId],
+      skipOnMount: !userId
+    }
+  );
+
   useEffect(() => {
-    const fetchUser = async () => {
-      if (!userId) return;
-      const response = await fetch(`/api/users/${userId}`);
-      if (response.status === 404) {
-        console.error("User not found");
-        notify("error", "User not found.");
-        return;
-      }
+    if (userError) {
+      notify("error", "Failed to load user data.");
+    }
+  }, [userError, notify]);
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch user");
-      }
-      const user = await response.json();
-
+  useEffect(() => {
+    if (userData) {
       form.setFieldsValue({
-        Title: user.title,
-        FirstName: user.first_name,
-        LastName: user.last_name,
-        Location: user.location,
-        timezone: user.timezone,
-        checkIn: convertUtcTimeToLocal(user.check_in_time, user.timezone),
-        checkOut: convertUtcTimeToLocal(user.check_out_time, user.timezone),
-        About: user.about_you,
-        IsAdmin: user.is_admin,
+        Title: userData.title,
+        FirstName: userData.first_name,
+        LastName: userData.last_name,
+        Location: userData.location,
+        timezone: userData.timezone,
+        checkIn: convertUtcTimeToLocal(userData.check_in_time, userData.timezone),
+        checkOut: convertUtcTimeToLocal(userData.check_out_time, userData.timezone),
+        About: userData.about_you,
+        IsAdmin: userData.is_admin,
       });
-    };
-    fetchUser();
-  }, [userId, form]);
+    }
+  }, [userData, form]);
 
   const handleSave = async (values: FormValues) => {
     try {

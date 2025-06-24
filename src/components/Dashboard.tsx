@@ -16,7 +16,6 @@ import {
     Space,
     Select,
     Typography,
-    Spin,
 } from "antd";
 
 import dayjs, { Dayjs } from "dayjs";
@@ -28,7 +27,7 @@ import { useSidebarStore } from "@/store/sidebarStore";
 import { Heatmap } from "@ant-design/charts";
 import PercentageLineChart from "./PercentageLineChart";
 import { DashboardProps } from "@/type/PropTypes";
-import { DashboardData, PercentageData } from "@/type/types";
+import { DashboardData, DashboardApiResponse, PercentageData } from "@/type/types";
 import { useFetch } from "@/utils/useFetch";
 
 const { Title } = Typography;
@@ -56,8 +55,41 @@ const Dashboard: React.FC<DashboardProps> = ({ userId, teams, users, isAdmin }) 
     const handleUserChange = (value: string[]) => setSelectedUsers(value);
     const handleRangeChange = (dates: RangePickerProps["value"]) => {
         if (dates) setDates(dates as [Dayjs, Dayjs]);
-        else setDates(getDefaultDates());
-    }
+    };
+
+    const buildQueryParams = () => {
+        const params = new URLSearchParams();
+        const formatted = dates.map((d) => d.format("YYYY-MM-DD"));
+        const [startDate, endDate] = formatted;
+
+        params.append("startDate", startDate);
+        params.append("endDate", endDate);
+
+        if (selectedTeams) {
+            params.append("teamChannelId", selectedTeams.toString());
+        }
+
+        if (selectedUsers.length > 0) {
+            params.append("users", selectedUsers.join(","));
+        }
+
+        return params.toString();
+    };
+
+    const { data: dashboardApiData } = useFetch<DashboardApiResponse>(
+        `/api/dashboard?${buildQueryParams()}`, 
+        { 
+            dependencies: [dates, selectedTeams, selectedUsers]
+        }
+    );
+
+    useEffect(() => {
+        if (dashboardApiData) {
+            setDashboardData(JSON.parse(JSON.stringify(dashboardApiData.smartCheckins || [])));
+            setBlockedData(JSON.parse(JSON.stringify(dashboardApiData.blockedUsersCount || [])));
+            setCheckinData(JSON.parse(JSON.stringify(dashboardApiData.checkinUserPercentageByDate || [])));
+        }
+    }, [dashboardApiData]);
 
     const config = {
         data: dashboardData,
@@ -97,38 +129,6 @@ const Dashboard: React.FC<DashboardProps> = ({ userId, teams, users, isAdmin }) 
         },
         autoFit: true,
     };
-
-
-    useEffect(() => {
-        const fetchData = async () => {
-            const params = new URLSearchParams();
-            const formatted = dates.map((d) => d.format("YYYY-MM-DD"));
-            const [startDate, endDate] = formatted;
-
-            params.append("startDate", startDate);
-            params.append("endDate", endDate);
-
-            if (selectedTeams) {
-                params.append("teamChannelId", selectedTeams.toString());
-            }
-
-            if (selectedUsers.length > 0) {
-                params.append("users", selectedUsers.join(","));
-            }
-
-            try {
-                const response = await fetch(`/api/dashboard?${params.toString()}`);
-                const data = await response.json();
-                setDashboardData(JSON.parse(JSON.stringify(data.smartCheckins)));
-                setBlockedData(JSON.parse(JSON.stringify(data.blockedUsersCount)));
-                setCheckinData(JSON.parse(JSON.stringify(data.checkinUserPercentageByDate)));
-            } catch (error) {
-                console.error("Error fetching dashboard data:", error);
-            }
-        };
-
-        fetchData();
-    }, [dates, selectedTeams, selectedUsers]);
 
     return (
         <Layout>

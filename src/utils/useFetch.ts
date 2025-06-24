@@ -1,13 +1,6 @@
 import { useState, useEffect } from 'react';
 import NProgress from 'nprogress';
-
-interface UseFetchOptions {
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
-  headers?: Record<string, string>;
-  body?: any;
-  dependencies?: any[];
-  skipOnMount?: boolean;
-}
+import { UseFetchOptions } from '@/type/types';
 
 export function useFetch<T>(url: string, options: UseFetchOptions = {}) {
   const [data, setData] = useState<T | null>(null);

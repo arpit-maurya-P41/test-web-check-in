@@ -8,6 +8,7 @@ import { useSidebarStore } from "@/store/sidebarStore";
 import "./Checkins.css";
 import { CheckinEntry, Goal} from "@/type/types";
 import { CheckinProps, Team } from "@/type/PropTypes";
+import { useFetch } from "@/utils/useFetch";
 
 const { Header, Content } = Layout;
 
@@ -31,6 +32,20 @@ const Checkins: React.FC<CheckinProps> = ({ userId, teams, isAdmin }) => {
         setSelectedTeam(null);
     };
 
+    const url = selectedTeam
+        ? `/api/checkins?teamChannelId=${selectedTeam.slack_channel_id}`
+        : `/api/checkins`;
+
+    const { data: checkinsData } = useFetch<CheckinEntry[]>(url, {
+        dependencies: [selectedTeam]
+    });
+
+    useEffect(() => {
+        if (checkinsData) {
+            setGoalsSummary(JSON.parse(JSON.stringify(checkinsData)));
+        }
+    }, [checkinsData]);
+
     const groupedByDate = (goalsSummary || []).reduce(
         (acc: Record<string, Record<string, Goal[]>>, entry) => {
           const date = new Date(entry.checkin_date).toLocaleDateString("en-US", {
@@ -48,24 +63,6 @@ const Checkins: React.FC<CheckinProps> = ({ userId, teams, isAdmin }) => {
         },
         {}
       );
-
-    useEffect(()=>{
-        const fetchData = async () => {
-            try{
-            const url = selectedTeam
-            ? `/api/checkins?teamChannelId=${selectedTeam.slack_channel_id}`
-            : `/api/checkins`;
-
-            const res = await fetch(url);
-            const data = await res.json();
-            setGoalsSummary(JSON.parse(JSON.stringify(data)));
-        }
-        catch(error){
-            console.error("Error fetching data", error);
-        }
-        }
-        fetchData();
-    },[selectedTeam])
 
     return(
         <Layout>

@@ -99,8 +99,8 @@ model users {
   check_in_time       DateTime              @default(now()) @db.Time(6)
   check_out_time      DateTime              @default(now()) @db.Time(6)
   is_active           Boolean?              @default(true)
-  slack_access_token  String?               @db.VarChar(255)
   is_admin            Boolean               @default(false)
+  slack_access_token  String?               @db.VarChar(255)
   checkins            checkins[]
   sessions            sessions[]
   user_team_mappings  user_team_mappings[]
