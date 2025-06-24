@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
         const startDateParam = url.searchParams.get("startDate") ?? "2025-01-01";
         const endDateParam = url.searchParams.get("endDate");
         const teamChannelId = url.searchParams.get("teamChannelId") ?? "";
-        const userSlackIds = url.searchParams.get("users")?.split(",") || [];
+        const userId = url.searchParams.get("users")?.split(",") || [];
 
         const startDate = new Date(startDateParam);
         let endDate = endDateParam ? new Date(endDateParam) : new Date();
@@ -27,9 +27,11 @@ export async function GET(req: NextRequest) {
                     lte: endDate,
                 },
                 slack_channel_id: teamChannelId,
-                slack_user_id: {
-                    in: userSlackIds.length > 0 ? userSlackIds : undefined,
-                },
+                users: {
+                    id: {
+                      in: userId.length > 0 ? userId.map(Number) : undefined,
+                    }
+                }
             },
             select: {
                 slack_user_id: true,
@@ -94,7 +96,7 @@ export async function GET(req: NextRequest) {
             }
         }, []);
 
-        let selectedUsersCount = userSlackIds.length;
+        let selectedUsersCount = userId.length;
         if(selectedUsersCount === 0)
         {
             selectedUsersCount = teamUserCount;

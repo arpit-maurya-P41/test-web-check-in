@@ -234,7 +234,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userId, teams, users, isAdmin }) 
                                             {users.map((user) => (
                                                 <Option
                                                     key={user.id}
-                                                    value={user.slack_user_id}>
+                                                    value={user.id}>
                                                     {user.email}
                                                 </Option>
                                             ))}

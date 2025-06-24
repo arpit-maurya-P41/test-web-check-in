@@ -43,33 +43,34 @@ const Profile: React.FC<ProfileProps> = ({ userId, isAdmin }) => {
   const format = "HH:mm";
   const notify = useNotification();
 
+  const fetchUser = async () => {
+    if (!userId) return;
+    const response = await fetch(`/api/users/${userId}`);
+    if (response.status === 404) {
+      console.error("User not found");
+      notify("error", "User not found.");
+      return;
+    }
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch user");
+    }
+    const user = await response.json();
+
+    form.setFieldsValue({
+      Title: user.title,
+      FirstName: user.first_name,
+      LastName: user.last_name,
+      Location: user.location,
+      timezone: user.timezone,
+      checkIn: convertUtcTimeToLocal(user.check_in_time, user.timezone),
+      checkOut: convertUtcTimeToLocal(user.check_out_time, user.timezone),
+      About: user.about_you,
+      IsAdmin: user.is_admin,
+    });
+  };
+
   useEffect(() => {
-    const fetchUser = async () => {
-      if (!userId) return;
-      const response = await fetch(`/api/users/${userId}`);
-      if (response.status === 404) {
-        console.error("User not found");
-        notify("error", "User not found.");
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch user");
-      }
-      const user = await response.json();
-
-      form.setFieldsValue({
-        Title: user.title,
-        FirstName: user.first_name,
-        LastName: user.last_name,
-        Location: user.location,
-        timezone: user.timezone,
-        checkIn: convertUtcTimeToLocal(user.check_in_time, user.timezone),
-        checkOut: convertUtcTimeToLocal(user.check_out_time, user.timezone),
-        About: user.about_you,
-        IsAdmin: user.is_admin,
-      });
-    };
     fetchUser();
   }, [userId, form]);
 
@@ -119,7 +120,7 @@ const Profile: React.FC<ProfileProps> = ({ userId, isAdmin }) => {
   };
 
   const handleCancel = () => {
-    form.resetFields();
+    fetchUser();
   };
 
   return (
