@@ -52,13 +52,9 @@ model goals {
 }
 
 model roles {
-  id               Int              @id @default(autoincrement())
-  role_name        String           @unique @db.VarChar(255)
-  can_manage_teams Boolean          @default(false)
-  can_manage_users Boolean          @default(false)
-  can_view_reports Boolean          @default(false)
-  can_manage_roles Boolean          @default(false)
-  user_team_role   user_team_role[]
+  id             Int              @id @default(autoincrement())
+  role_name      String           @unique @db.VarChar(255)
+  user_team_role user_team_role[]
 }
 
 model sessions {
