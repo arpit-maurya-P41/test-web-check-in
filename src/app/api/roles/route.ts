@@ -15,26 +15,3 @@ export async function GET() {
         );
     }
 }
-
-export async function POST(req: Request) {
-    console.log("Detected POST request");
-    const body = await req.json();
-    console.log(body);
-
-    try {
-        await prisma.roles.upsert({
-            where: { id: body.id },
-            update: { ...body },
-            create: { ...body },
-        });
-
-        const roles = await prisma.roles.findMany({orderBy: { id: "asc" }});
-        return NextResponse.json(roles);
-    } catch (error) {
-        console.error("Error Detacted in dashboard POST Request", error);
-        return NextResponse.json(
-            { error: "Internal Server Error" },
-            { status: 500 }
-        );
-    }
-}

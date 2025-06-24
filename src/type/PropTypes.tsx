@@ -1,17 +1,30 @@
 import { teams, users } from "@prisma/client";
 
-export type Props = {
+export type UserProps = {
     userId: string;
+    isAdmin: boolean;
+}
+
+export type ProfileProps = {
+    userId: string;
+    isAdmin: boolean;
+}
+
+export type TeamProps = {
+    userId: string;
+    isAdmin: boolean;
 }
 
 export type teamProfileProps = {
     userId: string;
     teamId: string;
+    isAdmin: boolean;
 }
 
 export type CheckinProps = {
     userId: string;
     teams: Team[];
+    isAdmin: boolean;
 }
 
 export type Team = {
@@ -26,6 +39,7 @@ export type DashboardProps = {
     userId: string;
     teams: teams[];
     users: users[];
+    isAdmin: boolean;
 };
 
 export type LineChartProps = {
@@ -42,10 +56,7 @@ export type PercentageDataPoint = {
 
 export type SidebarProps = {
     collapsed: boolean;
-    canManageTeams: boolean;
-    canManageUsers: boolean;
-    canViewReports: boolean;
-    canManageRoles: boolean;
     activeKey?: string;
     userId: string;
+    isAdmin?: boolean;
 };

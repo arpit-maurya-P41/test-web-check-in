@@ -19,14 +19,14 @@ import Sidebar from "../Sidebar";
 import { logoutUser } from "@/app/actions/authActions";
 import "./teams.css";
 import { ColumnsType } from "antd/es/table";
-import { Props } from "@/type/PropTypes";
+import { TeamProps } from "@/type/PropTypes";
 import { useRouter } from "next/navigation";
 import { TeamWithUserCount } from "@/type/types";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
 
-const TeamManagementIndex: React.FC<Props> = ({ userId }) => {
+const TeamManagementIndex: React.FC<TeamProps> = ({ userId, isAdmin }) => {
   const router = useRouter();
   const [form] = Form.useForm();
   const {
@@ -90,12 +90,9 @@ const TeamManagementIndex: React.FC<Props> = ({ userId }) => {
     <Layout>
       <Sidebar
         collapsed={collapsed}
-        canManageTeams={true}
-        canManageUsers={true}
-        canViewReports={true}
-        canManageRoles={true}
         activeKey="teamManagement"
         userId={userId}
+        isAdmin={isAdmin}
       />
       <Layout>
         <Header style={{ padding: 0, background: colorBgContainer }}>

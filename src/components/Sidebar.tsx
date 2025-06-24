@@ -12,7 +12,7 @@ import { DashboardItem } from "@/type/types";
 
 const { Sider } = Layout;
 
-const Sidebar: React.FC<SidebarProps> = ({ userId, collapsed, canManageTeams, canManageUsers, canManageRoles, activeKey }) => {
+const Sidebar: React.FC<SidebarProps> = ({ userId, collapsed, activeKey, isAdmin = false}) => {
     const sidebarItems = [];
     const dashboardItem: DashboardItem = {
         key: "dashboard",
@@ -34,7 +34,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userId, collapsed, canManageTeams, ca
     }
     sidebarItems.push(checkIns);
 
-    if (canManageTeams) {
+    if (isAdmin) {
         const teamManagementItem: DashboardItem = {
             key: "teamManagement",
             icon: <TeamOutlined />,
@@ -46,7 +46,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userId, collapsed, canManageTeams, ca
         sidebarItems.push(teamManagementItem);
     }
 
-    if (canManageUsers) {
+    if (isAdmin) {
         const userManagementItem: DashboardItem = {
             key: "userManagement",
             icon: <UserSwitchOutlined />,
@@ -56,18 +56,6 @@ const Sidebar: React.FC<SidebarProps> = ({ userId, collapsed, canManageTeams, ca
             userManagementItem.onClick = () => (window.location.href = "/user-management");
         }
         sidebarItems.push(userManagementItem);
-    }
-
-    if (canManageRoles) {
-        const roleManagementItem: DashboardItem = {
-            key: "roleManagement",
-            icon: <UserSwitchOutlined />,
-            label: "Roles",
-        };
-        if (activeKey !== "roleManagement") {
-            roleManagementItem.onClick = () => (window.location.href = "/role-management");
-        }
-        sidebarItems.push(roleManagementItem);
     }
     
     const profileItem: DashboardItem = {
