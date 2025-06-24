@@ -17,6 +17,7 @@ import {
 } from "antd";
 import Sidebar from "../Sidebar";
 import { logoutUser } from "@/app/actions/authActions";
+import { useSidebarStore } from "@/store/sidebarStore";
 import "./teams.css";
 import { ColumnsType } from "antd/es/table";
 import { TeamProps } from "@/type/PropTypes";
@@ -32,8 +33,8 @@ const TeamManagementIndex: React.FC<TeamProps> = ({ userId, isAdmin }) => {
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
+  const { sidebarCollapsed, toggleSidebar } = useSidebarStore();
 
-  const [collapsed, setCollapsed] = useState<boolean>(true);
   const [dataSource, setDataSource] = useState<TeamWithUserCount[]>([]);
   const [loading, setLoading] = useState(true);
   const [newTeamId, setNewTeamId] = useState(1);
@@ -89,7 +90,6 @@ const TeamManagementIndex: React.FC<TeamProps> = ({ userId, isAdmin }) => {
   ) : (
     <Layout>
       <Sidebar
-        collapsed={collapsed}
         activeKey="teamManagement"
         userId={userId}
         isAdmin={isAdmin}
@@ -99,8 +99,8 @@ const TeamManagementIndex: React.FC<TeamProps> = ({ userId, isAdmin }) => {
           <div className="header-container">
             <Button
               type="text"
-              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-              onClick={() => setCollapsed(!collapsed)}
+              icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              onClick={toggleSidebar}
               className="header-button"
             />
             <Button

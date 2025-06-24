@@ -12,11 +12,13 @@ import { Layout, Menu } from "antd";
 import { SidebarProps } from "@/type/PropTypes";
 import { DashboardItem } from "@/type/types";
 import { useRouter } from "next/navigation";
+import { useSidebarStore } from "@/store/sidebarStore";
 
 const { Sider } = Layout;
 
-const Sidebar: React.FC<SidebarProps> = ({ userId, collapsed, activeKey, isAdmin = false}) => {
+const Sidebar: React.FC<SidebarProps> = ({ userId, activeKey, isAdmin = false}) => {
     const router = useRouter();
+    const { sidebarCollapsed } = useSidebarStore();
     const sidebarItems = [];
     
     const dashboardItem: DashboardItem = {
@@ -77,7 +79,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userId, collapsed, activeKey, isAdmin
         <Sider
             trigger={null}
             collapsible
-            collapsed={collapsed}
+            collapsed={sidebarCollapsed}
             style={{
                 minHeight: "100vh"
             }}>

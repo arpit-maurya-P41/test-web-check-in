@@ -4,6 +4,7 @@ import Sidebar from "../Sidebar";
 import { useEffect, useState } from "react";
 import { DownOutlined, LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import { logoutUser } from "@/app/actions/authActions";
+import { useSidebarStore } from "@/store/sidebarStore";
 import "./Checkins.css";
 import { CheckinEntry, Goal} from "@/type/types";
 import { CheckinProps, Team } from "@/type/PropTypes";
@@ -12,7 +13,7 @@ const { Header, Content } = Layout;
 
 const Checkins: React.FC<CheckinProps> = ({ userId, teams, isAdmin }) => {
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
-    const [collapsed, setCollapsed] = useState<boolean>(true);
+    const { sidebarCollapsed, toggleSidebar } = useSidebarStore();
     const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
     const [goalsSummary, setGoalsSummary] = useState<CheckinEntry[]>([]);
     const [loading, setLoading] = useState(true);
@@ -76,7 +77,6 @@ const Checkins: React.FC<CheckinProps> = ({ userId, teams, isAdmin }) => {
         ) :
         <Layout>
             <Sidebar
-                collapsed={collapsed}
                 activeKey="checkins"
                 userId={userId}
                 isAdmin={isAdmin}
@@ -96,8 +96,8 @@ const Checkins: React.FC<CheckinProps> = ({ userId, teams, isAdmin }) => {
                 <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                 <Button
                     type="text"
-                    icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                    onClick={() => setCollapsed(!collapsed)}
+                    icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                    onClick={toggleSidebar}
                     style={{ fontSize: 16, width: 48, height: 48 }}
                 />
                 <span

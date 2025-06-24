@@ -26,6 +26,7 @@ import { logoutUser } from "@/app/actions/authActions";
 
 import { teams } from "@prisma/client";
 import Sidebar from "../Sidebar";
+import { useSidebarStore } from "@/store/sidebarStore";
 import { convertTimeToUTC } from "@/utils/timeUtils";
 import { useNotification } from "../NotificationProvider";
 import { Spin } from "antd";
@@ -43,7 +44,7 @@ const UserManagementIndex: React.FC<UserProps> = ({ userId, isAdmin }) => {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
   const router = useRouter();
-  const [collapsed, setCollapsed] = useState<boolean>(true);
+  const { sidebarCollapsed, toggleSidebar } = useSidebarStore();
   const [teams, setTeams] = useState<teams[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [editingRow, setEditingRow] = useState<{ id: number; method: string }>({
@@ -372,7 +373,6 @@ const UserManagementIndex: React.FC<UserProps> = ({ userId, isAdmin }) => {
   ) : (
     <Layout>
       <Sidebar
-        collapsed={collapsed}
         activeKey="userManagement"
         userId={userId}
         isAdmin={isAdmin}
@@ -381,8 +381,8 @@ const UserManagementIndex: React.FC<UserProps> = ({ userId, isAdmin }) => {
         <Header style={{ padding: 0, background: colorBgContainer }}>
           <Button
             type="text"
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed(!collapsed)}
+            icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            onClick={toggleSidebar}
             style={{
               fontSize: "16px",
               width: 64,

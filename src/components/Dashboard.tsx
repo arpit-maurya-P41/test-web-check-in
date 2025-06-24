@@ -23,6 +23,7 @@ import dayjs, { Dayjs } from "dayjs";
 import { RangePickerProps } from "antd/lib/date-picker";
 import Sidebar from "@/components/Sidebar";
 import { logoutUser } from "@/app/actions/authActions";
+import { useSidebarStore } from "@/store/sidebarStore";
 
 import { Heatmap } from "@ant-design/charts";
 import PercentageLineChart from "./PercentageLineChart";
@@ -38,8 +39,8 @@ const getDefaultDates = () => [dayjs().subtract(6, "day"), dayjs()] as [Dayjs, D
 
 const Dashboard: React.FC<DashboardProps> = ({ userId, teams, users, isAdmin }) => {
     const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
+    const { sidebarCollapsed, toggleSidebar } = useSidebarStore();
 
-    const [collapsed, setCollapsed] = useState(true);
     const [loading, setLoading] = useState(true);
     const [dashboardData, setDashboardData] = useState<DashboardData[]>([]);
     const [dates, setDates] = useState<[Dayjs, Dayjs]>(getDefaultDates());
@@ -129,7 +130,6 @@ const Dashboard: React.FC<DashboardProps> = ({ userId, teams, users, isAdmin }) 
     return (
         <Layout>
             <Sidebar
-                collapsed={collapsed}
                 activeKey="dashboard"
                 userId={userId}
                 isAdmin={isAdmin}
@@ -139,13 +139,13 @@ const Dashboard: React.FC<DashboardProps> = ({ userId, teams, users, isAdmin }) 
                     <Button
                         type="text"
                         icon={
-                            collapsed ? (
+                            sidebarCollapsed ? (
                                 <MenuUnfoldOutlined />
                             ) : (
                                 <MenuFoldOutlined />
                             )
                         }
-                        onClick={() => setCollapsed(!collapsed)}
+                        onClick={toggleSidebar}
                         style={{
                             fontSize: "16px",
                             width: 64,

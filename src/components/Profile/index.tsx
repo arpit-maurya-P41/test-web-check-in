@@ -22,6 +22,7 @@ import {
 import { useEffect, useState } from "react";
 import { logoutUser } from "@/app/actions/authActions";
 import Sidebar from "../Sidebar";
+import { useSidebarStore } from "@/store/sidebarStore";
 import {
   convertTimeToUTC,
   getTimeZones,
@@ -38,7 +39,7 @@ const Profile: React.FC<ProfileProps> = ({ userId, isAdmin }) => {
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
-  const [collapsed, setCollapsed] = useState<boolean>(true);
+  const { sidebarCollapsed, toggleSidebar } = useSidebarStore();
   const [form] = Form.useForm();
   const format = "HH:mm";
   const notify = useNotification();
@@ -125,7 +126,6 @@ const Profile: React.FC<ProfileProps> = ({ userId, isAdmin }) => {
   return (
     <Layout>
       <Sidebar
-        collapsed={collapsed}
         activeKey="profile"
         userId={userId}
         isAdmin={isAdmin}
@@ -134,8 +134,8 @@ const Profile: React.FC<ProfileProps> = ({ userId, isAdmin }) => {
         <Header style={{ padding: 0, background: colorBgContainer }}>
           <Button
             type="text"
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed(!collapsed)}
+            icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            onClick={toggleSidebar}
             style={{
               fontSize: "16px",
               width: 64,

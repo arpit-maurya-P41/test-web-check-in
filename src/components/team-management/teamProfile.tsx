@@ -23,6 +23,7 @@ import {
 import { logoutUser } from "@/app/actions/authActions";
 import { teamProfileProps } from "@/type/PropTypes";
 import Sidebar from "../Sidebar";
+import { useSidebarStore } from "@/store/sidebarStore";
 import { TeamDetailsForm, User } from "@/type/types";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { roles } from "@prisma/client";
@@ -37,7 +38,7 @@ const layout = {
 };
 
 const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) => {
-  const [collapsed, setCollapsed] = useState<boolean>(true);
+  const { sidebarCollapsed, toggleSidebar } = useSidebarStore();
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
@@ -203,7 +204,6 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) =>
   return (
     <Layout>
       <Sidebar
-        collapsed={collapsed}
         userId={userId}
         isAdmin={isAdmin}
       />
@@ -211,8 +211,8 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) =>
         <Header style={{ padding: 0, background: colorBgContainer }}>
           <Button
             type="text"
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed(!collapsed)}
+            icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            onClick={toggleSidebar}
             style={{
               fontSize: "16px",
               width: 64,
