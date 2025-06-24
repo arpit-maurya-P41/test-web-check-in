@@ -77,7 +77,7 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) =>
       return;
     }
     setLoading(true);
-    fetch(`/api/teams/${teamId}/teamUsers/?page=${page}&limit=10`)
+    fetch(`/api/teams/${teamId}/teamUsers?page=${page}&limit=10`)
       .then((res) => res.json())
       .then((res) => {
         const results = Array.isArray(res.data) ? res.data : [];
@@ -250,11 +250,11 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) =>
                 Team Info
               </Title>
             </Col>
-            <Col>
+            {isAdmin && <Col>
               <Button danger onClick={deleteTeam}>
                 Delete
               </Button>
-            </Col>
+            </Col>}
           </Row>
           <Form
             {...layout}

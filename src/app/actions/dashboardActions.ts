@@ -17,7 +17,7 @@ export async function isUserAdmin(userId: string) {
 
 export async function UserExists(userId: string){
   const user = await prisma.users.findUnique({
-    where: { id: Number(userId) },
+    where: { id: Number(userId), is_active: true },
     select: { id: true },
   });
   return user ? true : false;
