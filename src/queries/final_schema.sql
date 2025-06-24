@@ -8,11 +8,7 @@ CREATE TABLE teams (
 -- 🚀 Roles Table
 CREATE TABLE roles (
     id SERIAL PRIMARY KEY,
-    role_name VARCHAR(255) UNIQUE NOT NULL,
-    can_manage_teams BOOLEAN DEFAULT FALSE NOT NULL,
-    can_manage_users BOOLEAN DEFAULT FALSE NOT NULL,
-    can_view_reports BOOLEAN DEFAULT FALSE NOT NULL,
-    can_manage_roles BOOLEAN DEFAULT FALSE NOT NULL
+    role_name VARCHAR(255) UNIQUE NOT NULL
 );
 
 -- 🚀 Users Table
@@ -130,5 +126,4 @@ ALTER TABLE teams ADD column teaminfo Text;
 );
 
 alter table users drop column role_id;
-
 
