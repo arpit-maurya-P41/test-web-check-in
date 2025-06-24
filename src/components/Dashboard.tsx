@@ -29,6 +29,7 @@ import { Heatmap } from "@ant-design/charts";
 import PercentageLineChart from "./PercentageLineChart";
 import { DashboardProps } from "@/type/PropTypes";
 import { DashboardData, PercentageData } from "@/type/types";
+import { useFetch } from "@/utils/useFetch";
 
 const { Title } = Typography;
 
@@ -38,19 +39,21 @@ const { Header, Content } = Layout;
 const getDefaultDates = () => [dayjs().subtract(6, "day"), dayjs()] as [Dayjs, Dayjs];
 
 const Dashboard: React.FC<DashboardProps> = ({ userId, teams, users, isAdmin }) => {
-    const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
+    const {
+        token: { colorBgContainer, borderRadiusLG },
+    } = theme.useToken();
     const { sidebarCollapsed, toggleSidebar } = useSidebarStore();
-
-    const [loading, setLoading] = useState(true);
-    const [dashboardData, setDashboardData] = useState<DashboardData[]>([]);
     const [dates, setDates] = useState<[Dayjs, Dayjs]>(getDefaultDates());
-    const [selectedTeams, setSelectedTeams] = useState<string>(teams[0]?.slack_channel_id);
-    const [selectedUsers, setSelectedUsers] = useState([]);
+    const [selectedTeams, setSelectedTeams] = useState<string>(
+        teams[0]?.slack_channel_id
+    );
+    const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+    const [dashboardData, setDashboardData] = useState<DashboardData[]>([]);
     const [blockedData, setBlockedData] = useState<PercentageData[]>([]);
     const [checkinData, setCheckinData] = useState<PercentageData[]>([]);
 
     const handleTeamChange = (value: string) => setSelectedTeams(value ?? teams[0]?.slack_channel_id);
-    const handleUserChange = (value: never[]) => setSelectedUsers(value);
+    const handleUserChange = (value: string[]) => setSelectedUsers(value);
     const handleRangeChange = (dates: RangePickerProps["value"]) => {
         if (dates) setDates(dates as [Dayjs, Dayjs]);
         else setDates(getDefaultDates());
@@ -113,15 +116,15 @@ const Dashboard: React.FC<DashboardProps> = ({ userId, teams, users, isAdmin }) 
                 params.append("users", selectedUsers.join(","));
             }
 
-            const [dashboardRes] = await Promise.all([
-                fetch(`/api/dashboard?${params.toString()}`),
-            ]);
-
-            const data = await dashboardRes.json();
-            setDashboardData(JSON.parse(JSON.stringify(data.smartCheckins)));
-            setBlockedData(JSON.parse(JSON.stringify(data.blockedUsersCount)));
-            setCheckinData(JSON.parse(JSON.stringify(data.checkinUserPercentageByDate)));
-            setLoading(false);
+            try {
+                const response = await fetch(`/api/dashboard?${params.toString()}`);
+                const data = await response.json();
+                setDashboardData(JSON.parse(JSON.stringify(data.smartCheckins)));
+                setBlockedData(JSON.parse(JSON.stringify(data.blockedUsersCount)));
+                setCheckinData(JSON.parse(JSON.stringify(data.checkinUserPercentageByDate)));
+            } catch (error) {
+                console.error("Error fetching dashboard data:", error);
+            }
         };
 
         fetchData();
@@ -177,101 +180,95 @@ const Dashboard: React.FC<DashboardProps> = ({ userId, teams, users, isAdmin }) 
                         flexDirection: "column",
                         gap: 16,
                     }}>
-                    {loading ? (
-                        <Spin percent="auto" fullscreen size="large" />
-                    ) : (
-                        <>
-                            <Row>
-                                <Col
-                                    span={26}
-                                    style={{ margin: "auto" }}>
-                                    <Space
+                    <Row>
+                        <Col
+                            span={26}
+                            style={{ margin: "auto" }}>
+                            <Space
+                                style={{
+                                    marginBottom: 16,
+                                    display: "flex",
+                                }}
+                                wrap>
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 12,
+                                    }}>
+                                    <RangePicker
+                                        onChange={(dates: RangePickerProps["value"]) => handleRangeChange(dates)}
+                                        value={dates}
+                                        format="YYYY-MM-DD"
                                         style={{
-                                            marginBottom: 16,
-                                            display: "flex",
+                                            padding: "8px",
+                                            borderRadius: "8px",
                                         }}
-                                        wrap>
-                                        <div
-                                            style={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: 12,
-                                            }}>
-                                            <RangePicker
-                                                onChange={(dates: RangePickerProps["value"]) => handleRangeChange(dates)}
-                                                value={dates}
-                                                format="YYYY-MM-DD"
-                                                style={{
-                                                    padding: "8px",
-                                                    borderRadius: "8px",
-                                                }}
-                                                allowClear
-                                                maxDate={dayjs()}
-                                            />
-                                        </div>
-
-                                        <Select
-                                            placeholder="Select Teams"
-                                            value={selectedTeams}
-                                            onChange={handleTeamChange}
-                                            style={{ minWidth: 240 }}>
-                                            {teams.map((team) => (
-                                                <Option
-                                                    key={team.slack_channel_id}
-                                                    value={team.slack_channel_id}>
-                                                    {team.name}
-                                                </Option>
-                                            ))}
-                                        </Select>
-
-                                        <Select
-                                            mode="multiple"
-                                            allowClear
-                                            placeholder="Select Users"
-                                            value={selectedUsers}
-                                            onChange={handleUserChange}
-                                            style={{ minWidth: 240, maxWidth: 500 }}>
-                                            {users.map((user) => (
-                                                <Option
-                                                    key={user.id}
-                                                    value={user.slack_user_id}>
-                                                    {user.email}
-                                                </Option>
-                                            ))}
-                                        </Select>
-                                    </Space>
-                                </Col>
-                            </Row>
-                            <Row>
-                                <Col
-                                    span={24}
-                                    style={{ padding: 8 }}>
-                                    <Title level={2}>Smart Goals</Title>
-                                    {
-                                        config.data && config.data.length > 0 ? (
-                                        <Heatmap {...config} />
-                                        ) : (
-                                        <div style={{ textAlign: 'center', padding: '8rem' }}>No data available</div>
-                                        )
-                                    }
-                                    <Title level={2}>Blockers</Title>
-                                    <PercentageLineChart
-                                    title="Blocked Users Percentage"
-                                    data={blockedData}
-                                    yLabel="Blocked Users (%)"
-                                    color="#f5222d"
+                                        allowClear
+                                        maxDate={dayjs()}
                                     />
-                                    <Title level={2}>Participation</Title>
-                                    <PercentageLineChart
-                                        title="Check-in Users Percentage"
-                                        data={checkinData}
-                                        yLabel="Check-in Users (%)"
-                                        color="#52c41a"
-                                    />
-                                </Col>
-                            </Row>
-                        </>
-                    )}
+                                </div>
+
+                                <Select
+                                    placeholder="Select Teams"
+                                    value={selectedTeams}
+                                    onChange={handleTeamChange}
+                                    style={{ minWidth: 240 }}>
+                                    {teams.map((team) => (
+                                        <Option
+                                            key={team.slack_channel_id}
+                                            value={team.slack_channel_id}>
+                                            {team.name}
+                                        </Option>
+                                    ))}
+                                </Select>
+
+                                <Select
+                                    mode="multiple"
+                                    allowClear
+                                    placeholder="Select Users"
+                                    value={selectedUsers}
+                                    onChange={handleUserChange}
+                                    style={{ minWidth: 240, maxWidth: 500 }}>
+                                    {users.map((user) => (
+                                        <Option
+                                            key={user.id}
+                                            value={user.slack_user_id}>
+                                            {user.email}
+                                        </Option>
+                                    ))}
+                                </Select>
+                            </Space>
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col
+                            span={24}
+                            style={{ padding: 8 }}>
+                            <Title level={2}>Smart Goals</Title>
+                            {
+                                config.data && config.data.length > 0 ? (
+                                <Heatmap {...config} />
+                                ) : (
+                                <div style={{ textAlign: 'center', padding: '8rem' }}>No data available</div>
+                                )
+                            }
+                            <Title level={2}>Blockers</Title>
+                            <PercentageLineChart
+                            title="Blocked Users Percentage"
+                            data={blockedData}
+                            yLabel="Blocked Users (%)"
+                            color="#f5222d"
+                            />
+                            <Title level={2}>Participation</Title>
+                            <PercentageLineChart
+                                title="Check-in Users Percentage"
+                                data={checkinData}
+                                yLabel="Check-in Users (%)"
+                                color="#52c41a"
+                            />
+                        </Col>
+                    </Row>
                 </Content>
             </Layout>
         </Layout>

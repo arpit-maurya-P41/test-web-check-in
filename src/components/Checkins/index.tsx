@@ -1,5 +1,5 @@
 'use client'
-import { Button, Card, Dropdown, Layout, MenuProps, Spin, theme } from "antd";
+import { Button, Card, Dropdown, Layout, MenuProps, theme } from "antd";
 import Sidebar from "../Sidebar";
 import { useEffect, useState } from "react";
 import { DownOutlined, LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
@@ -16,7 +16,6 @@ const Checkins: React.FC<CheckinProps> = ({ userId, teams, isAdmin }) => {
     const { sidebarCollapsed, toggleSidebar } = useSidebarStore();
     const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
     const [goalsSummary, setGoalsSummary] = useState<CheckinEntry[]>([]);
-    const [loading, setLoading] = useState(true);
 
     const handleMenuClick: MenuProps['onClick'] = (e) => {
         const team = teams.find((t) => t.id.toString() === e.key);
@@ -64,17 +63,11 @@ const Checkins: React.FC<CheckinProps> = ({ userId, teams, isAdmin }) => {
         catch(error){
             console.error("Error fetching data", error);
         }
-        finally{
-            setLoading(false);
-        }
         }
         fetchData();
     },[selectedTeam])
 
     return(
-        loading ? (
-            <Spin percent="auto" fullscreen size="large" />
-        ) :
         <Layout>
             <Sidebar
                 activeKey="checkins"

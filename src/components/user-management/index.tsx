@@ -29,7 +29,6 @@ import Sidebar from "../Sidebar";
 import { useSidebarStore } from "@/store/sidebarStore";
 import { convertTimeToUTC } from "@/utils/timeUtils";
 import { useNotification } from "../NotificationProvider";
-import { Spin } from "antd";
 import { UserProps } from "@/type/PropTypes";
 import { User } from "@/type/types";
 import { useRouter } from "next/navigation";
@@ -53,7 +52,6 @@ const UserManagementIndex: React.FC<UserProps> = ({ userId, isAdmin }) => {
   });
   const notify = useNotification();
   const [isSaving, setIsSaving] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [newUserId, setNewUserId] = useState(1);
 
   useEffect(() => {
@@ -69,8 +67,6 @@ const UserManagementIndex: React.FC<UserProps> = ({ userId, isAdmin }) => {
         setNewUserId(usersData.latestUserId);
       } catch (error) {
         console.error("Error fetching data", error);
-      } finally {
-        setLoading(false);
       }
     };
     fetchData();
@@ -368,9 +364,7 @@ const UserManagementIndex: React.FC<UserProps> = ({ userId, isAdmin }) => {
     },
   ];
 
-  return loading ? (
-    <Spin percent="auto" fullscreen size="large" />
-  ) : (
+  return (
     <Layout>
       <Sidebar
         activeKey="userManagement"

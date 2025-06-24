@@ -13,7 +13,6 @@ import {
   Table,
   Form,
   Typography,
-  Spin,
 } from "antd";
 import Sidebar from "../Sidebar";
 import { logoutUser } from "@/app/actions/authActions";
@@ -36,7 +35,6 @@ const TeamManagementIndex: React.FC<TeamProps> = ({ userId, isAdmin }) => {
   const { sidebarCollapsed, toggleSidebar } = useSidebarStore();
 
   const [dataSource, setDataSource] = useState<TeamWithUserCount[]>([]);
-  const [loading, setLoading] = useState(true);
   const [newTeamId, setNewTeamId] = useState(1);
 
   useEffect(() => {
@@ -52,8 +50,6 @@ const TeamManagementIndex: React.FC<TeamProps> = ({ userId, isAdmin }) => {
 
     } catch (error) {
       console.error("Error fetching data", error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -85,9 +81,7 @@ const TeamManagementIndex: React.FC<TeamProps> = ({ userId, isAdmin }) => {
     },
   ];
 
-  return loading ? (
-    <Spin percent="auto" fullscreen size="large" />
-  ) : (
+  return (
     <Layout>
       <Sidebar
         activeKey="teamManagement"

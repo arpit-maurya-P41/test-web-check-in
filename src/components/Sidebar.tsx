@@ -13,6 +13,7 @@ import { SidebarProps } from "@/type/PropTypes";
 import { DashboardItem } from "@/type/types";
 import { useRouter } from "next/navigation";
 import { useSidebarStore } from "@/store/sidebarStore";
+import NProgress from "nprogress";
 
 const { Sider } = Layout;
 
@@ -21,13 +22,18 @@ const Sidebar: React.FC<SidebarProps> = ({ userId, activeKey, isAdmin = false}) 
     const { sidebarCollapsed } = useSidebarStore();
     const sidebarItems = [];
     
+    const handleNavigation = (path: string) => {
+        NProgress.start();
+        router.push(path);
+    };
+    
     const dashboardItem: DashboardItem = {
         key: "dashboard",
         icon: <LineChartOutlined />,
         label: "Dashboard",
     };
     if (activeKey !== "dashboard") {
-        dashboardItem.onClick = () => router.push("/dashboard");
+        dashboardItem.onClick = () => handleNavigation("/dashboard");
     }
     sidebarItems.push(dashboardItem);
 
@@ -37,7 +43,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userId, activeKey, isAdmin = false}) 
         label: "CheckIns",
     };
     if (activeKey !== "checkins") {
-        checkIns.onClick = () => router.push("/checkins");
+        checkIns.onClick = () => handleNavigation("/checkins");
     }
     sidebarItems.push(checkIns);
 
@@ -48,7 +54,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userId, activeKey, isAdmin = false}) 
             label: "Teams",
         };
         if (activeKey !== "teamManagement") {
-            teamManagementItem.onClick = () => router.push("/team-management");
+            teamManagementItem.onClick = () => handleNavigation("/team-management");
         }
         sidebarItems.push(teamManagementItem);
     }
@@ -60,7 +66,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userId, activeKey, isAdmin = false}) 
             label: "Users",
         };
         if (activeKey !== "userManagement") {
-            userManagementItem.onClick = () => router.push("/user-management");
+            userManagementItem.onClick = () => handleNavigation("/user-management");
         }
         sidebarItems.push(userManagementItem);
     }
@@ -71,7 +77,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userId, activeKey, isAdmin = false}) 
         label: "Profile",
     };
     if (activeKey !== "profile") {
-        profileItem.onClick = () => router.push(`/profile/${userId}`);
+        profileItem.onClick = () => handleNavigation(`/profile/${userId}`);
     }
     sidebarItems.push(profileItem);
 
