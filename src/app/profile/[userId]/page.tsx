@@ -13,7 +13,7 @@ export default async function ProfileManagement({params}: {params: Promise<{ use
   const isAdmin = await isUserAdmin(session.user.id);
   const userExists = await UserExists(userId);
   
-  if (!userExists || !isAdmin) {
+  if (!userExists || (!isAdmin && userId !== loggedInUserId)) {
     redirect(`/profile/${loggedInUserId}`)
   }
 
