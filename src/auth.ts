@@ -34,11 +34,20 @@ export const authConfig: NextAuthConfig = {
                 const dbUser = await prisma.users.findUnique({
                     where: { email: user.email }
                 });
-                user.id = String(dbUser?.id);
+                
+                if (!dbUser) {
+                    return "/access-denied?error=AccessDenied";
+                }
+                
+                if (dbUser && !dbUser.is_active) {
+                    return "/access-denied?error=AccountInactive";
+                }
+                
+                user.id = String(dbUser.id);
                 return true;
             }
             
-            throw new Error("AccessDenied");
+            return "/access-denied?error=AccessDenied";
         },
         jwt({ token, user }) {
             if (user) {
