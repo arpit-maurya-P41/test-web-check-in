@@ -1,39 +1,40 @@
 "use client";
 
 import React, { useState } from "react";
-import { Card, Form, Input, Button, Typography, Space, message } from "antd";
-import { loginUser } from "@/app/actions/authActions";
-import { LoginFormValues } from "@/type/types";
+import { Card, Button, Typography, Space, message } from "antd";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const { Title, Text } = Typography;
 
 const Login = () => {
-    const [form] = Form.useForm();
-    const [messageApi, contextHolder] = message.useMessage();
     const [loading, setLoading] = useState(false);
+    const router = useRouter();
 
-    const onFinish = async (values: LoginFormValues) => {
-        setLoading(true);
+    const handleGoogleSignIn = async () => {
         try {
-            await loginUser(values.username, values.password);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        } catch (error) {
-            messageApi.open({
-                type: "error",
-                content: "Invalid credentials. Please try again.",
+            setLoading(true);
+            const result = await signIn("google", { 
+                callbackUrl: "/",
+                redirect: false 
             });
+            
+            if (result?.error) {
+                message.error("Authentication failed. Please try again.");
+                console.error("Auth error:", result.error);
+            } else if (result?.url) {
+                router.push(result.url);
+            }
+        } catch (error) {
+            console.error("Sign in error:", error);
+            message.error("Something went wrong. Please try again.");
         } finally {
             setLoading(false);
         }
     };
 
-    const onFinishFailed = () => {
-        message.error("Please fix the errors in the form");
-    };
-
     return (
         <>
-            {contextHolder}
             <div
                 style={{
                     height: "100vh",
@@ -72,59 +73,30 @@ const Login = () => {
                             </Text>
                         </div>
 
-                        <Form
-                            form={form}
-                            layout="vertical"
-                            onFinish={onFinish}
-                            onFinishFailed={onFinishFailed}
-                            requiredMark={false}
-                            size="middle">
-                            <Form.Item
-                                label="Email or Username"
-                                name="username"
-                                rules={[
-                                    {
-                                        required: true,
-                                        message:
-                                            "Please enter your email or username",
-                                    },
-                                    {
-                                        pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                                        message: "Please enter a valid email",
-                                        validateTrigger: "onBlur",
-                                    },
-                                ]}>
-                                <Input placeholder="username@particle41.com" />
-                            </Form.Item>
-
-                            <Form.Item
-                                label="Password"
-                                name="password"
-                                rules={[
-                                    {
-                                        required: true,
-                                        message: "Please enter your password",
-                                    },
-                                    {
-                                        min: 6,
-                                        message:
-                                            "Password must be at least 6 characters",
-                                    },
-                                ]}>
-                                <Input.Password placeholder="••••••••" />
-                            </Form.Item>
-
-                            <Form.Item>
-                                <Button
-                                    type="primary"
-                                    htmlType="submit"
-                                    block
-                                    style={{ borderRadius: 8 }}
-                                    loading={loading}>
-                                    Sign In
-                                </Button>
-                            </Form.Item>
-                        </Form>
+                        <Button
+                            onClick={handleGoogleSignIn}
+                            loading={loading}
+                            block
+                            style={{ 
+                                borderRadius: 8,
+                                height: "40px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "8px"
+                            }}>
+                            {!loading && (
+                                <img 
+                                    src="/images/icons/google.svg" 
+                                    alt="Google" 
+                                    style={{ width: "18px", height: "18px" }} 
+                                    onError={(e) => {
+                                        e.currentTarget.style.display = "none";
+                                    }}
+                                />
+                            )}
+                            Sign in with Google
+                        </Button>
 
                         <Text
                             type="secondary"
@@ -133,7 +105,7 @@ const Login = () => {
                                 textAlign: "center",
                                 display: "block",
                             }}>
-                            Forgot password? Contact your admin.
+                            Contact your admin for access issues.
                         </Text>
                     </Space>
                 </Card>
