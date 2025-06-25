@@ -6,19 +6,15 @@ import type { Adapter } from "@auth/core/adapters";
 
 const customAdapter = (): Adapter => {
   return {
-    async createUser(user) {
-      const newUser = await prisma.users.create({
-        data: {
-          email: user.email,
-          first_name: user.name?.split(" ")[0] || "",
-          last_name: user.name?.split(" ")[1] || "",
-          is_active: true
-        },
+    async getUserByEmail(email) {
+      const user = await prisma.users.findUnique({
+        where: { email },
       });
+      if (!user) return null;
       return {
-        id: String(newUser.id),
-        email: newUser.email,
-        name: `${newUser.first_name} ${newUser.last_name}`.trim(),
+        id: String(user.id),
+        email: user.email,
+        name: `${user.first_name} ${user.last_name}`.trim(),
         emailVerified: null,
       };
     },
@@ -34,41 +30,6 @@ const customAdapter = (): Adapter => {
         emailVerified: null,
       };
     },
-    async getUserByEmail(email) {
-      const user = await prisma.users.findUnique({
-        where: { email },
-      });
-      if (!user) return null;
-      return {
-        id: String(user.id),
-        email: user.email,
-        name: `${user.first_name} ${user.last_name}`.trim(),
-        emailVerified: null,
-      };
-    },
-    async getUserByAccount() {
-      return null;
-    },
-    async updateUser(user) {
-      const updated = await prisma.users.update({
-        where: { id: parseInt(user.id) },
-        data: {
-          email: user.email,
-          first_name: user.name?.split(" ")[0] || "",
-          last_name: user.name?.split(" ")[1] || "",
-        },
-      });
-      return {
-        id: String(updated.id),
-        email: updated.email,
-        name: `${updated.first_name} ${updated.last_name}`.trim(),
-        emailVerified: null,
-      };
-    },
-    async linkAccount() {
-      // Since we don't have an accounts table, we'll just return
-      return;
-    },
     async createSession({ sessionToken, userId, expires }) {
       await prisma.sessions.create({
         data: {
@@ -82,24 +43,18 @@ const customAdapter = (): Adapter => {
         expires,
       };
     },
-    async getSessionAndUser() {
-      return null;
+    
+    async createUser() {
+      throw new Error("User creation is not allowed through the authentication flow");
     },
-    async updateSession() {
-      return null;
-    },
-    async deleteSession() {
-      // Simplified implementation
-      return;
-    },
-    async createVerificationToken() {
-      // Simplified implementation
-      return null;
-    },
-    async useVerificationToken() {
-      // Simplified implementation
-      return null;
-    },
+    async getUserByAccount() { return null; },
+    async updateUser() { throw new Error("Not implemented"); },
+    async linkAccount() { return; },
+    async getSessionAndUser() { return null; },
+    async updateSession() { return null; },
+    async deleteSession() { return; },
+    async createVerificationToken() { return null; },
+    async useVerificationToken() { return null; },
   };
 };
 
@@ -107,6 +62,7 @@ export const authConfig: NextAuthConfig = {
     adapter: customAdapter(),
     pages: {
         signIn: "/login",
+        error: "/access-denied",
     },
     providers: [
         Google({
@@ -124,30 +80,46 @@ export const authConfig: NextAuthConfig = {
                 return Response.redirect(new URL("/", nextUrl));
             }
 
+            // Allow access to the access-denied page without authentication
+            if (pathname.startsWith("/access-denied")) {
+                return true;
+            }
+
             return !!auth;
         },
         async signIn({ user, account, profile: _profile }) { // eslint-disable-line @typescript-eslint/no-unused-vars
             if (account?.provider === "google" && user.email) {
                 // Check if user exists with this email
-                let dbUser = await prisma.users.findUnique({
+                const dbUser = await prisma.users.findUnique({
                     where: { email: user.email }
                 });
                 
                 if (!dbUser) {
-                    // Create a new user if one doesn't exist
-                    try {
-                        dbUser = await prisma.users.create({
-                            data: {
-                                email: user.email,
-                                first_name: user.name?.split(" ")[0] || "",
-                                last_name: user.name?.split(" ")[1] || "",
-                                is_active: true
-                            }
-                        });
-                    } catch (error) {
-                        console.error("Error creating user:", error);
-                        return false;
-                    }
+                    // User doesn't exist in our database
+                    console.error("Access denied: User does not exist in the system");
+                    throw new Error("AccessDenied");
+                }
+                
+                // Check if user is active
+                if (!dbUser.is_active) {
+                    console.error("User account is not active");
+                    throw new Error("AccountInactive");
+                }
+                
+                // Check if user has admin access
+                if (dbUser.is_admin) {
+                    user.id = String(dbUser.id);
+                    return true;
+                }
+                
+                // Check if user has any roles assigned
+                const userRoles = await prisma.user_team_role.findFirst({
+                    where: { user_id: dbUser.id }
+                });
+                
+                if (!userRoles) {
+                    console.error("User does not have any assigned roles");
+                    throw new Error("NoRolesAssigned");
                 }
                 
                 // Allow sign in with this Google account
@@ -155,7 +127,7 @@ export const authConfig: NextAuthConfig = {
                 return true;
             }
             
-            return true;
+            throw new Error("AccessDenied");
         },
         jwt({ token, user, account: _account }) { // eslint-disable-line @typescript-eslint/no-unused-vars
             if (user) {
