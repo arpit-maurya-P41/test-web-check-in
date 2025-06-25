@@ -59,6 +59,7 @@ export async function getTeamUsers(teamId: number) {
       id: {
         in: teamUsers.map((user) => user.user_id),
       },
+      is_active: true
     },
     orderBy: { id: "asc" },
   });
