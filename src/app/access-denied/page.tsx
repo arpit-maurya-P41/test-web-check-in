@@ -17,9 +17,6 @@ function AccessDeniedContent() {
     case "AccountInactive":
       subTitle = "Your account is inactive. Please contact your administrator to activate your account.";
       break;
-    case "NoRolesAssigned":
-      subTitle = "You don't have any roles assigned. Please contact your administrator to assign roles.";
-      break;
     default:
       subTitle = "You don't have access to this application. Please contact your administrator.";
   }
