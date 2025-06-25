@@ -49,6 +49,7 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) =>
   const [form] = Form.useForm();
   const router = useRouter();
   const notify = useNotification();
+  const [hideDelete, setHideDelete] = useState(false);
 
   const deleteTeam = async () => {
     try {
@@ -69,7 +70,7 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) =>
   };
 
   const handleCancel = () => {
-    fetchData();
+    router.back();
   };
 
   const loadMoreData = () => {
@@ -125,7 +126,11 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) =>
 
   useEffect(() => {
     fetchData();
-
+      const hideDeleteButton = sessionStorage.getItem("hideDelete");
+      if (hideDeleteButton === "true") {
+        setHideDelete(true);
+        sessionStorage.removeItem("hideDelete");
+      }
     if (!initialLoad.current) {
       loadMoreData();
       initialLoad.current = true;
@@ -250,11 +255,11 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) =>
                 Team Info
               </Title>
             </Col>
-            <Col>
+            {!hideDelete && <Col>
               <Button danger onClick={deleteTeam}>
                 Delete
               </Button>
-            </Col>
+            </Col>}
           </Row>
           <Form
             {...layout}
