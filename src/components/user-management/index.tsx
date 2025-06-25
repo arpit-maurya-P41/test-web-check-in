@@ -280,6 +280,7 @@ const UserManagementIndex: React.FC<UserProps> = ({ userId, isAdmin }) => {
     {
       title: "Teams",
       dataIndex: "user_team_mappings",
+      width: 500,
       render: (_: unknown, record: User) => {
         if (editingRow.id === record.id) {
           return (
@@ -288,8 +289,8 @@ const UserManagementIndex: React.FC<UserProps> = ({ userId, isAdmin }) => {
                 mode="multiple"
                 showSearch={false}
                 allowClear
-                style={{ width: "100%" }}
                 placeholder="Select Teams"
+                style={{ width: "100%", maxWidth: 500 }}
               >
                 {teams.map((team) => (
                   <Option key={team.id} value={team.id}>
@@ -418,6 +419,7 @@ const UserManagementIndex: React.FC<UserProps> = ({ userId, isAdmin }) => {
                 pagination={{ pageSize: 10 }}
                 scroll={{ x: 1000 }}
                 size="small"
+                style={{ tableLayout: "fixed" }}
               />
             </Form>
           </div>

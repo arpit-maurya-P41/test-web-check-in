@@ -121,7 +121,19 @@ const Profile: React.FC<ProfileProps> = ({ userId, isAdmin }) => {
   };
 
   const handleCancel = () => {
-    form.resetFields();
+    if (userData) {
+      form.setFieldsValue({
+        Title: userData.title,
+        FirstName: userData.first_name,
+        LastName: userData.last_name,
+        Location: userData.location,
+        timezone: userData.timezone,
+        checkIn: convertUtcTimeToLocal(userData.check_in_time, userData.timezone),
+        checkOut: convertUtcTimeToLocal(userData.check_out_time, userData.timezone),
+        About: userData.about_you,
+        IsAdmin: userData.is_admin,
+      });
+    }
   };
 
   return (

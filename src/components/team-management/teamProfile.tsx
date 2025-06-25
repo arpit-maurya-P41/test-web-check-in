@@ -245,11 +245,11 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) =>
                 Team Info
               </Title>
             </Col>
-            <Col>
+            {isAdmin && <Col>
               <Button danger onClick={deleteTeam}>
                 Delete
               </Button>
-            </Col>
+            </Col>}
           </Row>
           <Form
             {...layout}
