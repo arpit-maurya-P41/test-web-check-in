@@ -21,17 +21,15 @@ import {
   Tooltip,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-
 import { logoutUser } from "@/app/actions/authActions";
-
-import { teams } from "@prisma/client";
 import Sidebar from "../Sidebar";
+import { useSidebarStore } from "@/store/sidebarStore";
 import { convertTimeToUTC } from "@/utils/timeUtils";
 import { useNotification } from "../NotificationProvider";
-import { Spin } from "antd";
-import { UserProps } from "@/type/PropTypes";
-import { User } from "@/type/types";
+import { UserProps, Team } from "@/type/PropTypes";
+import { User, EditingRow } from "@/type/types";
 import { useRouter } from "next/navigation";
+import { useFetch } from "@/utils/useFetch";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -43,46 +41,36 @@ const UserManagementIndex: React.FC<UserProps> = ({ userId, isAdmin }) => {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
   const router = useRouter();
-  const [collapsed, setCollapsed] = useState<boolean>(true);
-  const [teams, setTeams] = useState<teams[]>([]);
+  const { sidebarCollapsed, toggleSidebar } = useSidebarStore();
   const [users, setUsers] = useState<User[]>([]);
-  const [editingRow, setEditingRow] = useState<{ id: number; method: string }>({
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [editingRow, setEditingRow] = useState<EditingRow>({
     id: 0,
     method: "add",
   });
   const notify = useNotification();
   const [isSaving, setIsSaving] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [newUserId, setNewUserId] = useState(1);
 
+  // Using useFetch hook for teams data
+  const { data: teamsData } = useFetch<{ teams: Team[] }>('/api/teams');
+
+  // Using useFetch hook for users data
+  const { data: usersData, refetch: refetchUsers } = useFetch<{ users: User[], latestUserId: number }>('/api/users');
+
+  // Update state when data is fetched
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const teamsAPIResponse = await fetch("/api/teams");
-        const teamsData = await teamsAPIResponse.json();
-        setTeams(teamsData.teams);
+    if (teamsData) {
+      setTeams(teamsData.teams);
+    }
+  }, [teamsData]);
 
-        const usersAPIResponse = await fetch("/api/users");
-        const usersData = await usersAPIResponse.json();
-        setUsers(usersData.users);
-        setNewUserId(usersData.latestUserId);
-      } catch (error) {
-        console.error("Error fetching data", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-  const fetchData = () => {
-    fetch("/api/users")
-      .then((response) => response.json())
-      .then((data) => {
-        setUsers(data.users);
-        setNewUserId(data.latestUserId);
-      });
-  };
+  useEffect(() => {
+    if (usersData) {
+      setUsers(usersData.users);
+      setNewUserId(usersData.latestUserId);
+    }
+  }, [usersData]);
 
   const handleDelete = (id: number) => {
     if (id === Number(userId)) {
@@ -203,7 +191,7 @@ const UserManagementIndex: React.FC<UserProps> = ({ userId, isAdmin }) => {
   const resetAndFetch = () => {
     setEditingRow({ id: 0, method: "add" });
     form.resetFields();
-    fetchData();
+    refetchUsers();
     setIsSaving(false);
   };
 
@@ -368,12 +356,9 @@ const UserManagementIndex: React.FC<UserProps> = ({ userId, isAdmin }) => {
     },
   ];
 
-  return loading ? (
-    <Spin percent="auto" fullscreen size="large" />
-  ) : (
+  return (
     <Layout>
       <Sidebar
-        collapsed={collapsed}
         activeKey="userManagement"
         userId={userId}
         isAdmin={isAdmin}
@@ -382,8 +367,8 @@ const UserManagementIndex: React.FC<UserProps> = ({ userId, isAdmin }) => {
         <Header style={{ padding: 0, background: colorBgContainer }}>
           <Button
             type="text"
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed(!collapsed)}
+            icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            onClick={toggleSidebar}
             style={{
               fontSize: "16px",
               width: 64,

@@ -23,13 +23,15 @@ import dayjs, { Dayjs } from "dayjs";
 import { RangePickerProps } from "antd/lib/date-picker";
 import Sidebar from "@/components/Sidebar";
 import { logoutUser } from "@/app/actions/authActions";
+import { useSidebarStore } from "@/store/sidebarStore";
 
 import { Heatmap } from "@ant-design/charts";
 import PercentageLineChart from "./PercentageLineChart";
 import { DashboardProps } from "@/type/PropTypes";
-import { DashboardData, PercentageData } from "@/type/types";
+import { DashboardData, PercentageData, DashboardApiResponse } from "@/type/types";
 import { getTeamUsers } from "@/app/actions/dashboardActions";
 import { users } from "@prisma/client";
+import { useFetch } from "@/utils/useFetch";
 
 const { Title } = Typography;
 
@@ -48,14 +50,14 @@ const Dashboard: React.FC<DashboardProps> = ({
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
 
-  const [collapsed, setCollapsed] = useState(true);
+  const { sidebarCollapsed, toggleSidebar } = useSidebarStore();
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState<DashboardData[]>([]);
   const [dates, setDates] = useState<[Dayjs, Dayjs]>(getDefaultDates());
   const [selectedTeams, setSelectedTeams] = useState<string>(
     teams[0]?.slack_channel_id
   );
-  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [blockedData, setBlockedData] = useState<PercentageData[]>([]);
   const [checkinData, setCheckinData] = useState<PercentageData[]>([]);
   const [usersData, setUsersData] = useState<users[]>([]);
@@ -66,15 +68,51 @@ const Dashboard: React.FC<DashboardProps> = ({
     const teamId = selectedTeam?.id;
 
     if (teamId) {
-        const teamUsers = await getTeamUsers(teamId);
-        setUsersData(teamUsers);
-      }
+      const teamUsers = await getTeamUsers(teamId);
+      setUsersData(teamUsers);
+    }
   };
-  const handleUserChange = (value: never[]) => setSelectedUsers(value);
+  
+  const handleUserChange = (value: string[]) => setSelectedUsers(value);
   const handleRangeChange = (dates: RangePickerProps["value"]) => {
     if (dates) setDates(dates as [Dayjs, Dayjs]);
     else setDates(getDefaultDates());
   };
+
+  const buildQueryParams = () => {
+    const params = new URLSearchParams();
+    const formatted = dates.map((d) => d.format("YYYY-MM-DD"));
+    const [startDate, endDate] = formatted;
+
+    params.append("startDate", startDate);
+    params.append("endDate", endDate);
+
+    if (selectedTeams) {
+      params.append("teamChannelId", selectedTeams.toString());
+    }
+
+    if (selectedUsers.length > 0) {
+      params.append("users", selectedUsers.join(","));
+    }
+
+    return params.toString();
+  };
+
+  const { data: dashboardApiData } = useFetch<DashboardApiResponse>(
+    `/api/dashboard?${buildQueryParams()}`,
+    {
+      dependencies: [dates, selectedTeams, selectedUsers]
+    }
+  );
+
+  useEffect(() => {
+    if (dashboardApiData) {
+      setDashboardData(JSON.parse(JSON.stringify(dashboardApiData.smartCheckins || [])));
+      setBlockedData(JSON.parse(JSON.stringify(dashboardApiData.blockedUsersCount || [])));
+      setCheckinData(JSON.parse(JSON.stringify(dashboardApiData.checkinUserPercentageByDate || [])));
+      setLoading(false);
+    }
+  }, [dashboardApiData]);
 
   const config = {
     data: dashboardData,
@@ -121,43 +159,9 @@ const Dashboard: React.FC<DashboardProps> = ({
     autoFit: true,
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const params = new URLSearchParams();
-      const formatted = dates.map((d) => d.format("YYYY-MM-DD"));
-      const [startDate, endDate] = formatted;
-
-      params.append("startDate", startDate);
-      params.append("endDate", endDate);
-
-      if (selectedTeams) {
-        params.append("teamChannelId", selectedTeams.toString());
-      }
-
-      if (selectedUsers.length > 0) {
-        params.append("users", selectedUsers.join(","));
-      }
-
-      const [dashboardRes] = await Promise.all([
-        fetch(`/api/dashboard?${params.toString()}`),
-      ]);
-
-      const data = await dashboardRes.json();
-      setDashboardData(JSON.parse(JSON.stringify(data.smartCheckins)));
-      setBlockedData(JSON.parse(JSON.stringify(data.blockedUsersCount)));
-      setCheckinData(
-        JSON.parse(JSON.stringify(data.checkinUserPercentageByDate))
-      );
-      setLoading(false);
-    };
-
-    fetchData();
-  }, [dates, selectedTeams, selectedUsers]);
-
   return (
     <Layout>
       <Sidebar
-        collapsed={collapsed}
         activeKey="dashboard"
         userId={userId}
         isAdmin={isAdmin}
@@ -166,8 +170,8 @@ const Dashboard: React.FC<DashboardProps> = ({
         <Header style={{ padding: 0, background: colorBgContainer }}>
           <Button
             type="text"
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed(!collapsed)}
+            icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            onClick={toggleSidebar}
             style={{
               fontSize: "16px",
               width: 64,

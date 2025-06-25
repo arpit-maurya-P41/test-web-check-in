@@ -18,11 +18,13 @@ import {
   MenuUnfoldOutlined,
 } from "@ant-design/icons";
 import { logoutUser } from "@/app/actions/authActions";
+import { useSidebarStore } from "@/store/sidebarStore";
 import "./Checkins.css";
 import { CheckinEntry, Goal } from "@/type/types";
 import { CheckinProps, Team } from "@/type/PropTypes";
 import dayjs, { Dayjs } from "dayjs";
 import { RangePickerProps } from "antd/lib/date-picker";
+import { useFetch } from "@/utils/useFetch";
 
 const { Header, Content } = Layout;
 const { RangePicker } = DatePicker;
@@ -33,15 +35,17 @@ const Checkins: React.FC<CheckinProps> = ({ userId, teams, isAdmin }) => {
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
-  const [collapsed, setCollapsed] = useState<boolean>(true);
+  const { sidebarCollapsed, toggleSidebar } = useSidebarStore();
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [goalsSummary, setGoalsSummary] = useState<CheckinEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [dates, setDates] = useState<[Dayjs, Dayjs]>(getDefaultDates());
+  
   const handleRangeChange = (dates: RangePickerProps["value"]) => {
     if (dates) setDates(dates as [Dayjs, Dayjs]);
     else setDates(getDefaultDates());
   };
+  
   const handleMenuClick: MenuProps["onClick"] = (e) => {
     const team = teams.find((t) => t.id.toString() === e.key);
     if (team) setSelectedTeam(team);
@@ -55,6 +59,34 @@ const Checkins: React.FC<CheckinProps> = ({ userId, teams, isAdmin }) => {
   const handleAllTeamsClick = () => {
     setSelectedTeam(null);
   };
+
+  const buildQueryParams = () => {
+    const params = new URLSearchParams();
+    const formatted = dates.map((d) => d.format("YYYY-MM-DD"));
+    const [startDate, endDate] = formatted;
+    
+    if (selectedTeam) {
+      params.append("teamChannelId", selectedTeam.slack_channel_id);
+    }
+    if (startDate) params.append("startDate", startDate);
+    if (endDate) params.append("endDate", endDate);
+    
+    return params.toString();
+  };
+
+  const { data: checkinsData } = useFetch<CheckinEntry[]>(
+    `/api/checkins?${buildQueryParams()}`,
+    {
+      dependencies: [selectedTeam, dates]
+    }
+  );
+
+  useEffect(() => {
+    if (checkinsData) {
+      setGoalsSummary(JSON.parse(JSON.stringify(checkinsData)));
+      setLoading(false);
+    }
+  }, [checkinsData]);
 
   const groupedByDate = (goalsSummary || []).reduce(
     (acc: Record<string, Record<string, Goal[]>>, entry) => {
@@ -76,37 +108,11 @@ const Checkins: React.FC<CheckinProps> = ({ userId, teams, isAdmin }) => {
     {}
   );
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const formatted = dates.map((d) => d.format("YYYY-MM-DD"));
-        const [startDate, endDate] = formatted;
-        const params = new URLSearchParams();
-        if (selectedTeam) {
-          params.append("teamChannelId", selectedTeam.slack_channel_id);
-        }
-        if (startDate) params.append("startDate", startDate);
-        if (endDate) params.append("endDate", endDate);
-        
-        const url = `/api/checkins?${params.toString()}`;
-        const res = await fetch(url);
-        const data = await res.json();
-        setGoalsSummary(JSON.parse(JSON.stringify(data)));
-      } catch (error) {
-        console.error("Error fetching data", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [selectedTeam, dates]);
-
   return loading ? (
     <Spin percent="auto" fullscreen size="large" />
   ) : (
     <Layout>
       <Sidebar
-        collapsed={collapsed}
         activeKey="checkins"
         userId={userId}
         isAdmin={isAdmin}
@@ -133,8 +139,8 @@ const Checkins: React.FC<CheckinProps> = ({ userId, teams, isAdmin }) => {
             >
               <Button
                 type="text"
-                icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                onClick={() => setCollapsed(!collapsed)}
+                icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                onClick={toggleSidebar}
                 style={{ fontSize: 16, width: 48, height: 48 }}
               />
               <span

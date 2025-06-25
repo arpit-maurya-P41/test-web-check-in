@@ -54,7 +54,6 @@ export type PercentageDataPoint = {
 };  
 
 export type SidebarProps = {
-    collapsed: boolean;
     activeKey?: string;
     userId: string;
     isAdmin?: boolean;
