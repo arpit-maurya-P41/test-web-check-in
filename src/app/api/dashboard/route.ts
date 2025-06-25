@@ -30,7 +30,8 @@ export async function GET(req: NextRequest) {
                 users: {
                     id: {
                       in: userId.length > 0 ? userId.map(Number) : undefined,
-                    }
+                    },
+                    is_active: true
                 }
             },
             select: {
