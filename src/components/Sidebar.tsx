@@ -13,7 +13,6 @@ import { SidebarProps } from "@/type/PropTypes";
 import { DashboardItem } from "@/type/types";
 import { useRouter } from "next/navigation";
 import { useSidebarStore } from "@/store/sidebarStore";
-import NProgress from "nprogress";
 
 const { Sider } = Layout;
 
@@ -23,7 +22,6 @@ const Sidebar: React.FC<SidebarProps> = ({ userId, activeKey, isAdmin = false}) 
     const sidebarItems = [];
     
     const handleNavigation = (path: string) => {
-        NProgress.start();
         router.push(path);
     };
     
