@@ -324,6 +324,7 @@ const UserManagementIndex: React.FC<UserProps> = ({ userId, isAdmin }) => {
                 onClick={() => handleSave(record.id)}
                 loading={isSaving}
                 disabled={isSaving}
+                style={{ width: 80 }}
               >
                 {isSaving ? "Saving..." : "Save"}
               </Button>
