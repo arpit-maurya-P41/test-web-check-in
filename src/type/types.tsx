@@ -134,14 +134,6 @@ export type TeamRole = {
   role_name: string;
 }
 
-export type TeamUser = {
-  id: number;
-  first_name: string;
-  last_name: string;
-  email: string;
-  role_id: number | null;
-}
-
 export type TeamDetails = {
   name: string;
   teaminfo: string | null;
