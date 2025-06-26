@@ -24,7 +24,7 @@ import { logoutUser } from "@/app/actions/authActions";
 import { teamProfileProps } from "@/type/PropTypes";
 import Sidebar from "../Sidebar";
 import { useSidebarStore } from "@/store/sidebarStore";
-import { TeamDetailsForm, TeamRole, TeamUser, TeamDetails } from "@/type/types";
+import { TeamDetailsForm, TeamRole, User, TeamDetails } from "@/type/types";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useRouter } from "next/navigation";
 import { useNotification } from "../NotificationProvider";
@@ -46,7 +46,7 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) =>
   const { sidebarCollapsed, toggleSidebar } = useSidebarStore();
   const notify = useNotification();
 
-  const [data, setData] = useState<TeamUser[]>([]);
+  const [data, setData] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [userRoles, setUserRoles] = useState<TeamRole[]>([]);
   const [hasMore, setHasMore] = useState(true);
@@ -107,12 +107,14 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) =>
       return;
     }
     setLoading(true);
-    fetch(`/api/teams/${teamId}/teamUsers?page=${page}&pageSize=10`)
+    fetch(`/api/teams/${teamId}/teamUsers?page=${page}&limit=10`)
       .then((res) => res.json())
       .then((body) => {
-        setData([...data, ...body.users]);
-        setPage(page + 1);
-        setHasMore(body.hasMore);
+        const results = Array.isArray(body.data) ? body.data : [];
+        const newUsers = [...data, ...results];
+        setData(newUsers);
+        setHasMore(body.meta && newUsers.length < body.meta.total);
+        setPage((prevPage) => prevPage + 1);
         setLoading(false);
       })
       .catch(() => {
@@ -318,7 +320,7 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) =>
                             onChange={(value) => handleChange(value, user.id)}
                             options={roleMenuItems}
                             defaultValue={
-                              user.role_id?.toString() ??
+                              user.user_team_role?.[0]?.role_id.toString() ??
                               "5"
                             }
                           />
