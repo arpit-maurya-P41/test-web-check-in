@@ -48,6 +48,7 @@ const TeamManagementIndex: React.FC<TeamProps> = ({ userId, isAdmin }) => {
   }, [teamsData]);
 
   const handleAdd = () => {
+    sessionStorage.setItem("hideDelete", "true");
     router.push(`/team-management/${newTeamId}`);
   };
 
