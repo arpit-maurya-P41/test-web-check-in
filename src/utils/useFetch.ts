@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import NProgress from 'nprogress';
 import { UseFetchOptions } from '@/type/types';
 
 export function useFetch<T>(url: string, options: UseFetchOptions = {}) {
@@ -10,7 +9,6 @@ export function useFetch<T>(url: string, options: UseFetchOptions = {}) {
   const fetchData = async () => {
     setLoading(true);
     setError(null);
-    NProgress.start();
     
     try {
       const requestOptions: RequestInit = {
@@ -37,7 +35,6 @@ export function useFetch<T>(url: string, options: UseFetchOptions = {}) {
       setError(err instanceof Error ? err : new Error('An unknown error occurred'));
     } finally {
       setLoading(false);
-      NProgress.done();
     }
   };
   

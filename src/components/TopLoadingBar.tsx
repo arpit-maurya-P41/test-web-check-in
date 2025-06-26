@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
 import { usePathname, useSearchParams } from 'next/navigation';
@@ -9,10 +9,19 @@ import { usePathname, useSearchParams } from 'next/navigation';
 const TopLoadingBar = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const activeRequestsRef = useRef(0);
   
   // Listen for route changes
   useEffect(() => {
-    NProgress.done();
+    // Only complete if there are no active requests
+    if (activeRequestsRef.current === 0) {
+      // Add a small delay to ensure smooth transition
+      const timer = setTimeout(() => {
+        NProgress.done();
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
   }, [pathname, searchParams]);
   
   useEffect(() => {
@@ -24,19 +33,16 @@ const TopLoadingBar = () => {
       // Note: height is controlled via CSS
     });
     
-    // Keep track of active requests
-    let activeRequests = 0;
-    
     // Store the original fetch function
     const originalFetch = window.fetch;
     
     // Override the fetch function
     window.fetch = async function(...args) {
       // Increment active requests counter
-      activeRequests++;
+      activeRequestsRef.current++;
       
       // Start NProgress when first request is made
-      if (activeRequests === 1) {
+      if (activeRequestsRef.current === 1) {
         NProgress.start();
       }
       
@@ -48,10 +54,10 @@ const TopLoadingBar = () => {
         return Promise.reject(error);
       } finally {
         // Decrement active requests counter
-        activeRequests--;
+        activeRequestsRef.current--;
         
         // Complete NProgress when all requests are done
-        if (activeRequests === 0) {
+        if (activeRequestsRef.current === 0) {
           NProgress.done();
         }
       }
