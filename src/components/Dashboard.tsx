@@ -111,6 +111,17 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   }, [dashboardApiData]);
 
+  useEffect(() => {
+    const fetchInitialUsers = async () => {
+      const defaultTeam = teams[0];
+      if (defaultTeam?.id) {
+        const teamUsers = await getTeamUsers(defaultTeam.id);
+        setUsersData(teamUsers);
+      }
+    };
+    fetchInitialUsers();
+  }, [teams]);
+
   const config = {
     data: dashboardData,
     xField: "date",

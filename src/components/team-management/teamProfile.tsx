@@ -49,7 +49,7 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) =>
   const [data, setData] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [userRoles, setUserRoles] = useState<TeamRole[]>([]);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hideDelete, setHideDelete] = useState(false);
 
