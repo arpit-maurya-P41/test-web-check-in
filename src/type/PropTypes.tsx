@@ -1,4 +1,4 @@
-import { teams, users } from "@prisma/client";
+import { teams } from "@prisma/client";
 
 export type UserProps = {
     userId: string;
@@ -38,7 +38,6 @@ export type Team = {
 export type DashboardProps = {
     userId: string;
     teams: teams[];
-    users: users[];
     isAdmin: boolean;
 };
 
@@ -55,7 +54,6 @@ export type PercentageDataPoint = {
 };  
 
 export type SidebarProps = {
-    collapsed: boolean;
     activeKey?: string;
     userId: string;
     isAdmin?: boolean;

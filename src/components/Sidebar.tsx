@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import {
     CheckCircleOutlined,
@@ -9,18 +11,29 @@ import {
 import { Layout, Menu } from "antd";
 import { SidebarProps } from "@/type/PropTypes";
 import { DashboardItem } from "@/type/types";
+import { useRouter } from "next/navigation";
+import { useSidebarStore } from "@/store/sidebarStore";
+import NProgress from "nprogress";
 
 const { Sider } = Layout;
 
-const Sidebar: React.FC<SidebarProps> = ({ userId, collapsed, activeKey, isAdmin = false}) => {
+const Sidebar: React.FC<SidebarProps> = ({ userId, activeKey, isAdmin = false}) => {
+    const router = useRouter();
+    const { sidebarCollapsed } = useSidebarStore();
     const sidebarItems = [];
+    
+    const handleNavigation = (path: string) => {
+        NProgress.start();
+        router.push(path);
+    };
+    
     const dashboardItem: DashboardItem = {
         key: "dashboard",
         icon: <LineChartOutlined />,
         label: "Dashboard",
     };
     if (activeKey !== "dashboard") {
-        dashboardItem.onClick = () => (window.location.href = "/dashboard");
+        dashboardItem.onClick = () => handleNavigation("/dashboard");
     }
     sidebarItems.push(dashboardItem);
 
@@ -30,7 +43,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userId, collapsed, activeKey, isAdmin
         label: "CheckIns",
     };
     if (activeKey !== "checkins") {
-        checkIns.onClick = () => (window.location.href = "/checkins");
+        checkIns.onClick = () => handleNavigation("/checkins");
     }
     sidebarItems.push(checkIns);
 
@@ -41,7 +54,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userId, collapsed, activeKey, isAdmin
             label: "Teams",
         };
         if (activeKey !== "teamManagement") {
-            teamManagementItem.onClick = () => (window.location.href = "/team-management");
+            teamManagementItem.onClick = () => handleNavigation("/team-management");
         }
         sidebarItems.push(teamManagementItem);
     }
@@ -53,7 +66,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userId, collapsed, activeKey, isAdmin
             label: "Users",
         };
         if (activeKey !== "userManagement") {
-            userManagementItem.onClick = () => (window.location.href = "/user-management");
+            userManagementItem.onClick = () => handleNavigation("/user-management");
         }
         sidebarItems.push(userManagementItem);
     }
@@ -64,7 +77,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userId, collapsed, activeKey, isAdmin
         label: "Profile",
     };
     if (activeKey !== "profile") {
-        profileItem.onClick = () => (window.location.href = `/profile/${userId}`);
+        profileItem.onClick = () => handleNavigation(`/profile/${userId}`);
     }
     sidebarItems.push(profileItem);
 
@@ -72,7 +85,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userId, collapsed, activeKey, isAdmin
         <Sider
             trigger={null}
             collapsible
-            collapsed={collapsed}
+            collapsed={sidebarCollapsed}
             style={{
                 minHeight: "100vh"
             }}>

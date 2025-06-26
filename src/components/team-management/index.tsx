@@ -13,15 +13,16 @@ import {
   Table,
   Form,
   Typography,
-  Spin,
 } from "antd";
 import Sidebar from "../Sidebar";
 import { logoutUser } from "@/app/actions/authActions";
+import { useSidebarStore } from "@/store/sidebarStore";
 import "./teams.css";
 import { ColumnsType } from "antd/es/table";
 import { TeamProps } from "@/type/PropTypes";
 import { useRouter } from "next/navigation";
 import { TeamWithUserCount } from "@/type/types";
+import { useFetch } from "@/utils/useFetch";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -32,29 +33,19 @@ const TeamManagementIndex: React.FC<TeamProps> = ({ userId, isAdmin }) => {
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
+  const { sidebarCollapsed, toggleSidebar } = useSidebarStore();
 
-  const [collapsed, setCollapsed] = useState<boolean>(true);
   const [dataSource, setDataSource] = useState<TeamWithUserCount[]>([]);
-  const [loading, setLoading] = useState(true);
   const [newTeamId, setNewTeamId] = useState(1);
 
+  const { data: teamsData } = useFetch<{ teams: TeamWithUserCount[], latestTeamId: number }>('/api/teams');
+
   useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      const response = await fetch("/api/teams");
-      const data = await response.json();
-      setDataSource(data.teams);
-      setNewTeamId(data.latestTeamId);
-
-    } catch (error) {
-      console.error("Error fetching data", error);
-    } finally {
-      setLoading(false);
+    if (teamsData) {
+      setDataSource(teamsData.teams);
+      setNewTeamId(teamsData.latestTeamId);
     }
-  };
+  }, [teamsData]);
 
   const handleAdd = () => {
     sessionStorage.setItem("hideDelete", "true");
@@ -85,12 +76,9 @@ const TeamManagementIndex: React.FC<TeamProps> = ({ userId, isAdmin }) => {
     },
   ];
 
-  return loading ? (
-    <Spin percent="auto" fullscreen size="large" />
-  ) : (
+  return (
     <Layout>
       <Sidebar
-        collapsed={collapsed}
         activeKey="teamManagement"
         userId={userId}
         isAdmin={isAdmin}
@@ -100,8 +88,8 @@ const TeamManagementIndex: React.FC<TeamProps> = ({ userId, isAdmin }) => {
           <div className="header-container">
             <Button
               type="text"
-              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-              onClick={() => setCollapsed(!collapsed)}
+              icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              onClick={toggleSidebar}
               className="header-button"
             />
             <Button
@@ -127,13 +115,13 @@ const TeamManagementIndex: React.FC<TeamProps> = ({ userId, isAdmin }) => {
         >
           <div style={{ padding: 24 }}>
             <Title level={4}>Teams</Title>
-            <Button
+            {isAdmin && <Button
               onClick={handleAdd}
               type="primary"
               style={{ marginBottom: 16 }}
             >
               Add New Team
-            </Button>
+            </Button>}
             <div className="table-wrapper" style={{ width: "100%" }}>
               <Form form={form} component={false}>
                 <Table
