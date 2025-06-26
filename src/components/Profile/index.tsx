@@ -120,22 +120,6 @@ const Profile: React.FC<ProfileProps> = ({ userId, isAdmin }) => {
     }
   };
 
-  const handleCancel = () => {
-    if (userData) {
-      form.setFieldsValue({
-        Title: userData.title,
-        FirstName: userData.first_name,
-        LastName: userData.last_name,
-        Location: userData.location,
-        timezone: userData.timezone,
-        checkIn: convertUtcTimeToLocal(userData.check_in_time, userData.timezone),
-        checkOut: convertUtcTimeToLocal(userData.check_out_time, userData.timezone),
-        About: userData.about_you,
-        IsAdmin: userData.is_admin,
-      });
-    }
-  };
-
   return (
     <Layout>
       <Sidebar
@@ -331,9 +315,6 @@ const Profile: React.FC<ProfileProps> = ({ userId, isAdmin }) => {
                   style={{ marginRight: 8 }}
                 >
                   Save
-                </Button>
-                <Button htmlType="button" onClick={() => handleCancel()}>
-                  Cancel
                 </Button>
               </Col>
             </Row>
