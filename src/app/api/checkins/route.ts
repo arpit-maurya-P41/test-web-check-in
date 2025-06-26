@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
         },
       },
       orderBy: {
-        checkin_date: "desc",
+        checkin_date: "asc",
       },
     });
 
