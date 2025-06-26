@@ -40,3 +40,60 @@ a {
     color-scheme: dark;
   }
 }
+
+/* NProgress styles */
+#nprogress {
+  pointer-events: none;
+}
+
+#nprogress .bar {
+  background: #0070f3 !important;
+  position: fixed !important;
+  z-index: 1031 !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 4px !important;
+}
+
+#nprogress .peg {
+  display: block !important;
+  position: absolute !important;
+  right: 0px !important;
+  width: 100px !important;
+  height: 100% !important;
+  box-shadow: 0 0 10px #0070f3, 0 0 5px #0070f3 !important;
+  opacity: 1.0 !important;
+  transform: rotate(3deg) translate(0px, -4px) !important;
+}
+
+/* Hide the spinner */
+#nprogress .spinner {
+  display: none !important;
+}
+
+#nprogress .spinner-icon {
+  width: 18px !important;
+  height: 18px !important;
+  box-sizing: border-box !important;
+  border: solid 2px transparent !important;
+  border-top-color: #0070f3 !important;
+  border-left-color: #0070f3 !important;
+  border-radius: 50% !important;
+  animation: nprogress-spinner 400ms linear infinite !important;
+}
+
+.nprogress-custom-parent {
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+.nprogress-custom-parent #nprogress .spinner,
+.nprogress-custom-parent #nprogress .bar {
+  position: absolute !important;
+}
+
+@keyframes nprogress-spinner {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

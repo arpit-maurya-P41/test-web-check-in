@@ -1,5 +1,15 @@
 import { Dayjs } from "dayjs";
 import { teams } from "@prisma/client";
+import React from "react";
+
+// UseFetch hook options
+export type UseFetchOptions = {
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  headers?: Record<string, string>;
+  body?: Record<string, unknown>;
+  dependencies?: React.DependencyList;
+  skipOnMount?: boolean;
+}
 
 export type Goal = {
     goal_text: string;
@@ -99,4 +109,39 @@ export type TeamWithUserCount = {
     is_active: boolean;
     teaminfo: string | null;
     userCount: number
+}
+
+// User data in Profile component
+export type UserData = {
+  title: string;
+  first_name: string;
+  last_name: string;
+  location: string;
+  timezone: string;
+  check_in_time: string;
+  check_out_time: string;
+  about_you: string;
+  is_admin: boolean;
+}
+
+export type EditingRow = {
+  id: number;
+  method: string;
+}
+
+export type TeamRole = {
+  id: number;
+  role_name: string;
+}
+
+export type TeamDetails = {
+  name: string;
+  teaminfo: string | null;
+  slack_channel_id: string;
+}
+
+export type DashboardApiResponse = {
+  smartCheckins: DashboardData[];
+  blockedUsersCount: PercentageData[];
+  checkinUserPercentageByDate: PercentageData[];
 }

@@ -1,43 +1,41 @@
--- 🚀 Teams Table
+
 CREATE TABLE teams (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    slack_channel_id VARCHAR(255) UNIQUE NOT NULL
+    slack_channel_id VARCHAR(255) UNIQUE NOT NULL,
+    team_info TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
--- 🚀 Roles Table
 CREATE TABLE roles (
     id SERIAL PRIMARY KEY,
     role_name VARCHAR(255) UNIQUE NOT NULL
 );
 
--- 🚀 Users Table
 CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-	title TEXT,
-    first_name VARCHAR(255) NOT NULL,
+    id SERIAL PRIMARY KEY, 
+    first_name VARCHAR(255) NOT NULL, 
+	title TEXT, 
 	last_name TEXT,
     email VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    slack_user_id VARCHAR(255) UNIQUE NOT NULL,
-    role_id INT NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+    slack_user_id VARCHAR(255) UNIQUE,
+    slack_access_token VARCHAR(255) UNIQUE,
 	check_in_time TIME NOT NULL DEFAULT NOW(),
 	check_out_time TIME NOT NULL DEFAULT NOW(),
-	timezone TEXT,
+	timezone TEXT NOT NULL,
 	about_you TEXT,
 	location TEXT,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    is_admin BOOLEAN NOT NULL DEFAULT FALSE
 );
  
-
--- 🚀 User & Team Mappings Table (Renamed for consistency)
 CREATE TABLE user_team_mappings (
     id SERIAL PRIMARY KEY,
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    team_id INT NOT NULL REFERENCES teams(id) ON DELETE CASCADE
+    team_id INT NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+    UNIQUE (user_id, team_id)
 );
 
--- 🚀 Check-ins Table
 CREATE TABLE checkins (
     id SERIAL PRIMARY KEY,
     slack_user_id VARCHAR(255) NOT NULL REFERENCES users(slack_user_id) ON DELETE CASCADE,
@@ -48,7 +46,6 @@ CREATE TABLE checkins (
 	checkin_date DATE NOT NULL
 );
 
--- 🚀 Goals Table (Stores Goals for Check-ins)
 CREATE TABLE goals (
     id SERIAL PRIMARY KEY,
     checkin_id INT NOT NULL REFERENCES checkins(id) ON DELETE CASCADE,
@@ -56,7 +53,6 @@ CREATE TABLE goals (
     is_smart BOOLEAN DEFAULT FALSE
 );
 
--- 🚀 Checkouts Table (Now References Goal Progress)
 CREATE TABLE checkouts (
     id SERIAL PRIMARY KEY,
     checkin_id INT NOT NULL REFERENCES checkins(id) ON DELETE CASCADE,
@@ -66,14 +62,13 @@ CREATE TABLE checkouts (
 	checkout_date DATE NOT NULL
 );
 
--- 🚀 Goal Progress Table (Tracks if a Goal was Met)
 CREATE TABLE goal_progress (
     id SERIAL PRIMARY KEY,
     goal_id INT UNIQUE NOT NULL REFERENCES goals(id) ON DELETE CASCADE,
     checkout_id INT NOT NULL REFERENCES checkouts(id) ON DELETE CASCADE,
     is_met BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT NOW()
-); 
+);  
 
 CREATE TABLE users_notifications (
     id SERIAL PRIMARY KEY,
@@ -104,18 +99,8 @@ FOR EACH ROW
 WHEN (pg_trigger_depth() < 1)
 EXECUTE FUNCTION check_retry_count();
 
-ALTER TABLE user_team_mappings
-ADD CONSTRAINT unique_user_team UNIQUE (user_id, team_id);
 
-ALTER TABLE users ADD column is_admin BOOLEAN NOT NULL DEFAULT false;
-
-ALTER TABLE teams ADD column is_active BOOLEAN NOT NULL DEFAULT true
-
-ALTER TABLE users ALTER COLUMN slack_user_id DROP NOT NULL;
-
-ALTER TABLE teams ADD column teaminfo Text;
-
- CREATE TABLE user_team_role (
+CREATE TABLE user_team_role (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL,
   team_id INTEGER NOT NULL,
@@ -124,6 +109,3 @@ ALTER TABLE teams ADD column teaminfo Text;
   FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
   FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
 );
-
-alter table users drop column role_id;
-

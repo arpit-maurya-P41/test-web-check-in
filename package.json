@@ -11,20 +11,23 @@
   "dependencies": {
     "@ant-design/charts": "^2.2.7",
     "@ant-design/icons": "^6.0.0",
-    "@auth/prisma-adapter": "^2.8.0",
+    "@auth/prisma-adapter": "^2.10.0",
     "@prisma/client": "^6.6.0",
     "antd": "^5.25.1",
     "dotenv": "^16.4.7",
     "moment-timezone": "^0.5.48",
     "next": "15.3.2",
     "next-auth": "^5.0.0-beta.25",
+    "nprogress": "^0.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-infinite-scroll-component": "^6.1.0"
+    "react-infinite-scroll-component": "^6.1.0",
+    "zustand": "^5.0.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@types/node": "^20",
+    "@types/nprogress": "^0.2.3",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/react-infinite-scroll-component": "^4.2.5",
