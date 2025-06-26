@@ -16,7 +16,6 @@ import {
   Space,
   Select,
   Typography,
-  Spin,
 } from "antd";
 
 import dayjs, { Dayjs } from "dayjs";
@@ -51,7 +50,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   } = theme.useToken();
 
   const { sidebarCollapsed, toggleSidebar } = useSidebarStore();
-  const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState<DashboardData[]>([]);
   const [dates, setDates] = useState<[Dayjs, Dayjs]>(getDefaultDates());
   const [selectedTeams, setSelectedTeams] = useState<string>(
@@ -110,7 +108,6 @@ const Dashboard: React.FC<DashboardProps> = ({
       setDashboardData(JSON.parse(JSON.stringify(dashboardApiData.smartCheckins || [])));
       setBlockedData(JSON.parse(JSON.stringify(dashboardApiData.blockedUsersCount || [])));
       setCheckinData(JSON.parse(JSON.stringify(dashboardApiData.checkinUserPercentageByDate || [])));
-      setLoading(false);
     }
   }, [dashboardApiData]);
 
@@ -204,102 +201,96 @@ const Dashboard: React.FC<DashboardProps> = ({
             gap: 16,
           }}
         >
-          {loading ? (
-            <Spin percent="auto" fullscreen size="large" />
-          ) : (
-            <>
-              <Row>
-                <Col span={26} style={{ margin: "auto" }}>
-                  <Space
+          <Row>
+            <Col span={26} style={{ margin: "auto" }}>
+              <Space
+                style={{
+                  marginBottom: 16,
+                  display: "flex",
+                }}
+                wrap
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                  }}
+                >
+                  <RangePicker
+                    onChange={(dates: RangePickerProps["value"]) =>
+                      handleRangeChange(dates)
+                    }
+                    value={dates}
+                    format="YYYY-MM-DD"
                     style={{
-                      marginBottom: 16,
-                      display: "flex",
+                      padding: "8px",
+                      borderRadius: "8px",
                     }}
-                    wrap
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 12,
-                      }}
-                    >
-                      <RangePicker
-                        onChange={(dates: RangePickerProps["value"]) =>
-                          handleRangeChange(dates)
-                        }
-                        value={dates}
-                        format="YYYY-MM-DD"
-                        style={{
-                          padding: "8px",
-                          borderRadius: "8px",
-                        }}
-                        allowClear
-                        maxDate={dayjs()}
-                      />
-                    </div>
-
-                    <Select
-                      placeholder="Select Teams"
-                      value={selectedTeams}
-                      onChange={handleTeamChange}
-                      style={{ minWidth: 240 }}
-                    >
-                      {teams.map((team) => (
-                        <Option
-                          key={team.slack_channel_id}
-                          value={team.slack_channel_id}
-                        >
-                          {team.name}
-                        </Option>
-                      ))}
-                    </Select>
-
-                    <Select
-                      mode="multiple"
-                      allowClear
-                      placeholder="Select Users"
-                      value={selectedUsers}
-                      onChange={handleUserChange}
-                      style={{ minWidth: 240, maxWidth: 500 }}
-                    >
-                      {usersData.map((user) => (
-                        <Option key={user.id} value={user.id}>
-                          {user.email}
-                        </Option>
-                      ))}
-                    </Select>
-                  </Space>
-                </Col>
-              </Row>
-              <Row>
-                <Col span={24} style={{ padding: 8 }}>
-                  <Title level={2}>Smart Goals</Title>
-                  {config.data && config.data.length > 0 ? (
-                    <Heatmap {...config} />
-                  ) : (
-                    <div style={{ textAlign: "center", padding: "8rem" }}>
-                      No data available
-                    </div>
-                  )}
-                  <Title level={2}>Blockers</Title>
-                  <PercentageLineChart
-                    title="Blocked Users Percentage"
-                    data={blockedData}
-                    yLabel="Blocked Users (%)"
-                    color="#f5222d"
+                    allowClear
+                    maxDate={dayjs()}
                   />
-                  <Title level={2}>Participation</Title>
-                  <PercentageLineChart
-                    title="Check-in Users Percentage"
-                    data={checkinData}
-                    yLabel="Check-in Users (%)"
-                    color="#52c41a"
-                  />
-                </Col>
-              </Row>
-            </>
-          )}
+                </div>
+
+                <Select
+                  placeholder="Select Teams"
+                  value={selectedTeams}
+                  onChange={handleTeamChange}
+                  style={{ minWidth: 240 }}
+                >
+                  {teams.map((team) => (
+                    <Option
+                      key={team.slack_channel_id}
+                      value={team.slack_channel_id}
+                    >
+                      {team.name}
+                    </Option>
+                  ))}
+                </Select>
+
+                <Select
+                  mode="multiple"
+                  allowClear
+                  placeholder="Select Users"
+                  value={selectedUsers}
+                  onChange={handleUserChange}
+                  style={{ minWidth: 240, maxWidth: 500 }}
+                >
+                  {usersData.map((user) => (
+                    <Option key={user.id} value={user.id}>
+                      {user.email}
+                    </Option>
+                  ))}
+                </Select>
+              </Space>
+            </Col>
+          </Row>
+          <Row>
+            <Col span={24} style={{ padding: 8 }}>
+              <Title level={2}>Smart Goals</Title>
+              {config.data && config.data.length > 0 ? (
+                <Heatmap {...config} />
+              ) : (
+                <div style={{ textAlign: "center", padding: "8rem" }}>
+                  No data available
+                </div>
+              )}
+              <Title level={2}>Blockers</Title>
+              <PercentageLineChart
+                title="Blocked Users Percentage"
+                data={blockedData}
+                yLabel="Blocked Users (%)"
+                color="#f5222d"
+              />
+              <Title level={2}>Participation</Title>
+              <PercentageLineChart
+                title="Check-in Users Percentage"
+                data={checkinData}
+                yLabel="Check-in Users (%)"
+                color="#52c41a"
+              />
+            </Col>
+          </Row>
         </Content>
       </Layout>
     </Layout>

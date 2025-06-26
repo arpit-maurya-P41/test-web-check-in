@@ -5,7 +5,6 @@ import {
   Dropdown,
   Layout,
   MenuProps,
-  Spin,
   theme,
   DatePicker,
 } from "antd";
@@ -38,7 +37,6 @@ const Checkins: React.FC<CheckinProps> = ({ userId, teams, isAdmin }) => {
   const { sidebarCollapsed, toggleSidebar } = useSidebarStore();
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [goalsSummary, setGoalsSummary] = useState<CheckinEntry[]>([]);
-  const [loading, setLoading] = useState(true);
   const [dates, setDates] = useState<[Dayjs, Dayjs]>(getDefaultDates());
   
   const handleRangeChange = (dates: RangePickerProps["value"]) => {
@@ -84,7 +82,6 @@ const Checkins: React.FC<CheckinProps> = ({ userId, teams, isAdmin }) => {
   useEffect(() => {
     if (checkinsData) {
       setGoalsSummary(JSON.parse(JSON.stringify(checkinsData)));
-      setLoading(false);
     }
   }, [checkinsData]);
 
@@ -108,9 +105,7 @@ const Checkins: React.FC<CheckinProps> = ({ userId, teams, isAdmin }) => {
     {}
   );
 
-  return loading ? (
-    <Spin percent="auto" fullscreen size="large" />
-  ) : (
+  return (
     <Layout>
       <Sidebar
         activeKey="checkins"
