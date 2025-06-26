@@ -23,53 +23,82 @@ import {
 import { logoutUser } from "@/app/actions/authActions";
 import { teamProfileProps } from "@/type/PropTypes";
 import Sidebar from "../Sidebar";
-import { TeamDetailsForm, User } from "@/type/types";
+import { useSidebarStore } from "@/store/sidebarStore";
+import { TeamDetailsForm, TeamRole, TeamUser, TeamDetails } from "@/type/types";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { roles } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { useNotification } from "../NotificationProvider";
+import { useFetch } from "@/utils/useFetch";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
 const layout = {
-  labelCol: { span: 8 },
+  labelCol: { span: 4 },
   wrapperCol: { span: 16 },
 };
 
 const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) => {
-  const [collapsed, setCollapsed] = useState<boolean>(true);
+  const router = useRouter();
+  const [form] = Form.useForm();
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
-  const [users, setUsers] = useState<User[]>([]);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [userRoles, setUserRoles] = useState<roles[]>([]);
-  const [hasMore, setHasMore] = useState(false);
-  const [form] = Form.useForm();
-  const router = useRouter();
+  const { sidebarCollapsed, toggleSidebar } = useSidebarStore();
   const notify = useNotification();
+
+  const [data, setData] = useState<TeamUser[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [userRoles, setUserRoles] = useState<TeamRole[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
+
+  const { data: teamData } = useFetch<TeamDetails>(
+    `/api/teams/${teamId}/teamDetails`
+  );
+
+  const { data: rolesData } = useFetch<TeamRole[]>('/api/roles');
+
+  useEffect(() => {
+    if (teamData) {
+      form.setFieldsValue({
+        TeamName: teamData.name,
+        TeamInfo: teamData.teaminfo ?? "",
+        ChannelId: teamData.slack_channel_id,
+      });
+    }
+  }, [teamData, form]);
+
+  useEffect(() => {
+    if (rolesData) {
+      setUserRoles(rolesData);
+    }
+  }, [rolesData]);
 
   const deleteTeam = async () => {
     try {
       const response = await fetch(`/api/teams/${teamId}/deactivate`, {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: teamId }),
       });
-  
+
+      const data = await response.json();
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Failed to delete:", errorData.error);
+        notify("error", data.error || "Error while deleting team.");
         return;
       }
-  
-      router.push("/team-management");
+      notify("success", "Team deleted successfully.");
+      router.push(`/team-management`);
     } catch (error) {
-      console.error("Error calling delete API:", error);
+      console.error("Error while deleting:", error);
+      notify("error", "Unexpected error occurred.");
     }
   };
 
   const handleCancel = () => {
-    fetchData();
+    router.push(`/team-management`);
   };
 
   const loadMoreData = () => {
@@ -77,14 +106,12 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) =>
       return;
     }
     setLoading(true);
-    fetch(`/api/teams/${teamId}/teamUsers/?page=${page}&limit=10`)
+    fetch(`/api/teams/${teamId}/teamUsers?page=${page}&pageSize=10`)
       .then((res) => res.json())
-      .then((res) => {
-        const results = Array.isArray(res.data) ? res.data : [];
-        const newUsers = [...users, ...results];
-        setUsers(newUsers);
-        setHasMore(res.meta && newUsers.length < res.meta.total);
-        setPage((prevPage) => prevPage + 1);
+      .then((body) => {
+        setData([...data, ...body.users]);
+        setPage(page + 1);
+        setHasMore(body.hasMore);
         setLoading(false);
       })
       .catch(() => {
@@ -92,40 +119,9 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) =>
       });
   };
 
-  const fetchData = async () => {
-    const [teamResponse, rolesResponse] = await Promise.all([
-      fetch(`/api/teams/${teamId}/teamDetails`),
-      fetch("/api/roles"),
-    ]);
-
-    if (teamResponse.status === 404) {
-      form.setFieldsValue({
-        TeamName: "",
-        TeamInfo: "",
-        ChannelId: "",
-      });
-      return;
-    }
-
-    if (!teamResponse.ok || !rolesResponse.ok) {
-      throw new Error("Failed to fetch data");
-    }
-    const teamsData = await teamResponse.json();
-    const rolesData = await rolesResponse.json();
-    setUserRoles(rolesData);
-
-    form.setFieldsValue({
-      TeamName: teamsData.name,
-      TeamInfo: teamsData.teaminfo ?? "",
-      ChannelId: teamsData.slack_channel_id,
-    });
-  };
-
   const initialLoad = useRef(false);
 
   useEffect(() => {
-    fetchData();
-
     if (!initialLoad.current) {
       loadMoreData();
       initialLoad.current = true;
@@ -203,7 +199,6 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) =>
   return (
     <Layout>
       <Sidebar
-        collapsed={collapsed}
         userId={userId}
         isAdmin={isAdmin}
       />
@@ -211,8 +206,8 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) =>
         <Header style={{ padding: 0, background: colorBgContainer }}>
           <Button
             type="text"
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed(!collapsed)}
+            icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            onClick={toggleSidebar}
             style={{
               fontSize: "16px",
               width: 64,
@@ -250,11 +245,11 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) =>
                 Team Info
               </Title>
             </Col>
-            <Col>
+            {isAdmin && <Col>
               <Button danger onClick={deleteTeam}>
                 Delete
               </Button>
-            </Col>
+            </Col>}
           </Row>
           <Form
             {...layout}
@@ -297,14 +292,14 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) =>
                 }}
               >
                 <InfiniteScroll
-                  dataLength={users.length}
+                  dataLength={data.length}
                   next={loadMoreData}
                   hasMore={hasMore}
                   loader={<Skeleton avatar paragraph={{ rows: 1 }} active />}
                   scrollableTarget="scrollableDiv"
                 >
                   <List
-                    dataSource={users}
+                    dataSource={data}
                     renderItem={(user) => (
                       <List.Item key={user.email}>
                         <List.Item.Meta
@@ -317,7 +312,7 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) =>
                             onChange={(value) => handleChange(value, user.id)}
                             options={roleMenuItems}
                             defaultValue={
-                              user.user_team_role?.[0]?.role_id.toString() ??
+                              user.role_id?.toString() ??
                               "5"
                             }
                           />

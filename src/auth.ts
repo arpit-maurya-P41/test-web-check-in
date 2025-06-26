@@ -1,64 +1,57 @@
 import NextAuth from "next-auth";
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/prisma";
-import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
+import type { NextAuthConfig } from "next-auth";
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
-    adapter: PrismaAdapter(prisma),
+export const authConfig: NextAuthConfig = {
     pages: {
         signIn: "/login",
+        error: "/access-denied",
     },
     providers: [
-        Credentials({
-            credentials: {
-                email: {
-                    label: "Email",
-                    type: "text",
-                    placeholder: "Please enter an email",
-                },
-                password: {
-                    label: "Password",
-                    type: "password",
-                    placeholder: "Please enter an password",
-                },
-            },
-            authorize: async (credentials) => {
-                const user = await prisma.users.findFirst({
-                    where: {
-                        email: credentials?.email as string,
-                    },
-                });
-
-                if (user && credentials?.password === user?.password) {
-                    return {
-                        ...user,
-                        id: user.id.toString(), // Convert id to string
-                    };
-                }
-
-                return null; // if credentials are invalid
-            },
+        Google({
+            clientId: process.env.GOOGLE_CLIENT_ID as string,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
         }),
     ],
     callbacks: {
         authorized({ request: { nextUrl }, auth }) {
-            console.log("auth", auth);
-
             const isLoggedIn = !!auth?.user;
-
             const { pathname } = nextUrl;
-
-            console.log("isLoggedIn", isLoggedIn);
 
             if (pathname.startsWith("/login") && isLoggedIn) {
                 return Response.redirect(new URL("/", nextUrl));
             }
 
+            if (pathname.startsWith("/access-denied")) {
+                return true;
+            }
+
             return !!auth;
+        },
+        async signIn({ user, account}) {
+            if (account?.provider === "google" && user.email) {
+                const dbUser = await prisma.users.findUnique({
+                    where: { email: user.email }
+                });
+                
+                if (!dbUser) {
+                    return "/access-denied?error=AccessDenied";
+                }
+                
+                if (dbUser && !dbUser.is_active) {
+                    return "/access-denied?error=AccountInactive";
+                }
+                
+                user.id = String(dbUser.id);
+                return true;
+            }
+            
+            return "/access-denied?error=AccessDenied";
         },
         jwt({ token, user }) {
             if (user) {
-                return { ...token, id: user.id };
+              return { ...token, id: user.id }
             }
             return token;
         },
@@ -73,4 +66,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         },
     },
     session: { strategy: "jwt" },
-});
+    debug: process.env.NODE_ENV === "development",
+};
+
+export const { handlers, signIn, signOut, auth } = NextAuth(authConfig);
