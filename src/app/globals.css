@@ -41,19 +41,24 @@ a {
   }
 }
 
-/* NProgress styles */
+/* NProgress styles - Modern and responsive */
 #nprogress {
   pointer-events: none;
+  z-index: 9999;
 }
 
 #nprogress .bar {
-  background: #0070f3 !important;
+  background: linear-gradient(90deg, #0070f3, #00b4d8, #0070f3) !important;
+  background-size: 200% 100% !important;
+  animation: gradient-shift 2s ease-in-out infinite !important;
   position: fixed !important;
   z-index: 1031 !important;
   top: 0 !important;
   left: 0 !important;
   width: 100% !important;
   height: 4px !important;
+  border-radius: 0 0 2px 2px !important;
+  box-shadow: 0 2px 8px rgba(0, 112, 243, 0.3) !important;
 }
 
 #nprogress .peg {
@@ -96,4 +101,22 @@ a {
 @keyframes nprogress-spinner {
   0%   { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  #nprogress .bar {
+    background: linear-gradient(90deg, #00b4d8, #0070f3, #00b4d8) !important;
+    box-shadow: 0 2px 8px rgba(0, 180, 216, 0.4) !important;
+  }
+  
+  #nprogress .peg {
+    box-shadow: 0 0 10px #00b4d8, 0 0 5px #00b4d8 !important;
+  }
 }
