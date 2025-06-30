@@ -36,7 +36,7 @@ import { useFetch } from "@/utils/useFetch";
 const { Header, Content } = Layout;
 const { Title } = Typography;
 
-const Profile: React.FC<ProfileProps> = ({ userId, isAdmin }) => {
+const Profile: React.FC<ProfileProps> = ({ userId, isAdmin, isManager }) => {
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
@@ -126,6 +126,7 @@ const Profile: React.FC<ProfileProps> = ({ userId, isAdmin }) => {
         activeKey="profile"
         userId={userId}
         isAdmin={isAdmin}
+        isManager={isManager}
       />
       <Layout>
         <Header style={{ padding: 0, background: colorBgContainer }}>

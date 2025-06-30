@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import {
   getTeams,
   isUserAdmin,
+  isUserManager,
   UserExists,
 } from "../actions/dashboardActions";
 
@@ -16,12 +17,14 @@ export default async function Administrator() {
   if (!userExists) redirect("/login");
   const [teams] = await Promise.all([getTeams(session.user.id)]);
   const isAdmin = await isUserAdmin(session.user.id);
+  const isManager = await isUserManager(session.user.id);
 
   return (
     <Dashboard
       userId={session.user.id}
       teams={teams}
       isAdmin={isAdmin}
+      isManager={isManager}
     />
   );
 }

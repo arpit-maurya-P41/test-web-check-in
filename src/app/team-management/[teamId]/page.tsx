@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import TeamProfile from "@/components/team-management/teamProfile";
-import { isUserAdmin, UserExists } from "@/app/actions/dashboardActions";
+import { isUserAdmin, isUserManager, hasTeamPermission, UserExists } from "@/app/actions/dashboardActions";
 
 export default async function TeamProfileManagement({
   params,
@@ -18,7 +18,12 @@ export default async function TeamProfileManagement({
     if (!userExists) redirect("/login");
 
   const isAdmin = await isUserAdmin(session.user.id);
-  if (!isAdmin) redirect("/dashboard");
+  const isManager = await isUserManager(session.user.id);
+  
+  // Check if user has permission to access this team
+  const hasPermission = isAdmin || await hasTeamPermission(session.user.id, parseInt(teamId), 'manager');
+  
+  if (!hasPermission) redirect("/dashboard");
 
-  return <TeamProfile userId={session.user.id} teamId={teamId} isAdmin={isAdmin}/>;
+  return <TeamProfile userId={session.user.id} teamId={teamId} isAdmin={isAdmin} isManager={isManager}/>;
 }
