@@ -18,6 +18,7 @@ const TopLoadingBar = () => {
   const originalFetchRef = useRef<typeof window.fetch | null>(null);
   const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const eventsRef = useRef<LoadingEvent[]>([]);
+  const isInitialLoadRef = useRef(true);
 
   // Configure NProgress once
   useEffect(() => {
@@ -38,11 +39,21 @@ const TopLoadingBar = () => {
     const currentState = stateRef.current;
     const now = Date.now();
     
+    // Skip if this is the initial load and we're already loading
+    if (isInitialLoadRef.current && currentState.isLoading) {
+      isInitialLoadRef.current = false;
+      return;
+    }
+    
     // Start navigation loading
     if (!currentState.isNavigating) {
       currentState.isNavigating = true;
       currentState.navigationStartTime = now;
-      NProgress.start();
+      
+      // Only start NProgress if not already running
+      if (!currentState.isLoading) {
+        NProgress.start();
+      }
       
       eventsRef.current.push({
         type: 'navigation',
@@ -55,7 +66,7 @@ const TopLoadingBar = () => {
       clearTimeout(navigationTimeoutRef.current);
     }
 
-    // Complete navigation after a short delay (allows for page transitions)
+    // Complete navigation after a longer delay to account for slower deployments
     navigationTimeoutRef.current = setTimeout(() => {
       const navigationDuration = currentState.navigationStartTime 
         ? Date.now() - currentState.navigationStartTime 
@@ -66,6 +77,7 @@ const TopLoadingBar = () => {
       
       // Only complete if no API requests are active
       if (currentState.activeRequests === 0) {
+        currentState.isLoading = false;
         NProgress.done();
         
         eventsRef.current.push({
@@ -74,7 +86,7 @@ const TopLoadingBar = () => {
           duration: navigationDuration,
         });
       }
-    }, 150);
+    }, 300); // Increased from 150ms to 300ms for slower deployments
 
     return () => {
       if (navigationTimeoutRef.current) {
@@ -117,7 +129,7 @@ const TopLoadingBar = () => {
       // Increment active requests
       currentState.activeRequests++;
       
-      // Start loading if not already started
+      // Start loading if not already started and not navigating
       if (!currentState.isLoading && !currentState.isNavigating) {
         currentState.isLoading = true;
         NProgress.start();
