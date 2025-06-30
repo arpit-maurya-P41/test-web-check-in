@@ -23,7 +23,19 @@ export function convertTimeToUTC(timeStr: string, timezoneStr: string): string {
   return dateTimeInZone.utc().format();
 }
 
-export function convertUtcTimeToLocal(utcTime: string, timezone: string) {
-  const utcMoment = dayjs.utc(utcTime).tz(timezone);
-  return utcMoment;
+export function convertUtcTimeToLocal(utcTime: string, timezone: string | null) {
+  // Handle null or invalid timezone
+  if (!timezone || timezone === 'null' || timezone === 'undefined') {
+    // Fallback to UTC if no timezone is provided
+    return dayjs.utc(utcTime);
+  }
+  
+  try {
+    const utcMoment = dayjs.utc(utcTime).tz(timezone);
+    return utcMoment;
+  } catch (error) {
+    console.warn(`Invalid timezone "${timezone}", falling back to UTC:`, error);
+    // Fallback to UTC if timezone is invalid
+    return dayjs.utc(utcTime);
+  }
 }
