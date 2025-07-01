@@ -52,6 +52,8 @@ const TopLoadingBar = () => {
         'data:', // Data URLs
         'blob:', // Blob URLs
         'file:', // File URLs
+        '?_rsc=', // React Server Component requests (page navigation)
+        '&_rsc=', // RSC requests with other params
       ].some(skipUrl => url.includes(skipUrl));
 
       if (shouldSkip) {
