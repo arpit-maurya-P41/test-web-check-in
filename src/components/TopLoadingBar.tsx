@@ -3,12 +3,9 @@
 import { useEffect, useRef } from 'react';
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
-import { usePathname, useSearchParams } from 'next/navigation';
 import { LoadingState, LoadingEvent } from '../type/types';
 
 const TopLoadingBar = () => {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
   const stateRef = useRef<LoadingState>({
     isLoading: false,
     activeRequests: 0,
@@ -16,9 +13,7 @@ const TopLoadingBar = () => {
     navigationStartTime: null,
   });
   const originalFetchRef = useRef<typeof window.fetch | null>(null);
-  const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const eventsRef = useRef<LoadingEvent[]>([]);
-  const isInitialLoadRef = useRef(true);
 
   // Configure NProgress once
   useEffect(() => {
@@ -33,67 +28,6 @@ const TopLoadingBar = () => {
     // Store original fetch
     originalFetchRef.current = window.fetch;
   }, []);
-
-  // Handle route changes with better timing
-  useEffect(() => {
-    const currentState = stateRef.current;
-    const now = Date.now();
-    
-    // Skip if this is the initial load and we're already loading
-    if (isInitialLoadRef.current && currentState.isLoading) {
-      isInitialLoadRef.current = false;
-      return;
-    }
-    
-    // Start navigation loading
-    if (!currentState.isNavigating) {
-      currentState.isNavigating = true;
-      currentState.navigationStartTime = now;
-      
-      // Only start NProgress if not already running
-      if (!currentState.isLoading) {
-        NProgress.start();
-      }
-      
-      eventsRef.current.push({
-        type: 'navigation',
-        timestamp: now,
-      });
-    }
-
-    // Clear any existing navigation timeout
-    if (navigationTimeoutRef.current) {
-      clearTimeout(navigationTimeoutRef.current);
-    }
-
-    // Complete navigation after a longer delay to account for slower deployments
-    navigationTimeoutRef.current = setTimeout(() => {
-      const navigationDuration = currentState.navigationStartTime 
-        ? Date.now() - currentState.navigationStartTime 
-        : 0;
-      
-      currentState.isNavigating = false;
-      currentState.navigationStartTime = null;
-      
-      // Only complete if no API requests are active
-      if (currentState.activeRequests === 0) {
-        currentState.isLoading = false;
-        NProgress.done();
-        
-        eventsRef.current.push({
-          type: 'complete',
-          timestamp: Date.now(),
-          duration: navigationDuration,
-        });
-      }
-    }, 300); // Increased from 150ms to 300ms for slower deployments
-
-    return () => {
-      if (navigationTimeoutRef.current) {
-        clearTimeout(navigationTimeoutRef.current);
-      }
-    };
-  }, [pathname, searchParams]);
 
   // Intercept fetch requests with better filtering
   useEffect(() => {
@@ -129,8 +63,8 @@ const TopLoadingBar = () => {
       // Increment active requests
       currentState.activeRequests++;
       
-      // Start loading if not already started and not navigating
-      if (!currentState.isLoading && !currentState.isNavigating) {
+      // Start loading if not already started
+      if (!currentState.isLoading) {
         currentState.isLoading = true;
         NProgress.start();
         
@@ -151,8 +85,8 @@ const TopLoadingBar = () => {
         // Decrement active requests
         currentState.activeRequests--;
         
-        // Complete loading if no active requests and not navigating
-        if (currentState.activeRequests === 0 && !currentState.isNavigating) {
+        // Complete loading if no active requests
+        if (currentState.activeRequests === 0) {
           currentState.isLoading = false;
           NProgress.done();
           
@@ -177,9 +111,6 @@ const TopLoadingBar = () => {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (navigationTimeoutRef.current) {
-        clearTimeout(navigationTimeoutRef.current);
-      }
       NProgress.done();
     };
   }, []);
