@@ -11,6 +11,19 @@ export type UseFetchOptions = {
   skipOnMount?: boolean;
 }
 
+export type LoadingState = {
+  isLoading: boolean;
+  activeRequests: number;
+  isNavigating: boolean;
+  navigationStartTime: number | null;
+}
+
+export type LoadingEvent = {
+  type: 'navigation' | 'api' | 'complete';
+  timestamp: number;
+  duration?: number;
+}
+
 export type Goal = {
     goal_text: string;
     is_smart: boolean;

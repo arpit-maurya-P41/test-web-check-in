@@ -165,22 +165,25 @@ const UserManagementIndex: React.FC<UserProps> = ({ userId, isAdmin }) => {
         is_active: true,
       };
 
-      fetch("/api/users", {
+      const response = await fetch("/api/users", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(updatedUser),
-      })
-        .then((response) => response.json())
-        .then(() => {
-          resetAndFetch();
-        });
-
-      notify("success", "Data saved successfully.");
-    } catch {
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        notify("error", result.error || "Failed to save user data.");
+      } else {
+        resetAndFetch();
+        notify("success", "Data saved successfully.");
+      }
+    } catch (error) {
+      console.error("Error saving user:", error);
       message.error("Validation failed");
-      setIsSaving(false);
     }
   };
 

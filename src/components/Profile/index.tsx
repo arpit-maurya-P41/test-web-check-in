@@ -67,8 +67,8 @@ const Profile: React.FC<ProfileProps> = ({ userId, isAdmin, isManager }) => {
         LastName: userData.last_name,
         Location: userData.location,
         timezone: userData.timezone,
-        checkIn: convertUtcTimeToLocal(userData.check_in_time, userData.timezone),
-        checkOut: convertUtcTimeToLocal(userData.check_out_time, userData.timezone),
+        checkIn: userData.check_in_time ? convertUtcTimeToLocal(userData.check_in_time, userData.timezone) : null,
+        checkOut: userData.check_out_time ? convertUtcTimeToLocal(userData.check_out_time, userData.timezone) : null,
         About: userData.about_you,
         IsAdmin: userData.is_admin,
       });
