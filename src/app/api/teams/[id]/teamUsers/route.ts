@@ -55,6 +55,7 @@ export async function GET(req: NextRequest) {
               },
               select: {
                 role_id: true,
+                check_in: true
               },
               take: 1
             },
