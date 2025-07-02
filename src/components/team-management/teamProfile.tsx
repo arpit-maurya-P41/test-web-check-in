@@ -5,6 +5,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   LogoutOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import {
   Button,
@@ -29,6 +30,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { useRouter } from "next/navigation";
 import { useNotification } from "../NotificationProvider";
 import { useFetch } from "@/utils/useFetch";
+import AddMembersModal from "./AddMemberModal";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -37,7 +39,11 @@ const layout = {
   wrapperCol: { span: 16 },
 };
 
-const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin, isManager }) => {
+const TeamProfile: React.FC<teamProfileProps> = ({
+  userId,
+  teamId,
+  isAdmin, isManager,
+}) => {
   const router = useRouter();
   const [form] = Form.useForm();
   const {
@@ -52,12 +58,43 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin, isMa
   const [hasMore, setHasMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hideDelete, setHideDelete] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleSaveMembers = async (emails: string[]) => {
+    try {
+      const response = await fetch("/api/teams/addMembers", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          emails,
+          teamId: parseInt(teamId, 10),
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        if (result.added === null || result.added === undefined) {
+          notify("warning", result.message);
+        } else {
+          notify(result.status, result.message);
+          loadMoreData(1, true);
+        }
+      } else {
+        console.error("Error:", result.message);
+      }
+    } catch (error) {
+      console.error("Network error:", error);
+    }
+  };
 
   const { data: teamData } = useFetch<TeamDetails>(
     `/api/teams/${teamId}/teamDetails`
   );
 
-  const { data: rolesData } = useFetch<TeamRole[]>('/api/roles');
+  const { data: rolesData } = useFetch<TeamRole[]>("/api/roles");
 
   useEffect(() => {
     if (teamData) {
@@ -102,19 +139,29 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin, isMa
     router.back();
   };
 
-  const loadMoreData = () => {
+  const loadMoreData = (customPage?: number, reset: boolean = false) => {
     if (loading) {
       return;
     }
+    const currentPage = customPage ?? page;
+    if (reset) {
+      setData([]);
+    }
     setLoading(true);
-    fetch(`/api/teams/${teamId}/teamUsers?page=${page}&limit=10`)
+    fetch(`/api/teams/${teamId}/teamUsers?page=${currentPage}&limit=10`)
       .then((res) => res.json())
       .then((body) => {
         const results = Array.isArray(body.data) ? body.data : [];
-        const newUsers = [...data, ...results];
+        const newUsers = reset ? results : [...data, ...results];
         setData(newUsers);
-        setHasMore(body.meta && newUsers.length < body.meta.total);
-        setPage((prevPage) => prevPage + 1);
+        const total = body.meta?.total || 0;
+        const stillHasMore = newUsers.length < total;
+        setHasMore(stillHasMore);
+        if (results.length > 0 && stillHasMore) {
+          setPage(currentPage + 1);
+        } else {
+          setPage(currentPage);
+        }
         setLoading(false);
       })
       .catch(() => {
@@ -125,16 +172,16 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin, isMa
   const initialLoad = useRef(false);
 
   useEffect(() => {
-      const hideDeleteButton = sessionStorage.getItem("hideDelete");
-      if (hideDeleteButton === "true") {
-        setHideDelete(true);
-        sessionStorage.removeItem("hideDelete");
-      }
+    const hideDeleteButton = sessionStorage.getItem("hideDelete");
+    if (hideDeleteButton === "true") {
+      setHideDelete(true);
+      sessionStorage.removeItem("hideDelete");
+    }
     if (!initialLoad.current) {
       loadMoreData();
       initialLoad.current = true;
     }
-  },[]);
+  }, []);
 
   const roleMenuItems = userRoles.map((role) => ({
     value: role.id.toString(),
@@ -204,6 +251,31 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin, isMa
     }
   };
 
+  const handleDeleteMember = async (userId: number) => {
+    try {
+      const res = await fetch("/api/teams/removeMember", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId, teamId: parseInt(teamId, 10) }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        notify("error", data.message || "Failed to remove member");
+        return;
+      }
+
+      notify("success", data.message);
+      loadMoreData(1, true);
+    } catch (error) {
+      console.error("Error removing user:", error);
+      notify("error", "Unexpected error occurred");
+    }
+  };
+
   return (
     <Layout>
       <Sidebar
@@ -215,7 +287,9 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin, isMa
         <Header style={{ padding: 0, background: colorBgContainer }}>
           <Button
             type="text"
-            icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            icon={
+              sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />
+            }
             onClick={toggleSidebar}
             style={{
               fontSize: "16px",
@@ -254,11 +328,13 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin, isMa
                 Team Info
               </Title>
             </Col>
-            {isAdmin && !hideDelete && <Col>
-              <Button danger onClick={deleteTeam}>
-                Delete
-              </Button>
-            </Col>}
+            {isAdmin && !hideDelete && (
+              <Col>
+                <Button danger onClick={deleteTeam}>
+                  Delete
+                </Button>
+              </Col>
+            )}
           </Row>
           <Form
             {...layout}
@@ -292,7 +368,25 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin, isMa
             </Form.Item>
 
             <Form.Item wrapperCol={{ span: 24 }}>
-              <Title level={4}>Members</Title>
+              <Row justify="space-between" align="middle">
+                <Col>
+                  <Title level={4} style={{ margin: 0 }}>
+                    Members
+                  </Title>
+                </Col>
+                <Col>
+                  <Button type="primary" onClick={() => setIsModalOpen(true)}>
+                    Add New Member
+                  </Button>
+                  <AddMembersModal
+                    open={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    onSave={handleSaveMembers}
+                  />
+                </Col>
+              </Row>
+            </Form.Item>
+            <Form.Item wrapperCol={{ span: 24 }}>
               <div
                 id="scrollableDiv"
                 style={{
@@ -327,6 +421,14 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin, isMa
                                 "5"
                               }
                             />
+                          <DeleteOutlined
+                            style={{
+                              color: "red",
+                              fontSize: 16,
+                              cursor: "pointer",
+                            }}
+                            onClick={() => handleDeleteMember(user.id)}
+                          />
                         </Space>
                       </List.Item>
                     )}

@@ -103,7 +103,6 @@ export async function POST(req: Request) {
           first_name: body.first_name,
           last_name: body.last_name,
           email: body.email,
-          password: "Password123",
           check_in_time: body.check_in_time,
           check_out_time: body.check_out_time,
           timezone: "Asia/Kolkata",
