@@ -71,4 +71,4 @@ export type MemberOptionsProps = {
     checked?: boolean;
     onDelete: (userId: number) => void;
     onCheckInChange: (userId: number, checked: boolean) => void;
-  }
+}
