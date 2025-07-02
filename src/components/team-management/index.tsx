@@ -23,6 +23,7 @@ import { TeamProps } from "@/type/PropTypes";
 import { useRouter } from "next/navigation";
 import { TeamWithUserCount } from "@/type/types";
 import { useFetch } from "@/utils/useFetch";
+import { useNotification } from "../NotificationProvider";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -34,6 +35,7 @@ const TeamManagementIndex: React.FC<TeamProps> = ({ userId, isAdmin, isManager }
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
   const { sidebarCollapsed, toggleSidebar } = useSidebarStore();
+  const notify = useNotification();
 
   const [dataSource, setDataSource] = useState<TeamWithUserCount[]>([]);
   const [newTeamId, setNewTeamId] = useState(1);
@@ -52,6 +54,29 @@ const TeamManagementIndex: React.FC<TeamProps> = ({ userId, isAdmin, isManager }
     router.push(`/team-management/${newTeamId}`);
   };
 
+  const handleTeamClick = async (teamId: number) => {
+    if (isAdmin) {
+      router.push(`/team-management/${teamId}`);
+      return;
+    }
+    // Check if user is manager for this team
+    try {
+      const res = await fetch(`/api/user-team-role?userId=${userId}&teamId=${teamId}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.roles && data.roles.role_name && data.roles.role_name.toLowerCase() === "manager") {
+          router.push(`/team-management/${teamId}`);
+        } else {
+          notify("error", "You do not have access to this team.");
+        }
+      } else {
+        notify("error", "You do not have access to this team.");
+      }
+    } catch (e) {
+      notify("error", "Unable to check access. Please try again.");
+    }
+  };
+
   const columns: ColumnsType<TeamWithUserCount> = [
     {
       title: "Name",
@@ -60,7 +85,7 @@ const TeamManagementIndex: React.FC<TeamProps> = ({ userId, isAdmin, isManager }
         return (
           <span
             style={{ cursor: "pointer" }}
-            onClick={() => router.push(`/team-management/${record.id}`)}
+            onClick={() => handleTeamClick(record.id)}
           >
             {record.name}
           </span>
