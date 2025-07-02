@@ -112,3 +112,6 @@ CREATE TABLE user_team_role (
 
 ALTER TABLE user_team_role
 ADD CONSTRAINT uq_user_team_role UNIQUE (user_id, team_id, role_id);
+
+ALTER TABLE user_team_role
+ADD COLUMN check_in BOOLEAN DEFAULT TRUE;

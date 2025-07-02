@@ -68,6 +68,7 @@ export type UserTeamMapping = {
 
 export type UserTeamRole = {
     role_id: number;
+    check_in?: boolean;
 };
 
 export type User = {

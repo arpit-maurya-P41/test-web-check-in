@@ -120,13 +120,14 @@ model users_notifications {
 }
 
 model user_team_role {
-  id      Int   @id @default(autoincrement())
-  user_id Int
-  team_id Int
-  role_id Int
-  roles   roles @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  teams   teams @relation(fields: [team_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  users   users @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id       Int      @id @default(autoincrement())
+  user_id  Int
+  team_id  Int
+  role_id  Int
+  check_in Boolean? @default(true)
+  roles    roles    @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  teams    teams    @relation(fields: [team_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users    users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([user_id, team_id, role_id], map: "uq_user_team_role")
 }

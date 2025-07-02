@@ -58,3 +58,10 @@ export type SidebarProps = {
     userId: string;
     isAdmin?: boolean;
 };
+
+export type MemberOptionsProps = {
+    userId: number;
+    checked?: boolean;
+    onDelete: (userId: number) => void;
+    onCheckInChange: (userId: number, checked: boolean) => void;
+  }
