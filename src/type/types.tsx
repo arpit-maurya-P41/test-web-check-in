@@ -95,11 +95,6 @@ export type PercentageData = {
     percentage: number;
 };
 
-export type LoginFormValues = {
-    username: string;
-    password: string;
-}
-
 export type NotificationType = 'success' | 'info' | 'warning' | 'error';
 
 export type DashboardItem = {

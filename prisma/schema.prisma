@@ -89,7 +89,6 @@ model users {
   id                  Int                   @id @default(autoincrement())
   first_name          String                @db.VarChar(255)
   email               String                @unique @db.VarChar(255)
-  password            String?               @db.VarChar(255)
   slack_user_id       String?               @unique @db.VarChar(255)
   timezone            String?
   about_you           String?
