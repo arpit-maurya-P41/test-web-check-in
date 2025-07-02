@@ -37,7 +37,7 @@ export type Team = {
     name: string;
     slack_channel_id: string;
     is_active: boolean;
-    teaminfo: string| null;
+    team_info: string| null;
   };
 
 export type DashboardProps = {
@@ -65,3 +65,10 @@ export type SidebarProps = {
     isAdmin?: boolean;
     isManager?: boolean;
 };
+
+export type MemberOptionsProps = {
+    userId: number;
+    checked?: boolean;
+    onDelete: (userId: number) => void;
+    onCheckInChange: (userId: number, checked: boolean) => void;
+  }
