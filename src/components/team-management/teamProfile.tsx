@@ -8,10 +8,12 @@ import {
 } from "@ant-design/icons";
 import {
   Button,
+  Col,
   Form,
   Input,
   Layout,
   List,
+  Row,
   Select,
   Skeleton,
   Space,
@@ -241,10 +243,27 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin, isMa
             minHeight: 280,
             background: colorBgContainer,
             borderRadius: borderRadiusLG,
+            display: "flex",
+            flexDirection: "column",
+            gap: 16,
           }}
         >
+           <Row justify="space-between" align="middle">
+            <Col>
+              <Title level={4} style={{ margin: 0 }}>
+                Team Info
+              </Title>
+            </Col>
+            {isAdmin && !hideDelete && <Col>
+              <Button danger onClick={deleteTeam}>
+                Delete
+              </Button>
+            </Col>}
+          </Row>
           <Form
             {...layout}
+            name="nest-messages"
+            labelAlign="left"
             form={form}
             onFinish={handleSave}
             style={{ maxWidth: 600 }}
@@ -256,24 +275,20 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin, isMa
                 { required: true, message: "Please input team name!" },
               ]}
             >
-              <Input />
+              <Input placeholder="Team name"/>
             </Form.Item>
 
             <Form.Item
-              label="Team Info"
-              name="TeamInfo"
-            >
-              <Input.TextArea rows={4} />
-            </Form.Item>
-
-            <Form.Item
-              label="Channel ID"
+              label="Slack Channel ID"
               name="ChannelId"
               rules={[
                 { required: true, message: "Please input channel ID!" },
               ]}
             >
-              <Input />
+            <Input placeholder="Slack Channel Id"/>
+            </Form.Item>
+            <Form.Item name="TeamInfo" label="About this team">
+              <Input.TextArea placeholder="What should people know about this team?" />
             </Form.Item>
 
             <Form.Item wrapperCol={{ span: 24 }}>
@@ -303,7 +318,6 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin, isMa
                           description={user.email}
                         />
                         <Space wrap>
-                          {(isAdmin || isManager) && (
                             <Select
                               style={{ width: 120 }}
                               onChange={(value) => handleChange(value, user.id)}
@@ -313,7 +327,6 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin, isMa
                                 "5"
                               }
                             />
-                          )}
                         </Space>
                       </List.Item>
                     )}
@@ -321,20 +334,20 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin, isMa
                 </InfiniteScroll>
               </div>
             </Form.Item>
-
-            <Form.Item wrapperCol={{ span: 24 }}>
-              <Space>
-                <Button type="primary" htmlType="submit">
+            <Row justify="center" gutter={16}>
+              <Col>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  style={{ marginRight: 8 }}
+                >
                   Save
                 </Button>
-                <Button onClick={handleCancel}>Cancel</Button>
-                {isAdmin && !hideDelete && (
-                  <Button danger onClick={deleteTeam}>
-                    Delete Team
-                  </Button>
-                )}
-              </Space>
-            </Form.Item>
+                <Button htmlType="button" onClick={() => handleCancel()}>
+                  Cancel
+                </Button>
+              </Col>
+            </Row>
           </Form>
         </Content>
       </Layout>

@@ -19,7 +19,10 @@ export async function isUserManager(userId: string, teamId?: number) {
   interface WhereClause {
     user_id: number;
     roles: {
-      role_name: string;
+      role_name: {
+        equals: string;
+        mode: "insensitive";
+      };
     };
     team_id?: number;
   }
@@ -27,7 +30,10 @@ export async function isUserManager(userId: string, teamId?: number) {
   const whereClause: WhereClause = {
     user_id: Number(userId),
     roles: {
-      role_name: "Manager"
+      role_name: {
+        equals: "Manager",
+        mode: "insensitive"
+      }
     }
   };
 

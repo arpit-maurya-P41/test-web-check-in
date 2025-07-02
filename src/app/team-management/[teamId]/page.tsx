@@ -19,11 +19,5 @@ export default async function TeamProfileManagement({
 
   const isAdmin = await isUserAdmin(session.user.id);
   const isManager = await isUserManager(session.user.id);
-  
-  // Check if user has permission to access this team
-  const hasPermission = isAdmin || await hasTeamPermission(session.user.id, parseInt(teamId), 'manager');
-  
-  if (!hasPermission) redirect("/dashboard");
-
   return <TeamProfile userId={session.user.id} teamId={teamId} isAdmin={isAdmin} isManager={isManager}/>;
 }

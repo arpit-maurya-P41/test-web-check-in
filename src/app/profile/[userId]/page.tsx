@@ -21,7 +21,7 @@ export default async function ProfileManagement({
   const isManager = await isUserManager(loggedInUserId);
   const userExists = await UserExists(userId);
   
-  if (!userExists || (!isAdmin && !isManager && userId !== loggedInUserId)) {
+  if (!userExists || (!isAdmin && userId !== loggedInUserId)) {
     redirect(`/profile/${loggedInUserId}`)
   }
 
