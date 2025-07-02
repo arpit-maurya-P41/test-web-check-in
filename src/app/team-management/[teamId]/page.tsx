@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import TeamProfile from "@/components/team-management/teamProfile";
-import { isUserAdmin, isUserManager, hasTeamPermission, UserExists } from "@/app/actions/dashboardActions";
+import { isUserAdmin, isUserManager, UserExists } from "@/app/actions/dashboardActions";
 
 export default async function TeamProfileManagement({
   params,
