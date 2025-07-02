@@ -109,3 +109,6 @@ CREATE TABLE user_team_role (
   FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
   FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
 );
+
+ALTER TABLE user_team_role
+ADD CONSTRAINT uq_user_team_role UNIQUE (user_id, team_id, role_id);
