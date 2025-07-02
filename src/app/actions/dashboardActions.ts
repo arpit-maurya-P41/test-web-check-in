@@ -65,37 +65,6 @@ export async function getUserRoles(userId: string) {
   return userRoles;
 }
 
-export async function hasTeamPermission(userId: string, teamId: number, requiredRole: 'admin' | 'manager' | 'member' = 'member') {
-  const isAdmin = await isUserAdmin(userId);
-  if (isAdmin) return true;
-
-  if (requiredRole === 'admin') return false;
-
-  const userTeamRole = await prisma.user_team_role.findFirst({
-    where: {
-      user_id: Number(userId),
-      team_id: teamId,
-    },
-    include: {
-      roles: true
-    }
-  });
-
-  if (!userTeamRole) return false;
-
-  const roleName = userTeamRole.roles.role_name.toLowerCase();
-  
-  if (requiredRole === 'manager') {
-    return roleName === 'manager';
-  }
-  
-  if (requiredRole === 'member') {
-    return roleName === 'member' || roleName === 'manager';
-  }
-
-  return false;
-}
-
 export async function UserExists(userId: string){
   const user = await prisma.users.findUnique({
     where: { id: Number(userId), is_active: true },
