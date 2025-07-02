@@ -18,6 +18,6 @@ export default async function TeamProfileManagement({
     if (!userExists) redirect("/login");
 
   const isAdmin = await isUserAdmin(session.user.id);
-  const isManager = await isUserManager(session.user.id);
+  const isManager = await isUserManager(session.user.id,parseInt(teamId));
   return <TeamProfile userId={session.user.id} teamId={teamId} isAdmin={isAdmin} isManager={isManager}/>;
 }
