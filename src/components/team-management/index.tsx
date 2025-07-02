@@ -72,7 +72,7 @@ const TeamManagementIndex: React.FC<TeamProps> = ({ userId, isAdmin, isManager }
       } else {
         notify("error", "You do not have access to this team.");
       }
-    } catch (e) {
+    } catch {
       notify("error", "Unable to check access. Please try again.");
     }
   };
