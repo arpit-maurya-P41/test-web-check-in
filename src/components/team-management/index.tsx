@@ -27,7 +27,7 @@ import { useFetch } from "@/utils/useFetch";
 const { Header, Content } = Layout;
 const { Title } = Typography;
 
-const TeamManagementIndex: React.FC<TeamProps> = ({ userId, isAdmin }) => {
+const TeamManagementIndex: React.FC<TeamProps> = ({ userId, isAdmin, isManager }) => {
   const router = useRouter();
   const [form] = Form.useForm();
   const {
@@ -82,6 +82,7 @@ const TeamManagementIndex: React.FC<TeamProps> = ({ userId, isAdmin }) => {
         activeKey="teamManagement"
         userId={userId}
         isAdmin={isAdmin}
+        isManager={isManager}
       />
       <Layout>
         <Header style={{ padding: 0, background: colorBgContainer }}>

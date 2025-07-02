@@ -37,7 +37,7 @@ const layout = {
   wrapperCol: { span: 16 },
 };
 
-const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) => {
+const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin, isManager }) => {
   const router = useRouter();
   const [form] = Form.useForm();
   const {
@@ -209,6 +209,7 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) =>
       <Sidebar
         userId={userId}
         isAdmin={isAdmin}
+        isManager={isManager}
       />
       <Layout>
         <Header style={{ padding: 0, background: colorBgContainer }}>
@@ -247,7 +248,7 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) =>
             gap: 16,
           }}
         >
-          <Row justify="space-between" align="middle">
+           <Row justify="space-between" align="middle">
             <Col>
               <Title level={4} style={{ margin: 0 }}>
                 Team Info
@@ -265,29 +266,31 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) =>
             labelAlign="left"
             form={form}
             onFinish={handleSave}
+            style={{ maxWidth: 600 }}
           >
             <Form.Item
+              label="Team Name"
               name="TeamName"
-              label="Team name"
-              rules={[{ required: true, message: "Team name is required" }]}
-            >
-              <Input placeholder="Team name" />
-            </Form.Item>
-            <Form.Item
-              name="ChannelId"
-              label="Slack Channel Id"
               rules={[
-                {
-                  required: true,
-                  message: "Please input slack channel id!",
-                },
+                { required: true, message: "Please input team name!" },
               ]}
             >
-              <Input placeholder="Slack Channel Id" />
+              <Input placeholder="Team name"/>
+            </Form.Item>
+
+            <Form.Item
+              label="Slack Channel ID"
+              name="ChannelId"
+              rules={[
+                { required: true, message: "Please input channel ID!" },
+              ]}
+            >
+            <Input placeholder="Slack Channel Id"/>
             </Form.Item>
             <Form.Item name="TeamInfo" label="About this team">
               <Input.TextArea placeholder="What should people know about this team?" />
             </Form.Item>
+
             <Form.Item wrapperCol={{ span: 24 }}>
               <Title level={4}>Members</Title>
               <div
@@ -315,15 +318,15 @@ const TeamProfile: React.FC<teamProfileProps> = ({ userId, teamId, isAdmin }) =>
                           description={user.email}
                         />
                         <Space wrap>
-                          <Select
-                            style={{ width: 120 }}
-                            onChange={(value) => handleChange(value, user.id)}
-                            options={roleMenuItems}
-                            defaultValue={
-                              user.user_team_role?.[0]?.role_id.toString() ??
-                              "5"
-                            }
-                          />
+                            <Select
+                              style={{ width: 120 }}
+                              onChange={(value) => handleChange(value, user.id)}
+                              options={roleMenuItems}
+                              defaultValue={
+                                user.user_team_role?.[0]?.role_id.toString() ??
+                                "5"
+                              }
+                            />
                         </Space>
                       </List.Item>
                     )}
