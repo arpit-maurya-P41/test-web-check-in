@@ -5,7 +5,6 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   LogoutOutlined,
-  DeleteOutlined,
 } from "@ant-design/icons";
 import {
   Button,
@@ -31,6 +30,8 @@ import { useRouter } from "next/navigation";
 import { useNotification } from "../NotificationProvider";
 import { useFetch } from "@/utils/useFetch";
 import AddMembersModal from "./AddMemberModal";
+import MemberOptions from "./MemberOptions";
+
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -100,7 +101,7 @@ const TeamProfile: React.FC<teamProfileProps> = ({
     if (teamData) {
       form.setFieldsValue({
         TeamName: teamData.name,
-        TeamInfo: teamData.teaminfo ?? "",
+        TeamInfo: teamData.team_info ?? "",
         ChannelId: teamData.slack_channel_id,
       });
     }
@@ -225,7 +226,7 @@ const TeamProfile: React.FC<teamProfileProps> = ({
         body: JSON.stringify({
           id: teamId,
           name: values.TeamName,
-          teaminfo: values.TeamInfo,
+          team_info: values.TeamInfo,
           slack_channel_id: values.ChannelId,
           is_active: true,
         }),
@@ -275,6 +276,27 @@ const TeamProfile: React.FC<teamProfileProps> = ({
       notify("error", "Unexpected error occurred");
     }
   };
+
+  const handleUserCheckIn = async (userId: number, checked : boolean ) => {
+    try {
+      const res = await fetch("/api/user-team-role/checkIn", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          team_id: parseInt(teamId, 10),
+          check_in: checked,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update check-in status");
+    } catch (err) {
+      console.error(err);
+      notify("error", "Failed to update check-in status");
+    }
+  }
 
   return (
     <Layout>
@@ -412,22 +434,20 @@ const TeamProfile: React.FC<teamProfileProps> = ({
                           description={user.email}
                         />
                         <Space wrap>
-                            <Select
-                              style={{ width: 120 }}
-                              onChange={(value) => handleChange(value, user.id)}
-                              options={roleMenuItems}
-                              defaultValue={
-                                user.user_team_role?.[0]?.role_id.toString() ??
-                                "5"
-                              }
-                            />
-                          <DeleteOutlined
-                            style={{
-                              color: "red",
-                              fontSize: 16,
-                              cursor: "pointer",
-                            }}
-                            onClick={() => handleDeleteMember(user.id)}
+                          <Select
+                            style={{ width: 120 }}
+                            onChange={(value) => handleChange(value, user.id)}
+                            options={roleMenuItems}
+                            defaultValue={
+                              user.user_team_role?.[0]?.role_id.toString() ??
+                              "5"
+                            }
+                          />
+                          <MemberOptions
+                            userId={user.id}
+                            onDelete={handleDeleteMember}
+                            onCheckInChange={handleUserCheckIn}
+                            checked={!!user.user_team_role?.[0]?.check_in}
                           />
                         </Space>
                       </List.Item>
