@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
       where: { id: teamId, is_active: true },
       select: {
         name: true,
-        teaminfo: true,
+        team_info: true,
         slack_channel_id: true,
       },
     });
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid team ID" }, { status: 400 });
     }
 
-    const { name, teaminfo, slack_channel_id, is_active } = body;
+    const { name, team_info, slack_channel_id, is_active } = body;
     const existingTeam = await prisma.teams.findUnique({
       where: { id: teamId },
     });
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
     if (existingTeam) {
       const updatedTeam = await prisma.teams.update({
         where: { id: teamId },
-        data: { name, teaminfo, slack_channel_id, is_active },
+        data: { name, team_info, slack_channel_id, is_active },
       });
       return NextResponse.json(updatedTeam);
     }
@@ -92,7 +92,7 @@ export async function POST(req: Request) {
         where: { id: duplicateInactive.id },
         data: {
           name,
-          teaminfo,
+          team_info,
           slack_channel_id,
           is_active: true,
         },
@@ -103,7 +103,7 @@ export async function POST(req: Request) {
       data: {
         id: teamId,
         name,
-        teaminfo,
+        team_info,
         slack_channel_id,
         is_active: true,
       },

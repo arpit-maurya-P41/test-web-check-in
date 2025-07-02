@@ -101,7 +101,7 @@ const TeamProfile: React.FC<teamProfileProps> = ({
     if (teamData) {
       form.setFieldsValue({
         TeamName: teamData.name,
-        TeamInfo: teamData.teaminfo ?? "",
+        TeamInfo: teamData.team_info ?? "",
         ChannelId: teamData.slack_channel_id,
       });
     }
@@ -226,7 +226,7 @@ const TeamProfile: React.FC<teamProfileProps> = ({
         body: JSON.stringify({
           id: teamId,
           name: values.TeamName,
-          teaminfo: values.TeamInfo,
+          team_info: values.TeamInfo,
           slack_channel_id: values.ChannelId,
           is_active: true,
         }),

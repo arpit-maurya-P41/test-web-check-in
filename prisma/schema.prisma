@@ -69,7 +69,7 @@ model teams {
   name               String               @db.VarChar(255)
   slack_channel_id   String               @unique @db.VarChar(255)
   is_active          Boolean              @default(true)
-  teaminfo           String?
+  team_info          String?
   checkins           checkins[]
   user_team_mappings user_team_mappings[]
   user_team_role     user_team_role[]

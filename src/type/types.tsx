@@ -116,7 +116,7 @@ export type TeamWithUserCount = {
     id: number;
     slack_channel_id: string;
     is_active: boolean;
-    teaminfo: string | null;
+    team_info: string | null;
     userCount: number
 }
 
@@ -145,7 +145,7 @@ export type TeamRole = {
 
 export type TeamDetails = {
   name: string;
-  teaminfo: string | null;
+  team_info: string | null;
   slack_channel_id: string;
 }
 
