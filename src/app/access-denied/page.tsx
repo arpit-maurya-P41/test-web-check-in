@@ -4,6 +4,7 @@ import React, { Suspense } from "react";
 import { Result, Button } from "antd";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import TopLoadingBar from "@/components/TopLoadingBar";
 
 function AccessDeniedContent() {
   const searchParams = useSearchParams();
@@ -47,27 +48,30 @@ function AccessDeniedContent() {
 
 export default function AccessDenied() {
   return (
-    <Suspense fallback={
-      <div style={{
-        backgroundColor: "#fff",
-        height: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-      }}>
-        <Result
-          status="403"
-          title={"Access Denied"}
-          subTitle={"Loading..."}
-          extra={
-            <Link href="/login">
-              <Button type="primary">Back to Login</Button>
-            </Link>
-          }
-        />
-      </div>
-    }>
-      <AccessDeniedContent />
-    </Suspense>
+    <>
+      <TopLoadingBar />
+      <Suspense fallback={
+        <div style={{
+          backgroundColor: "#fff",
+          height: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}>
+          <Result
+            status="403"
+            title={"Access Denied"}
+            subTitle={"Loading..."}
+            extra={
+              <Link href="/login">
+                <Button type="primary">Back to Login</Button>
+              </Link>
+            }
+          />
+        </div>
+      }>
+        <AccessDeniedContent />
+      </Suspense>
+    </>
   );
 } 

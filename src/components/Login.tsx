@@ -1,9 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, Button, Typography, Space, message } from "antd";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import TopLoadingBar from "./TopLoadingBar";
+import NProgress from "nprogress";
+import "nprogress/nprogress.css";
 
 const { Title, Text } = Typography;
 
@@ -11,9 +14,17 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
+    useEffect(() => {
+        return () => {
+            NProgress.done();
+        };
+    }, []);
+
     const handleGoogleSignIn = async () => {
         try {
             setLoading(true);
+            NProgress.start();
+            
             const result = await signIn("google", { 
                 callbackUrl: "/",
                 redirect: false 
@@ -22,12 +33,14 @@ const Login = () => {
             if (result?.error) {
                 message.error("Authentication failed. Please try again.");
                 console.error("Auth error:", result.error);
+                NProgress.done();
             } else if (result?.url) {
                 router.push(result.url);
             }
         } catch (error) {
             console.error("Sign in error:", error);
             message.error("Something went wrong. Please try again.");
+            NProgress.done();
         } finally {
             setLoading(false);
         }
@@ -35,6 +48,7 @@ const Login = () => {
 
     return (
         <>
+            <TopLoadingBar />
             <div
                 style={{
                     height: "100vh",
