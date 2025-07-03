@@ -329,7 +329,7 @@ const UserManagementIndex: React.FC<UserProps> = ({ userId, isAdmin }) => {
                 disabled={isSaving}
                 style={{ width: 80 }}
               >
-                {isSaving ? "Saving..." : "Save"}
+                {isSaving ? "Saving.." : "Save"}
               </Button>
               <Button onClick={handleCancel} disabled={isSaving}>
                 Cancel
@@ -343,6 +343,7 @@ const UserManagementIndex: React.FC<UserProps> = ({ userId, isAdmin }) => {
               disabled={editingRow.id !== 0}
               onClick={() => handleEdit(record, "edit")}
               type="link"
+              style={{ width: 80 }}
             >
               Edit
             </Button>
