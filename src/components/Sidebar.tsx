@@ -16,7 +16,7 @@ import { useSidebarStore } from "@/store/sidebarStore";
 
 const { Sider } = Layout;
 
-const Sidebar: React.FC<SidebarProps> = ({ userId, activeKey, isAdmin = false}) => {
+const Sidebar: React.FC<SidebarProps> = ({ userId, activeKey, isAdmin = false, isManager = false}) => {
     const router = useRouter();
     const { sidebarCollapsed } = useSidebarStore();
     const sidebarItems = [];
@@ -45,7 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userId, activeKey, isAdmin = false}) 
     }
     sidebarItems.push(checkIns);
 
-    if (isAdmin) {
+    if (isAdmin || isManager) {
         const teamManagementItem: DashboardItem = {
             key: "teamManagement",
             icon: <TeamOutlined />,

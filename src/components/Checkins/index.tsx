@@ -30,7 +30,7 @@ const { RangePicker } = DatePicker;
 const getDefaultDates = () =>
   [dayjs().subtract(6, "day"), dayjs()] as [Dayjs, Dayjs];
 
-const Checkins: React.FC<CheckinProps> = ({ userId, teams, isAdmin }) => {
+const Checkins: React.FC<CheckinProps> = ({ userId, teams, isAdmin, isManager }) => {
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
@@ -111,6 +111,7 @@ const Checkins: React.FC<CheckinProps> = ({ userId, teams, isAdmin }) => {
         activeKey="checkins"
         userId={userId}
         isAdmin={isAdmin}
+        isManager={isManager}
       />
       <Layout>
         <Header style={{ padding: 0, background: colorBgContainer }}>

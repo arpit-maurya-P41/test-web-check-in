@@ -44,6 +44,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   userId,
   teams,
   isAdmin,
+  isManager,
 }) => {
   const {
     token: { colorBgContainer, borderRadiusLG },
@@ -173,6 +174,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         activeKey="dashboard"
         userId={userId}
         isAdmin={isAdmin}
+        isManager={isManager}
       />
       <Layout>
         <Header style={{ padding: 0, background: colorBgContainer }}>

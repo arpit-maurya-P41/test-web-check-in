@@ -3,28 +3,33 @@ import { teams } from "@prisma/client";
 export type UserProps = {
     userId: string;
     isAdmin: boolean;
+    isManager?: boolean;
 }
 
 export type ProfileProps = {
     userId: string;
     isAdmin: boolean;
+    isManager?: boolean;
 }
 
 export type TeamProps = {
     userId: string;
     isAdmin: boolean;
+    isManager?: boolean;
 }
 
 export type teamProfileProps = {
     userId: string;
     teamId: string;
     isAdmin: boolean;
+    isManager?: boolean;
 }
 
 export type CheckinProps = {
     userId: string;
     teams: Team[];
     isAdmin: boolean;
+    isManager?: boolean;
 }
 
 export type Team = {
@@ -39,6 +44,7 @@ export type DashboardProps = {
     userId: string;
     teams: teams[];
     isAdmin: boolean;
+    isManager?: boolean;
 };
 
 export type LineChartProps = {
@@ -57,6 +63,7 @@ export type SidebarProps = {
     activeKey?: string;
     userId: string;
     isAdmin?: boolean;
+    isManager?: boolean;
 };
 
 export type MemberOptionsProps = {
@@ -64,4 +71,4 @@ export type MemberOptionsProps = {
     checked?: boolean;
     onDelete: (userId: number) => void;
     onCheckInChange: (userId: number, checked: boolean) => void;
-  }
+}

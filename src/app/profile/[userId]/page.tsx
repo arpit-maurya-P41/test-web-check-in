@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import Profile from "@/components/Profile";
-import { isUserAdmin, UserExists } from "@/app/actions/dashboardActions";
+import { isUserAdmin, isUserManager, UserExists } from "@/app/actions/dashboardActions";
 
 export default async function ProfileManagement({
   params,
@@ -18,11 +18,12 @@ export default async function ProfileManagement({
     redirect("/login");
   }
   const isAdmin = await isUserAdmin(loggedInUserId);
+  const isManager = await isUserManager(loggedInUserId);
   const userExists = await UserExists(userId);
   
   if (!userExists || (!isAdmin && userId !== loggedInUserId)) {
     redirect(`/profile/${loggedInUserId}`)
   }
 
-  return <Profile userId={userId ?? loggedInUserId} isAdmin={isAdmin} />;
+  return <Profile userId={userId ?? loggedInUserId} isAdmin={isAdmin} isManager={isManager} />;
 }
