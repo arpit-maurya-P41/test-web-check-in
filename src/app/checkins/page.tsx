@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { getTeams, isUserAdmin, UserExists } from "../actions/dashboardActions";
+import { getTeams, isUserAdmin, isUserManager, UserExists } from "../actions/dashboardActions";
 import Checkins from "@/components/Checkins";
 
 export default async function Checkin() {
@@ -15,6 +15,7 @@ export default async function Checkin() {
     ]);
 
     const isAdmin = await isUserAdmin(session.user.id);
+    const isManager = await isUserManager(session.user.id);
     
-    return <Checkins userId={session.user.id} teams={teams} isAdmin={isAdmin}/>;
+    return <Checkins userId={session.user.id} teams={teams} isAdmin={isAdmin} isManager={isManager}/>;
 }

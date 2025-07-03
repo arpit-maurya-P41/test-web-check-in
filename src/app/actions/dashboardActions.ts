@@ -15,6 +15,70 @@ export async function isUserAdmin(userId: string) {
   return isAdmin;
 }
 
+export async function isUserManager(userId: string, teamId?: number) {
+  // If teamId is provided, first check if user is a member of that team
+  if (teamId) {
+    const userTeamMapping = await prisma.user_team_mappings.findFirst({
+      where: {
+        user_id: Number(userId),
+        team_id: teamId,
+      },
+    });
+
+    if (!userTeamMapping) {
+      return false; // User is not a member of this team
+    }
+  }
+
+  interface WhereClause {
+    user_id: number;
+    roles: {
+      role_name: {
+        equals: string;
+        mode: "insensitive";
+      };
+    };
+    team_id?: number;
+  }
+
+  const whereClause: WhereClause = {
+    user_id: Number(userId),
+    roles: {
+      role_name: {
+        equals: "Manager",
+        mode: "insensitive"
+      }
+    }
+  };
+
+  if (teamId) {
+    whereClause.team_id = teamId;
+  }
+
+  const managerRole = await prisma.user_team_role.findFirst({
+    where: whereClause,
+    include: {
+      roles: true
+    }
+  });
+
+  return !!managerRole;
+}
+
+export async function getUserRoles(userId: string) {
+  const userRoles = await prisma.user_team_role.findMany({
+    where: {
+      user_id: Number(userId),
+    },
+    include: {
+      roles: true,
+      teams: true
+    }
+  });
+
+  return userRoles;
+}
+
 export async function UserExists(userId: string){
   const user = await prisma.users.findUnique({
     where: { id: Number(userId), is_active: true },

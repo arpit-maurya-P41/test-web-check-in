@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import TeamManagementIndex from "@/components/team-management";
 import { auth } from "@/auth";
-import { isUserAdmin, UserExists } from "../actions/dashboardActions";
+import { isUserAdmin, isUserManager, UserExists } from "../actions/dashboardActions";
 
 export default async function TeamManagement() {
     const session = await auth();
@@ -13,7 +13,9 @@ export default async function TeamManagement() {
     if (!userExists) redirect("/login");
 
     const isAdmin = await isUserAdmin(session.user.id);
-    if (!isAdmin) redirect("/dashboard");
+    const isManager = await isUserManager(session.user.id);
+    
+    if (!isAdmin && !isManager) redirect("/dashboard");
 
-    return <TeamManagementIndex userId={session.user.id} isAdmin={isAdmin}/>
+    return <TeamManagementIndex userId={session.user.id} isAdmin={isAdmin} isManager={isManager}/>;
 }
