@@ -14,6 +14,22 @@ export async function GET(req: Request) {
       );
     }
 
+    // First check if user is a member of the team
+    const userTeamMapping = await prisma.user_team_mappings.findFirst({
+      where: {
+        user_id: parseInt(userId),
+        team_id: parseInt(teamId),
+      },
+    });
+
+    if (!userTeamMapping) {
+      return NextResponse.json(
+        { error: "User is not a member of this team." },
+        { status: 404 }
+      );
+    }
+
+    // Then check their role in the team
     const userTeamRole = await prisma.user_team_role.findFirst({
       where: {
         user_id: parseInt(userId),

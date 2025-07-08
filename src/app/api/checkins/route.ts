@@ -30,6 +30,7 @@ export async function GET(req: NextRequest) {
         checkin_date: true,
         blocker: true,
         feeling: true,
+        slack_channel_id: true,
         goals: {
           select: {
             goal_text: true,
@@ -46,6 +47,17 @@ export async function GET(req: NextRequest) {
           select: {
             first_name: true,
             last_name: true,
+            user_team_mappings: {
+              select: {
+                teams: {
+                  select: {
+                    name: true,
+                    id: true,
+                    slack_channel_id: true
+                  }
+                }
+              }
+            }
           },
         },
       },

@@ -16,6 +16,20 @@ export async function isUserAdmin(userId: string) {
 }
 
 export async function isUserManager(userId: string, teamId?: number) {
+  // If teamId is provided, first check if user is a member of that team
+  if (teamId) {
+    const userTeamMapping = await prisma.user_team_mappings.findFirst({
+      where: {
+        user_id: Number(userId),
+        team_id: teamId,
+      },
+    });
+
+    if (!userTeamMapping) {
+      return false; // User is not a member of this team
+    }
+  }
+
   interface WhereClause {
     user_id: number;
     roles: {

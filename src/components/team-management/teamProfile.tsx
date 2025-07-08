@@ -364,7 +364,6 @@ const TeamProfile: React.FC<teamProfileProps> = ({
             labelAlign="left"
             form={form}
             onFinish={handleSave}
-            style={{ maxWidth: 600 }}
           >
             <Form.Item
               label="Team Name"

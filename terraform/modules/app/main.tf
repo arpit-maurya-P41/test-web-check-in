@@ -60,7 +60,7 @@ module "prv_subnets" {
 
 locals {
   db_credentials       = jsondecode(data.aws_secretsmanager_secret_version.db_credentials.secret_string)
-  db_connection_string = "postgresql://${local.db_credentials.DB_USER}:${local.db_credentials.DB_PASSWORD}@${local.db_credentials.DB_HOST}:${local.db_credentials.DB_PORT}/${local.db_credentials.DB_NAME}"
+  db_connection_string = "postgresql://${local.db_credentials.username}:${local.db_credentials.password}@${local.db_credentials.host}:${local.db_credentials.port}/${local.db_credentials.dbname}"
   db_security_group_id = data.aws_ssm_parameter.db_security_group_id.value
 }
 
