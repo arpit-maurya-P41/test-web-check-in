@@ -8,17 +8,21 @@ datasource db {
 }
 
 model checkins {
-  id               Int         @id @default(autoincrement())
-  slack_user_id    String      @db.VarChar(255)
-  slack_channel_id String      @db.VarChar(255)
-  feeling          String?     @db.VarChar(255)
-  created_at       DateTime?   @default(now()) @db.Timestamp(6)
-  blocker          String?
-  checkin_date     DateTime?   @db.Date
-  teams            teams       @relation(fields: [slack_channel_id], references: [slack_channel_id], onDelete: Cascade, onUpdate: NoAction)
-  users            users       @relation(fields: [slack_user_id], references: [slack_user_id], onDelete: Cascade, onUpdate: NoAction)
-  checkouts        checkouts[]
-  goals            goals[]
+  id                            Int         @id @default(autoincrement())
+  slack_user_id                 String      @db.VarChar(255)
+  slack_channel_id              String      @db.VarChar(255)
+  feeling                       String?     @db.VarChar(255)
+  created_at                    DateTime?   @default(now()) @db.Timestamp(6)
+  blocker                       String?
+  checkin_date                  DateTime?   @db.Date
+  user_id                       Int
+  team_id                       Int
+  teams                         teams       @relation(fields: [slack_channel_id], references: [slack_channel_id], onDelete: Cascade, onUpdate: NoAction)
+  users                         users       @relation(fields: [slack_user_id], references: [slack_user_id], onDelete: Cascade, onUpdate: NoAction)
+  teams_checkins_team_idToteams teams       @relation("checkins_team_idToteams", fields: [team_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_team")
+  users_checkins_user_idTousers users       @relation("checkins_user_idTousers", fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user")
+  checkouts                     checkouts[]
+  goals                         goals[]
 }
 
 model checkouts {
@@ -65,14 +69,16 @@ model sessions {
 }
 
 model teams {
-  id                 Int                  @id @default(autoincrement())
-  name               String               @db.VarChar(255)
-  slack_channel_id   String               @unique @db.VarChar(255)
-  is_active          Boolean              @default(true)
-  team_info          String?
-  checkins           checkins[]
-  user_team_mappings user_team_mappings[]
-  user_team_role     user_team_role[]
+  id                               Int                   @id @default(autoincrement())
+  name                             String                @db.VarChar(255)
+  slack_channel_id                 String                @unique @db.VarChar(255)
+  is_active                        Boolean               @default(true)
+  team_info                        String?
+  checkins                         checkins[]
+  checkins_checkins_team_idToteams checkins[]            @relation("checkins_team_idToteams")
+  daily_user_checkins              daily_user_checkins[]
+  user_team_mappings               user_team_mappings[]
+  user_team_role                   user_team_role[]
 }
 
 model user_team_mappings {
@@ -86,25 +92,27 @@ model user_team_mappings {
 }
 
 model users {
-  id                  Int                   @id @default(autoincrement())
-  first_name          String                @db.VarChar(255)
-  email               String                @unique @db.VarChar(255)
-  slack_user_id       String?               @unique @db.VarChar(255)
-  timezone            String?
-  about_you           String?
-  location            String?
-  last_name           String?
-  title               String?
-  check_in_time       DateTime              @default(now()) @db.Time(6)
-  check_out_time      DateTime              @default(now()) @db.Time(6)
-  is_active           Boolean?              @default(true)
-  slack_access_token  String?               @db.VarChar(255)
-  is_admin            Boolean               @default(false)
-  checkins            checkins[]
-  sessions            sessions[]
-  user_team_mappings  user_team_mappings[]
-  user_team_role      user_team_role[]
-  users_notifications users_notifications[]
+  id                               Int                   @id @default(autoincrement())
+  first_name                       String                @db.VarChar(255)
+  email                            String                @unique @db.VarChar(255)
+  slack_user_id                    String?               @unique @db.VarChar(255)
+  timezone                         String?
+  about_you                        String?
+  location                         String?
+  last_name                        String?
+  title                            String?
+  check_in_time                    DateTime              @default(now()) @db.Time(6)
+  check_out_time                   DateTime              @default(now()) @db.Time(6)
+  is_active                        Boolean?              @default(true)
+  slack_access_token               String?               @db.VarChar(255)
+  is_admin                         Boolean               @default(false)
+  checkins                         checkins[]
+  checkins_checkins_user_idTousers checkins[]            @relation("checkins_user_idTousers")
+  daily_user_checkins              daily_user_checkins[]
+  sessions                         sessions[]
+  user_team_mappings               user_team_mappings[]
+  user_team_role                   user_team_role[]
+  users_notifications              users_notifications[]
 }
 
 model users_notifications {
@@ -130,4 +138,24 @@ model user_team_role {
   users    users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([user_id, team_id, role_id], map: "uq_user_team_role")
+}
+
+model daily_user_checkins {
+  id               Int       @id @default(autoincrement())
+  user_id          Int
+  team_id          Int
+  check_in_date    DateTime  @db.Date
+  has_checked_in   Boolean?  @default(false)
+  has_participated Boolean?
+  is_blocked       Boolean?
+  smart_goals      Int?
+  is_active        Boolean?  @default(true)
+  created_at       DateTime? @default(now()) @db.Timestamp(6)
+  updated_at       DateTime? @default(now()) @db.Timestamp(6)
+  teams            teams     @relation(fields: [team_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_team")
+  users            users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user")
+
+  @@index([check_in_date, team_id], map: "idx_user_check_in_date_team")
+  @@index([is_active], map: "idx_user_check_is_active")
+  @@index([user_id], map: "idx_user_check_user")
 }
