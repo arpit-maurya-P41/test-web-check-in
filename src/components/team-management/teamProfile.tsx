@@ -83,7 +83,8 @@ const TeamProfile: React.FC<teamProfileProps> = ({
           notify(result.status, result.message);
           loadMoreData(1, true);
         }
-      } else {
+      } 
+      else {
         console.error("Error:", result.message);
       }
     } catch (error) {
@@ -191,7 +192,7 @@ const TeamProfile: React.FC<teamProfileProps> = ({
 
   const handleChange = async (roleId: string, userId: number) => {
     try {
-      const response = await fetch("/api/user-team-role", {
+      const response = await fetch("/api/userTeamRole", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -279,7 +280,7 @@ const TeamProfile: React.FC<teamProfileProps> = ({
 
   const handleUserCheckIn = async (userId: number, checked : boolean ) => {
     try {
-      const res = await fetch("/api/user-team-role/checkIn", {
+      const res = await fetch("/api/userTeamRole/checkIn", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -388,7 +389,9 @@ const TeamProfile: React.FC<teamProfileProps> = ({
               <Input.TextArea placeholder="What should people know about this team?" />
             </Form.Item>
 
-            <Form.Item wrapperCol={{ span: 24 }}>
+            {!hideDelete && 
+              <>
+              <Form.Item wrapperCol={{ span: 24 }}>
               <Row justify="space-between" align="middle">
                 <Col>
                   <Title level={4} style={{ margin: 0 }}>
@@ -455,6 +458,7 @@ const TeamProfile: React.FC<teamProfileProps> = ({
                 </InfiniteScroll>
               </div>
             </Form.Item>
+            </>}
             <Row justify="center" gutter={16}>
               <Col>
                 <Button

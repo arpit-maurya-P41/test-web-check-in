@@ -52,13 +52,10 @@ const UserManagementIndex: React.FC<UserProps> = ({ userId, isAdmin }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [newUserId, setNewUserId] = useState(1);
 
-  // Using useFetch hook for teams data
   const { data: teamsData } = useFetch<{ teams: Team[] }>('/api/teams');
 
-  // Using useFetch hook for users data
   const { data: usersData, refetch: refetchUsers } = useFetch<{ users: User[], latestUserId: number }>('/api/users');
 
-  // Update state when data is fetched
   useEffect(() => {
     if (teamsData) {
       setTeams(teamsData.teams);

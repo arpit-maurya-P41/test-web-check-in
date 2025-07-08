@@ -87,6 +87,14 @@ export async function UserExists(userId: string){
   return user ? true : false;
 }
 
+export async function TeamExists(teamId: string){
+  const team = await prisma.teams.findUnique({
+    where: { id: Number(teamId), is_active: true },
+    select: { id: true },
+  });
+  return team ? true : false;
+}
+
 export async function getDashboardData(userId: string) {
   await getTeams(userId);
   return userId;
