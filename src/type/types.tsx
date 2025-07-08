@@ -37,11 +37,19 @@ export type Goal = {
     checkin_date: string;
     blocker: string | null;
     feeling: string | null;
+    slack_channel_id: string;
     goals: Goal[];
     users: {
         first_name: string;
         last_name: string;
-      };
+        user_team_mappings: {
+          teams: {
+            name: string;
+            id: number;
+            slack_channel_id: string;
+          }
+        }[];
+    };
   };
 
 export type FormValues = {
