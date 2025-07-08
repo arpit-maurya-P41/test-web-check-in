@@ -1,17 +1,33 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/prisma";
 import { getDateRange } from "@/utils/dateUtils";
+import { auth } from "@/auth";
+import { isUserAdmin } from "@/app/actions/dashboardActions";
 
 export async function GET(req: NextRequest) {
     console.log("Detected GET request");
 
     try {
+        // Check authentication and admin status
+        const session = await auth();
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
         const url = new URL(req.url);
 
         const startDateParam = url.searchParams.get("startDate") ?? "2025-01-01";
         const endDateParam = url.searchParams.get("endDate");
         const teamChannelId = url.searchParams.get("teamChannelId") ?? "";
         const userId = url.searchParams.get("users")?.split(",") || [];
+
+        // Check if user is admin when accessing all teams data
+        if (!teamChannelId) {
+            const userIsAdmin = await isUserAdmin(session.user.id);
+            if (!userIsAdmin) {
+                return NextResponse.json({ error: "Admin access required for all teams data" }, { status: 403 });
+            }
+        }
 
         const startDate = new Date(startDateParam);
         let endDate = endDateParam ? new Date(endDateParam) : new Date();
@@ -20,20 +36,38 @@ export async function GET(req: NextRequest) {
             endDate = new Date();
         }
 
-        const checkins = await prisma.checkins.findMany({
-            where: {
-                checkin_date: {
-                    gte: startDate,
-                    lte: endDate,
-                },
-                slack_channel_id: teamChannelId,
-                users: {
-                    id: {
-                      in: userId.length > 0 ? userId.map(Number) : undefined,
-                    },
-                    is_active: true
-                }
+        const whereClause: {
+            checkin_date: {
+                gte: Date;
+                lte: Date;
+            };
+            users: {
+                id: {
+                    in: number[] | undefined;
+                };
+                is_active: boolean;
+            };
+            slack_channel_id?: string;
+        } = {
+            checkin_date: {
+                gte: startDate,
+                lte: endDate,
             },
+            users: {
+                id: {
+                  in: userId.length > 0 ? userId.map(Number) : undefined,
+                },
+                is_active: true
+            }
+        };
+
+        // Only add team filter if teamChannelId is provided
+        if (teamChannelId) {
+            whereClause.slack_channel_id = teamChannelId;
+        }
+
+        const checkins = await prisma.checkins.findMany({
+            where: whereClause,
             select: {
                 slack_user_id: true,
                 slack_channel_id: true,
@@ -78,13 +112,26 @@ export async function GET(req: NextRequest) {
             };
         });
 
-        const teamUserCount = await prisma.user_team_mappings.count({
-            where: {
-              teams: {
-                slack_channel_id: teamChannelId
-              }
-            }
-          });
+        // Get team user count based on teamChannelId
+        let teamUserCount = 0;
+        if (teamChannelId) {
+            teamUserCount = await prisma.user_team_mappings.count({
+                where: {
+                  teams: {
+                    slack_channel_id: teamChannelId
+                  }
+                }
+            });
+        } else {
+            // If no team is specified, count distinct users across all teams
+            const userTeamMappings = await prisma.user_team_mappings.findMany({
+                select: {
+                    user_id: true
+                },
+                distinct: ['user_id']
+            });
+            teamUserCount = userTeamMappings.length;
+        }
 
         const blockedMap: Record<string, number> = {};
 
