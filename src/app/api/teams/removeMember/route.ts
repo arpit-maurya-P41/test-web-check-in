@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/prisma";
+import { removeFutureCheckins } from "@/utils/helper";
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,6 +17,8 @@ export async function POST(req: NextRequest) {
     await prisma.user_team_mappings.deleteMany({
       where: { user_id: userId, team_id: teamId },
     });
+
+    await removeFutureCheckins(userId, teamId);
 
     return NextResponse.json({ message: "User removed successfully." });
   } catch (error) {

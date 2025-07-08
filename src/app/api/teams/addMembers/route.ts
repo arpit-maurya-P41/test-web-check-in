@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/prisma"; 
+import { insertCheckinsForNewUser } from "@/utils/cronCheckins";
+import { TeamExists } from "@/app/actions/dashboardActions";
 
 export async function POST(req: NextRequest) {
   try {
     const { emails, teamId } = await req.json();
 
-    if (!emails || !Array.isArray(emails) || !teamId) {
+    if (!emails || !Array.isArray(emails) || !await TeamExists(teamId)) {
       return NextResponse.json({ message: "Invalid input" }, { status: 400 });
     }
 
@@ -61,6 +63,11 @@ export async function POST(req: NextRequest) {
         data: roleMappings,
         skipDuplicates: true,
       });
+
+      const userIds = Array.from(new Set(roleMappings.map((r) => r.user_id)));
+
+      await insertCheckinsForNewUser(userIds, teamId);
+
 
     let message = "Members added successfully";
     let status = "success";

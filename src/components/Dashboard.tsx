@@ -27,7 +27,11 @@ import { useSidebarStore } from "@/store/sidebarStore";
 import { Heatmap } from "@ant-design/charts";
 import PercentageLineChart from "./PercentageLineChart";
 import { DashboardProps } from "@/type/PropTypes";
-import { DashboardData, PercentageData, DashboardApiResponse } from "@/type/types";
+import {
+  DashboardData,
+  PercentageData,
+  DashboardApiResponse,
+} from "@/type/types";
 import { getTeamUsers } from "@/app/actions/dashboardActions";
 import { users } from "@prisma/client";
 import { useFetch } from "@/utils/useFetch";
@@ -71,7 +75,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       setUsersData(teamUsers);
     }
   };
-  
+
   const handleUserChange = (value: string[]) => setSelectedUsers(value);
   const handleRangeChange = (dates: RangePickerProps["value"]) => {
     if (dates) setDates(dates as [Dayjs, Dayjs]);
@@ -100,15 +104,23 @@ const Dashboard: React.FC<DashboardProps> = ({
   const { data: dashboardApiData } = useFetch<DashboardApiResponse>(
     `/api/dashboard?${buildQueryParams()}`,
     {
-      dependencies: [dates, selectedTeams, selectedUsers]
+      dependencies: [dates, selectedTeams, selectedUsers],
     }
   );
 
   useEffect(() => {
     if (dashboardApiData) {
-      setDashboardData(JSON.parse(JSON.stringify(dashboardApiData.smartCheckins || [])));
-      setBlockedData(JSON.parse(JSON.stringify(dashboardApiData.blockedUsersCount || [])));
-      setCheckinData(JSON.parse(JSON.stringify(dashboardApiData.checkinUserPercentageByDate || [])));
+      setDashboardData(
+        JSON.parse(JSON.stringify(dashboardApiData.smartCheckins || []))
+      );
+      setBlockedData(
+        JSON.parse(JSON.stringify(dashboardApiData.blockedUsersCount || []))
+      );
+      setCheckinData(
+        JSON.parse(
+          JSON.stringify(dashboardApiData.checkinUserPercentageByDate || [])
+        )
+      );
     }
   }, [dashboardApiData]);
 
@@ -168,6 +180,24 @@ const Dashboard: React.FC<DashboardProps> = ({
     autoFit: true,
   };
 
+  const predefinedRanges: Record<string, [dayjs.Dayjs, dayjs.Dayjs]> = {
+    Today: [dayjs(), dayjs()],
+    Yesterday: [dayjs().subtract(1, "day"), dayjs().subtract(1, "day")],
+    "Last 7 Days": [dayjs().subtract(6, "day"), dayjs()],
+    "Last 14 Days": [dayjs().subtract(13, "day"), dayjs()],
+    "Last 30 Days": [dayjs().subtract(29, "day"), dayjs()],
+    "This Month": [
+      dayjs().startOf("month"),
+      dayjs().isSame(dayjs().endOf("month"), "day")
+        ? dayjs().endOf("month")
+        : dayjs(),
+    ],
+    "Last Month": [
+      dayjs().subtract(1, "month").startOf("month"),
+      dayjs().subtract(1, "month").endOf("month"),
+    ],
+  };
+
   return (
     <Layout>
       <Sidebar
@@ -180,7 +210,9 @@ const Dashboard: React.FC<DashboardProps> = ({
         <Header style={{ padding: 0, background: colorBgContainer }}>
           <Button
             type="text"
-            icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            icon={
+              sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />
+            }
             onClick={toggleSidebar}
             style={{
               fontSize: "16px",
@@ -242,6 +274,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                     }}
                     allowClear
                     maxDate={dayjs()}
+                    presets={Object.entries(predefinedRanges).map(
+                      ([label, range]) => ({
+                        label,
+                        value: range,
+                      })
+                    )}
+                    size="small"
                   />
                 </div>
 
@@ -250,6 +289,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   value={selectedTeams}
                   onChange={handleTeamChange}
                   style={{ minWidth: 240 }}
+                  size="large"
                 >
                   {teams.map((team) => (
                     <Option
@@ -268,6 +308,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   value={selectedUsers}
                   onChange={handleUserChange}
                   style={{ minWidth: 240, maxWidth: 500 }}
+                  size="large"
                 >
                   {usersData.map((user) => (
                     <Option key={user.id} value={user.id}>

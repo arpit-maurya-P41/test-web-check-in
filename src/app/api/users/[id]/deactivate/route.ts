@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/prisma";
+import { removeFutureCheckins } from "@/utils/helper";
 
 export async function POST(req: Request) {
     try {
@@ -19,6 +20,8 @@ export async function POST(req: Request) {
         await prisma.user_team_role.deleteMany({
             where: { user_id: body.id },
         }); 
+
+        await removeFutureCheckins(body.id);
 
         const users = await prisma.users.findMany({orderBy: { id: "asc" }, where: {is_active: true}});
 

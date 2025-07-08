@@ -115,3 +115,88 @@ ADD CONSTRAINT uq_user_team_role UNIQUE (user_id, team_id, role_id);
 
 ALTER TABLE user_team_role
 ADD COLUMN check_in BOOLEAN DEFAULT TRUE;
+
+
+ALTER TABLE checkins
+ADD COLUMN user_id INTEGER,
+ADD COLUMN team_id INTEGER,
+ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+ADD CONSTRAINT fk_team FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+ALTER COLUMN user_id SET NOT NULL,
+ALTER COLUMN team_id SET NOT NULL;
+
+
+CREATE TABLE daily_user_checkins	 (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  team_id INTEGER NOT NULL,
+  check_in_date DATE NOT NULL,
+  has_checked_in BOOLEAN DEFAULT FALSE,
+  has_participated BOOLEAN,
+  is_blocked BOOLEAN,
+  smart_goals INTEGER, 
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_team FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_user_check_in_date_team ON daily_user_checkins (check_in_date, team_id);
+CREATE INDEX idx_user_check_user ON daily_user_checkins (user_id);
+CREATE INDEX idx_user_check_is_active ON daily_user_checkins (is_active);
+
+
+
+
+CREATE OR REPLACE FUNCTION insert_daily_user_checkins() 
+RETURNS TRIGGER AS $$
+DECLARE
+  total_goals INTEGER;
+  smart_goals INTEGER;
+  smart_goal_percentage NUMERIC;
+BEGIN
+  -- Count total and smart goals for this checkin
+  SELECT COUNT(*), COALESCE(SUM(CASE WHEN is_smart THEN 1 ELSE 0 END), 0)
+  INTO total_goals, smart_goals
+  FROM goals
+  WHERE checkin_id = NEW.id;
+
+  IF total_goals > 0 THEN
+    smart_goal_percentage := ROUND((smart_goals::NUMERIC / total_goals) * 100);
+  ELSE
+    smart_goal_percentage := 0;
+  END IF;
+
+
+  UPDATE daily_user_checkins
+  SET
+    is_blocked = (NEW.blocker IS NOT NULL AND LENGTH(TRIM(NEW.blocker)) > 0),
+    has_checked_in = TRUE,
+    has_participated = TRUE,
+    smart_goals = smart_goal_percentage,
+    updated_at = CURRENT_TIMESTAMP
+  WHERE user_id = NEW.user_id
+    AND team_id = NEW.team_id
+    AND check_in_date = NEW.checkin_date;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+CREATE TRIGGER trg_insert_daily_user_checkins
+AFTER INSERT ON checkins
+FOR EACH ROW
+EXECUTE FUNCTION insert_daily_user_checkins();
+
+CREATE TRIGGER trg_update_daily_user_checkins
+AFTER UPDATE ON checkins
+FOR EACH ROW
+EXECUTE FUNCTION insert_daily_user_checkins();
+
+
+ALTER TABLE daily_user_checkins
+ADD CONSTRAINT unique_user_team_date UNIQUE (user_id, team_id, check_in_date);
