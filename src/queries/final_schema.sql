@@ -132,7 +132,6 @@ CREATE TABLE daily_user_checkins	 (
   team_id INTEGER NOT NULL,
   check_in_date DATE NOT NULL,
   has_checked_in BOOLEAN DEFAULT FALSE,
-  has_participated BOOLEAN,
   is_blocked BOOLEAN,
   smart_goals INTEGER, 
   is_active BOOLEAN DEFAULT TRUE,
@@ -174,7 +173,6 @@ BEGIN
   SET
     is_blocked = (NEW.blocker IS NOT NULL AND LENGTH(TRIM(NEW.blocker)) > 0),
     has_checked_in = TRUE,
-    has_participated = TRUE,
     smart_goals = smart_goal_percentage,
     updated_at = CURRENT_TIMESTAMP
   WHERE user_id = NEW.user_id
