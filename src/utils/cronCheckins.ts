@@ -19,15 +19,28 @@ export const insertDailyUserCheckins = async () => {
         check_in_date: true,
       },
     });
+    const insertDates: Date[] = [];
 
     let startDateUTC: Date;
+
     if (latestEntry) {
       const latestDate = new Date(latestEntry.check_in_date);
       startDateUTC = new Date(Date.UTC(
         latestDate.getUTCFullYear(),
         latestDate.getUTCMonth(),
-        latestDate.getUTCDate() + 1
+        latestDate.getUTCDate()
       ));
+
+      const d = new Date(startDateUTC);
+      if (d.getUTCDay() !== 0 && d.getUTCDay() !== 6) {
+        d.setUTCDate(d.getUTCDate() + 1);
+      
+        while (d.getUTCDay() === 0 || d.getUTCDay() === 6) {
+          d.setUTCDate(d.getUTCDate() + 1);
+        }
+        insertDates.push(d);
+      }
+
     } else {
       const today = new Date();
       startDateUTC = new Date(Date.UTC(
@@ -35,14 +48,17 @@ export const insertDailyUserCheckins = async () => {
         today.getUTCMonth(),
         today.getUTCDate()
       ));
-    }
 
-    const insertDates: Date[] = [];
-
-    for (let i = 0; i < 2; i++) {
-      const d = new Date(startDateUTC);
-      d.setUTCDate(d.getUTCDate() + i);
-      insertDates.push(d);
+      let count = 0, i = 0;
+      while (count < 3) {
+        const d = new Date(startDateUTC);
+        d.setUTCDate(d.getUTCDate() + i);
+        if (d.getUTCDay() !== 0 && d.getUTCDay() !== 6) {
+          insertDates.push(d);
+          count++;
+        }
+        i++;
+      }
     }
 
     for (const date of insertDates) {
@@ -132,8 +148,11 @@ export const insertCheckinsForNewUser = async (
     const insertDates: string[] = [];
 
     for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
-      const dateStr = d.toISOString().split("T")[0];
-      insertDates.push(dateStr);
+      const day = d.getUTCDay();
+      if (day !== 0 && day !== 6) {
+        const dateStr = d.toISOString().split("T")[0];
+        insertDates.push(dateStr);
+      }
     }
 
     const existingEntries = await prisma.daily_user_checkins.findMany({
