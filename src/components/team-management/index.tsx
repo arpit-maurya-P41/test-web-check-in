@@ -61,7 +61,7 @@ const TeamManagementIndex: React.FC<TeamProps> = ({ userId, isAdmin, isManager }
     }
     // Check if user is manager for this team
     try {
-      const res = await fetch(`/api/user-team-role?userId=${userId}&teamId=${teamId}`);
+      const res = await fetch(`/api/userTeamRole?userId=${userId}&teamId=${teamId}`);
       if (res.ok) {
         const data = await res.json();
         if (data.roles && data.roles.role_name && data.roles.role_name.toLowerCase() === "manager") {
