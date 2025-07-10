@@ -153,7 +153,7 @@ export async function GET(req: NextRequest) {
           
           const smartCheckins = Object.values(smartCheckinMap).map(({ user, date, totalSmartGoal, checkinCount }) => {
             const normalizedPercentage = checkinCount > 0
-              ?  Math.round((totalSmartGoal / checkinCount) * 100) / 100
+            ?  Math.round(Number(((totalSmartGoal / checkinCount)).toFixed(2)))
               : 0;
           
             return {
