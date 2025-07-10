@@ -65,7 +65,15 @@ export async function GET(req: NextRequest) {
         }
 
         // Build where clause for checkins query
-        const whereClause: any = {
+        const whereClause: {
+            check_in_date: {
+                gte: Date;
+                lte: Date;
+            };
+            is_active: boolean;
+            team_id?: number | { in: number[] };
+            user_id?: { in: number[] };
+        } = {
             check_in_date: {
                 gte: startDate,
                 lte: endDate,
