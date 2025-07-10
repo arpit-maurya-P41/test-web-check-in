@@ -1,12 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { UseFetchOptions } from '@/type/types';
 
 export function useFetch<T>(url: string, options: UseFetchOptions = {}) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
+  const lastUrlRef = useRef<string>('');
+  const isRequestingRef = useRef<boolean>(false);
   
   const fetchData = async () => {
+    // Prevent duplicate requests for the same URL
+    if (lastUrlRef.current === url && isRequestingRef.current) {
+      return;
+    }
+    
+    lastUrlRef.current = url;
+    isRequestingRef.current = true;
     setLoading(true);
     setError(null);
     
@@ -35,6 +44,7 @@ export function useFetch<T>(url: string, options: UseFetchOptions = {}) {
       setError(err instanceof Error ? err : new Error('An unknown error occurred'));
     } finally {
       setLoading(false);
+      isRequestingRef.current = false;
     }
   };
   
@@ -42,7 +52,7 @@ export function useFetch<T>(url: string, options: UseFetchOptions = {}) {
     if (!options.skipOnMount) {
       fetchData();
     }
-  }, options.dependencies || []);
+  }, [url, ...(options.dependencies || [])]);
   
   return { data, loading, error, refetch: fetchData };
 } 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -57,9 +57,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const { sidebarCollapsed, toggleSidebar } = useSidebarStore();
   const [dashboardData, setDashboardData] = useState<DashboardData[]>([]);
   const [dates, setDates] = useState<[Dayjs, Dayjs]>(getDefaultDates());
-  const [selectedTeams, setSelectedTeams] = useState<string>(
-    teams[0]?.id.toString()
-  );
+  const [selectedTeams, setSelectedTeams] = useState<string>("");
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [blockedData, setBlockedData] = useState<PercentageData[]>([]);
   const [checkinData, setCheckinData] = useState<PercentageData[]>([]);
@@ -89,7 +87,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     else setDates(getDefaultDates());
   };
 
-  const buildQueryParams = () => {
+  const queryParams = useMemo(() => {
     const params = new URLSearchParams();
     const formatted = dates.map((d) => d.format("YYYY-MM-DD"));
     const [startDate, endDate] = formatted;
@@ -107,12 +105,12 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
 
     return params.toString();
-  };
+  }, [dates, selectedTeams, selectedUsers, userId]);
 
   const { data: dashboardApiData } = useFetch<DashboardApiResponse>(
-    `/api/dashboard?${buildQueryParams()}`,
+    `/api/dashboard?${queryParams}`,
     {
-      dependencies: [dates, selectedTeams, selectedUsers],
+      dependencies: [queryParams],
     }
   );
 
@@ -345,9 +343,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               <Title level={2} style={{ display: "flex", alignItems: "center",justifyContent: "space-between" }}>
                 Smart Goals
                 {dashboardData.length > 0 && (
-                  <Title level={2} style={{color: "#1677ff"}}>
+                  <span style={{color: "#1677ff"}}>
                     {Math.round(dashboardData.reduce((sum, item) => sum + (item.percentage || 0), 0) / dashboardData.length)} %
-                  </Title>
+                  </span>
                 )}
               </Title>
               {config.data && config.data.length > 0 ? (
@@ -360,9 +358,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               <Title level={2} style={{ display: "flex", alignItems: "center",justifyContent: "space-between" }}>
                 Blockers
                 {blockedData.length > 0 && (
-                  <Title level={2} style={{color: "#1677ff"}}>
+                  <span style={{color: "#1677ff"}}>
                     {Math.round(blockedData.reduce((sum, item) => sum + (item.percentage || 0), 0) / blockedData.length)}%
-                  </Title>
+                  </span>
                 )}
               </Title>
               <PercentageLineChart
@@ -374,9 +372,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               <Title level={2} style={{ display: "flex", alignItems: "center",justifyContent: "space-between" }}>
                 Participation
                 {checkinData.length > 0 && (
-                  <Title level={2} style={{color: "#1677ff"}}>
+                  <span style={{color: "#1677ff"}}>
                     {Math.round(checkinData.reduce((sum, item) => sum + (item.percentage || 0), 0) / checkinData.length)}%
-                  </Title>
+                  </span>
                 )}
               </Title>
               <PercentageLineChart
