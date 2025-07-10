@@ -60,7 +60,9 @@ const Checkins: React.FC<CheckinProps> = ({
 
   const handleMenuClick: MenuProps["onClick"] = (e) => {
     const team = teams.find((t) => t.id.toString() === e.key);
-    if (team) setSelectedTeam(team);
+    if (team) {
+      setSelectedTeam(team);
+    }
   };
 
   const teamMenuItems: MenuProps["items"] = teams.map((team) => ({
@@ -96,7 +98,12 @@ const Checkins: React.FC<CheckinProps> = ({
 
   useEffect(() => {
     if (checkinsData) {
-      setCheckInsData(checkinsData);
+      setCheckInsData({
+        date: checkinsData.date,
+        teamSummary: checkinsData.teamSummary,
+        checkedInUsers: checkinsData.checkedInUsers || [],
+        notCheckedInUsers: checkinsData.notCheckedInUsers || []
+      });
     }
   }, [checkinsData]);
 
@@ -148,7 +155,7 @@ const Checkins: React.FC<CheckinProps> = ({
                   fontWeight: 500,
                   cursor: "pointer",
                   fontSize: "16px",
-                  color: selectedTeam ? "#1890ff" : "black",
+                  color: selectedTeam ? "black" : "#1890ff",
                 }}
                 onClick={handleAllTeamsClick}
               >
