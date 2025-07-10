@@ -152,10 +152,15 @@ const Checkins: React.FC<CheckinProps> = ({
               />
               <span
                 style={{
-                  fontWeight: 500,
-                  cursor: "pointer",
+                  fontWeight: selectedTeam ? "normal" : 500,
                   fontSize: "16px",
-                  color: selectedTeam ? "black" : "#1890ff",
+                  backgroundColor: selectedTeam ? "transparent" : "#f0f0f0",
+                  height: "2rem",
+                  padding: "0 8px",
+                  borderRadius: "4px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
                 onClick={handleAllTeamsClick}
               >
@@ -166,7 +171,9 @@ const Checkins: React.FC<CheckinProps> = ({
                 menu={{ items: teamMenuItems, onClick: handleMenuClick }}
                 trigger={["click"]}
               >
-                <Button type="text" style={{ fontSize: 16 }}>
+                <Button type="text" style={{ 
+                  fontWeight: selectedTeam ? 500 : "normal",
+                  fontSize: 16, backgroundColor: selectedTeam ? "#f0f0f0" : "transparent" }}>
                   {selectedTeam?.name || "Select Team"} <DownOutlined />
                 </Button>
               </Dropdown>
