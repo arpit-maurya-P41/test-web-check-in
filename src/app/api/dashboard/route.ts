@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/prisma";
 import { getDateRange } from "@/utils/dateUtils";
+import { isUserAdmin, isUserManager } from "@/app/actions/dashboardActions";
 
 export async function GET(req: NextRequest) {
     console.log("Detected GET request");
@@ -10,9 +11,9 @@ export async function GET(req: NextRequest) {
 
         const startDateParam = url.searchParams.get("startDate") ?? "2025-01-01";
         const endDateParam = url.searchParams.get("endDate");
-        const teamIdParam = url.searchParams.get("teamId") ?? "";
+        const teamId = url.searchParams.get("teamId");
         const userId = url.searchParams.get("users")?.split(",") || [];
-        const teamId = teamIdParam && !isNaN(Number(teamIdParam)) ? Number(teamIdParam) : null;
+        const requestingUserId = url.searchParams.get("requestingUserId");
 
         const startDate = new Date(startDateParam);
         let endDate = endDateParam ? new Date(endDateParam) : new Date();
@@ -21,17 +22,70 @@ export async function GET(req: NextRequest) {
             endDate = new Date();
         }
 
+        // Get accessible teams based on user role
+        let accessibleTeamIds: number[] = [];
+        
+        if (requestingUserId) {
+            const isAdmin = await isUserAdmin(requestingUserId);
+            if (isAdmin) {
+                // Admin can access all teams
+                const allTeams = await prisma.teams.findMany({
+                    where: { is_active: true },
+                    select: { id: true }
+                });
+                accessibleTeamIds = allTeams.map(team => team.id);
+            } else {
+                const isManager = await isUserManager(requestingUserId);
+                if (isManager) {
+                    // Get teams where user is manager
+                    const managerTeams = await prisma.user_team_role.findMany({
+                        where: {
+                            user_id: Number(requestingUserId),
+                            roles: {
+                                role_name: {
+                                    equals: "Manager",
+                                    mode: "insensitive"
+                                }
+                            }
+                        },
+                        select: { team_id: true }
+                    });
+                    accessibleTeamIds = managerTeams.map(team => team.team_id);
+                } else {
+                    // Get teams where user is a member
+                    const userTeams = await prisma.user_team_mappings.findMany({
+                        where: {
+                            user_id: Number(requestingUserId)
+                        },
+                        select: { team_id: true }
+                    });
+                    accessibleTeamIds = userTeams.map(team => team.team_id);
+                }
+            }
+        }
+
+        // Build where clause for checkins query
+        const whereClause: any = {
+            check_in_date: {
+                gte: startDate,
+                lte: endDate,
+            },
+            is_active: true,
+        };
+
+        // If specific team is selected, use that, otherwise use accessible teams
+        if (teamId) {
+            whereClause.team_id = Number(teamId);
+        } else if (accessibleTeamIds.length > 0) {
+            whereClause.team_id = { in: accessibleTeamIds };
+        }
+
+        if (userId.length > 0) {
+            whereClause.user_id = { in: userId.map(Number) };
+        }
 
         const checkins = await prisma.daily_user_checkins.findMany({
-            where: {
-                check_in_date: {
-                    gte: startDate,
-                    lte: endDate,
-                },
-                ...(teamId !== null && { team_id: teamId }),
-                ...(userId.length > 0 && { user_id: { in: userId.map(Number) } }),
-                is_active: true,
-            },
+            where: whereClause,
             select: {
                 user_id: true,
                 team_id: true,

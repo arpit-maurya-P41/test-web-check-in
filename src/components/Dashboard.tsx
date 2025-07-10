@@ -5,7 +5,6 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   LogoutOutlined,
-  DownloadOutlined,
 } from "@ant-design/icons";
 import {
   Button,
@@ -17,7 +16,6 @@ import {
   Space,
   Select,
   Typography,
-  Dropdown,
 } from "antd";
 
 import dayjs, { Dayjs } from "dayjs";
@@ -37,7 +35,6 @@ import {
 import { getTeamUsers } from "@/app/actions/dashboardActions";
 import { users } from "@prisma/client";
 import { useFetch } from "@/utils/useFetch";
-import Papa from "papaparse";
 
 const { Title } = Typography;
 
@@ -47,7 +44,6 @@ const { Header, Content } = Layout;
 const getDefaultDates = () =>
   [dayjs().subtract(6, "day"), dayjs()] as [Dayjs, Dayjs];
 
-const ALL_TEAMS = "all_teams";
 const Dashboard: React.FC<DashboardProps> = ({
   userId,
   teams,
@@ -62,170 +58,24 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [dashboardData, setDashboardData] = useState<DashboardData[]>([]);
   const [dates, setDates] = useState<[Dayjs, Dayjs]>(getDefaultDates());
   const [selectedTeams, setSelectedTeams] = useState<string>(
-    teams[0]?.slack_channel_id
+    teams[0]?.id.toString()
   );
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [blockedData, setBlockedData] = useState<PercentageData[]>([]);
   const [checkinData, setCheckinData] = useState<PercentageData[]>([]);
   const [usersData, setUsersData] = useState<users[]>([]);
 
-  // Utility function to download CSV
-  const downloadCSV = (data: Record<string, unknown>[], filename: string) => {
-    const csv = Papa.unparse(data);
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", filename);
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  // CSV Export functions
-  const exportSmartGoalsData = async () => {
-    if (dashboardData.length === 0) {
-      return;
-    }
-    const csvData = dashboardData.map((item) => ({
-      Date: item.date,
-      User: item.user.name,
-      "Smart Goals Percentage": item.percentage,
-      "User ID": item.user.id,
-    }));
-
-    downloadCSV(
-      csvData,
-      `smart-goals-${dates[0].format("YYYY-MM-DD")}-to-${dates[1].format(
-        "YYYY-MM-DD"
-      )}.csv`
-    );
-  };
-
-  const exportBlockersData = async () => {
-    if (blockedData.length === 0) {
-      return;
-    }
-
-    const csvData = blockedData.map((item) => ({
-      Date: item.date,
-      "Blocked Users Percentage": item.percentage,
-    }));
-
-    downloadCSV(
-      csvData,
-      `blockers-${dates[0].format("YYYY-MM-DD")}-to-${dates[1].format(
-        "YYYY-MM-DD"
-      )}.csv`
-    );
-  };
-
-  const exportParticipationData = async () => {
-    if (checkinData.length === 0) {
-      return;
-    }
-
-    const csvData = checkinData.map((item) => ({
-      Date: item.date,
-      "Check-in Users Percentage": item.percentage,
-    }));
-
-    downloadCSV(
-      csvData,
-      `participation-${dates[0].format("YYYY-MM-DD")}-to-${dates[1].format(
-        "YYYY-MM-DD"
-      )}.csv`
-    );
-  };
-
-  const exportAllData = async () => {
-    if (
-      dashboardData.length === 0 &&
-      blockedData.length === 0 &&
-      checkinData.length === 0
-    ) {
-      return;
-    }
-
-    const allData: Record<string, unknown>[] = [
-      // Smart goals data
-      ...dashboardData.map((item) => ({
-        Date: item.date,
-        User: item.user.name,
-        "Data Type": "Smart Goals",
-        Percentage: item.percentage,
-        "User ID": item.user.id,
-      })),
-      // Blockers data
-      ...blockedData.map((item) => ({
-        Date: item.date,
-        User: "All Users",
-        "Data Type": "Blockers",
-        Percentage: item.percentage,
-        "User ID": "N/A",
-      })),
-      // Participation data
-      ...checkinData.map((item) => ({
-        Date: item.date,
-        User: "All Users",
-        "Data Type": "Participation",
-        Percentage: item.percentage,
-        "User ID": "N/A",
-      })),
-    ];
-
-    downloadCSV(
-      allData,
-      `dashboard-all-data-${dates[0].format("YYYY-MM-DD")}-to-${dates[1].format(
-        "YYYY-MM-DD"
-      )}.csv`
-    );
-  };
-
-  const exportMenuItems = [
-    {
-      key: "smart-goals",
-      label: "Smart Goals Data",
-      onClick: exportSmartGoalsData,
-    },
-    {
-      key: "blockers",
-      label: "Blockers Data",
-      onClick: exportBlockersData,
-    },
-    {
-      key: "participation",
-      label: "Participation Data",
-      onClick: exportParticipationData,
-    },
-    {
-      key: "all",
-      label: "All Data",
-      onClick: exportAllData,
-    },
-  ];
-
   const handleTeamChange = async (value: string) => {
-    setSelectedTeams(value ?? teams[0]?.slack_channel_id);
-
-    if (value === ALL_TEAMS && isAdmin) {
-      const allUsers: users[] = [];
-      for (const team of teams) {
-        if (team.id) {
-          const teamUsers = await getTeamUsers(team.id);
-          teamUsers.forEach((user) => {
-            if (!allUsers.some((u) => u.id === user.id)) {
-              allUsers.push(user);
-            }
-          });
-        }
-      }
-      setUsersData(allUsers);
+    setSelectedTeams(value);
+    if (value === "all") {
+      const allUsers = await Promise.all(teams.map(team => getTeamUsers(team.id)));
+      const uniqueUsers = Array.from(
+        new Map(allUsers.flat().map(user => [user.id, user])).values()
+      );
+      setUsersData(uniqueUsers);
     } else {
-      const selectedTeam = teams.find((t) => t.slack_channel_id === value);
+      const selectedTeam = teams.find((t) => t.id.toString() === value);
       const teamId = selectedTeam?.id;
-
       if (teamId) {
         const teamUsers = await getTeamUsers(teamId);
         setUsersData(teamUsers);
@@ -246,9 +96,10 @@ const Dashboard: React.FC<DashboardProps> = ({
 
     params.append("startDate", startDate);
     params.append("endDate", endDate);
+    params.append("requestingUserId", userId);
 
-    if (selectedTeams && selectedTeams !== ALL_TEAMS) {
-      params.append("teamChannelId", selectedTeams.toString());
+    if (selectedTeams && selectedTeams !== "all") {
+      params.append("teamId", selectedTeams.toString());
     }
 
     if (selectedUsers.length > 0) {
@@ -283,14 +134,23 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   useEffect(() => {
     const fetchInitialUsers = async () => {
-      const defaultTeam = teams[0];
-      if (defaultTeam?.id) {
-        const teamUsers = await getTeamUsers(defaultTeam.id);
-        setUsersData(teamUsers);
+      if (teams.length > 0) {
+        const defaultTeam = teams[0];
+        if (defaultTeam?.id) {
+          const teamUsers = await getTeamUsers(defaultTeam.id);
+          setUsersData(teamUsers);
+        }
       }
     };
     fetchInitialUsers();
   }, [teams]);
+
+  // Set initial selected team
+  useEffect(() => {
+    if (teams.length > 0) {
+      setSelectedTeams(isAdmin ? "all" : teams[0]?.id.toString());
+    }
+  }, [teams, isAdmin]);
 
   const config = {
     data: dashboardData,
@@ -324,8 +184,11 @@ const Dashboard: React.FC<DashboardProps> = ({
       },
     },
     label: {
-      text: (d: DashboardData) =>
-        d.percentage === null ? "" : `${d.percentage}`,
+      text: (d: DashboardData) => {
+        // Improved handling for null/undefined percentage values
+        if (d.percentage === null || d.percentage === undefined) return "";
+        return `${d.percentage}`;
+      },
       position: "inside",
       style: {
         fill: "#fff",
@@ -448,15 +311,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                   style={{ minWidth: 240 }}
                   size="large"
                 >
-                  {isAdmin && (
-                    <Option key={ALL_TEAMS} value={ALL_TEAMS}>
-                      All Teams
-                    </Option>
-                  )}
+                  <Option key="all" value="all">All Teams</Option>
                   {teams.map((team) => (
                     <Option
-                      key={team.slack_channel_id}
-                      value={team.slack_channel_id}
+                      key={team.id}
+                      value={team.id.toString()}
                     >
                       {team.name}
                     </Option>
@@ -478,49 +337,18 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </Option>
                   ))}
                 </Select>
-
-                <Dropdown
-                  menu={{ items: exportMenuItems }}
-                  placement="bottomRight"
-                >
-                  <Button
-                    type="primary"
-                    icon={<DownloadOutlined />}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                    }}
-                  >
-                    Export Data
-                  </Button>
-                </Dropdown>
               </Space>
             </Col>
           </Row>
           <Row>
             <Col span={24} style={{ padding: 8 }}>
-              <Title
-                level={2}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  justifyContent: "space-between",
-                }}
-              >
+              <Title level={2} style={{ display: "flex", alignItems: "center",justifyContent: "space-between" }}>
                 Smart Goals
-                <div style={{ color: "#1677ff" }}>
-                  {dashboardData.length > 0
-                    ? Math.round(
-                        dashboardData.reduce(
-                          (sum, item) => sum + item.percentage,
-                          0
-                        ) / dashboardData.length
-                      )
-                    : 0}
-                  %
-                </div>
+                {dashboardData.length > 0 && (
+                  <Title level={2} style={{color: "#1677ff"}}>
+                    {Math.round(dashboardData.reduce((sum, item) => sum + (item.percentage || 0), 0) / dashboardData.length * 100) / 100} %
+                  </Title>
+                )}
               </Title>
               {config.data && config.data.length > 0 ? (
                 <Heatmap {...config} />
@@ -529,27 +357,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                   No data available
                 </div>
               )}
-              <Title
-                level={2}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  justifyContent: "space-between",
-                }}
-              >
+              <Title level={2} style={{ display: "flex", alignItems: "center",justifyContent: "space-between" }}>
                 Blockers
-                <div style={{ color: "#1677ff" }}>
-                  {blockedData.length > 0
-                    ? Math.round(
-                        blockedData.reduce(
-                          (sum, item) => sum + item.percentage,
-                          0
-                        ) / blockedData.length
-                      )
-                    : 0}
-                  %
-                </div>
+                {blockedData.length > 0 && (
+                  <Title level={2} style={{color: "#1677ff"}}>
+                    {Math.round(blockedData.reduce((sum, item) => sum + (item.percentage || 0), 0) / blockedData.length)}%
+                  </Title>
+                )}
               </Title>
               <PercentageLineChart
                 title="Blocked Users Percentage"
@@ -557,27 +371,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                 yLabel="Blocked Users (%)"
                 color="#f5222d"
               />
-              <Title
-                level={2}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  justifyContent: "space-between",
-                }}
-              >
+              <Title level={2} style={{ display: "flex", alignItems: "center",justifyContent: "space-between" }}>
                 Participation
-                <div style={{ color: "#1677ff" }}>
-                  {checkinData.length > 0
-                    ? Math.round(
-                        checkinData.reduce(
-                          (sum, item) => sum + item.percentage,
-                          0
-                        ) / checkinData.length
-                      )
-                    : 0}
-                  %
-                </div>
+                {checkinData.length > 0 && (
+                  <Title level={2} style={{color: "#1677ff"}}>
+                    {Math.round(checkinData.reduce((sum, item) => sum + (item.percentage || 0), 0) / checkinData.length)}%
+                  </Title>
+                )}
               </Title>
               <PercentageLineChart
                 title="Check-in Users Percentage"
