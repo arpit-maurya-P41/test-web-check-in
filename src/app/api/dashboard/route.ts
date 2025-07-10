@@ -1,33 +1,18 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/prisma";
 import { getDateRange } from "@/utils/dateUtils";
-import { auth } from "@/auth";
-import { isUserAdmin } from "@/app/actions/dashboardActions";
 
 export async function GET(req: NextRequest) {
     console.log("Detected GET request");
 
     try {
-        // Check authentication and admin status
-        const session = await auth();
-        if (!session?.user?.id) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
         const url = new URL(req.url);
 
         const startDateParam = url.searchParams.get("startDate") ?? "2025-01-01";
         const endDateParam = url.searchParams.get("endDate");
-        const teamChannelId = url.searchParams.get("teamChannelId") ?? "";
+        const teamIdParam = url.searchParams.get("teamId") ?? "";
         const userId = url.searchParams.get("users")?.split(",") || [];
-
-        // Check if user is admin when accessing all teams data
-        if (!teamChannelId) {
-            const userIsAdmin = await isUserAdmin(session.user.id);
-            if (!userIsAdmin) {
-                return NextResponse.json({ error: "Admin access required for all teams data" }, { status: 403 });
-            }
-        }
+        const teamId = teamIdParam && !isNaN(Number(teamIdParam)) ? Number(teamIdParam) : null;
 
         const startDate = new Date(startDateParam);
         let endDate = endDateParam ? new Date(endDateParam) : new Date();
@@ -36,43 +21,26 @@ export async function GET(req: NextRequest) {
             endDate = new Date();
         }
 
-        const whereClause: {
-            checkin_date: {
-                gte: Date;
-                lte: Date;
-            };
-            users: {
-                id: {
-                    in: number[] | undefined;
-                };
-                is_active: boolean;
-            };
-            slack_channel_id?: string;
-        } = {
-            checkin_date: {
-                gte: startDate,
-                lte: endDate,
-            },
-            users: {
-                id: {
-                  in: userId.length > 0 ? userId.map(Number) : undefined,
+
+        const checkins = await prisma.daily_user_checkins.findMany({
+            where: {
+                check_in_date: {
+                    gte: startDate,
+                    lte: endDate,
                 },
-                is_active: true
-            }
-        };
-
-        // Only add team filter if teamChannelId is provided
-        if (teamChannelId) {
-            whereClause.slack_channel_id = teamChannelId;
-        }
-
-        const checkins = await prisma.checkins.findMany({
-            where: whereClause,
+                ...(teamId !== null && { team_id: teamId }),
+                ...(userId.length > 0 && { user_id: { in: userId.map(Number) } }),
+                is_active: true,
+            },
             select: {
-                slack_user_id: true,
-                slack_channel_id: true,
-                checkin_date: true,
-                blocker: true,
+                user_id: true,
+                team_id: true,
+                check_in_date: true,
+                is_blocked: true,
+                smart_goals: true,
+                has_checked_in: true,
+                created_at: true,
+                updated_at: true,
                 users: {
                     select: {
                         slack_user_id: true,
@@ -81,100 +49,101 @@ export async function GET(req: NextRequest) {
                         email: true,
                     },
                 },
-                goals: {
-                    select: {
-                        id: true,
-                        is_smart: true,
-                    },
-                },
             },
             orderBy: {
-                checkin_date: "asc",
+                check_in_date: "asc",
             },
         });
+
         const dateRange = getDateRange(startDateParam, endDateParam ?? "");
 
-        const smartCheckins = checkins.map((checkin) => {             
-            return {
-                date: checkin.checkin_date?.toLocaleDateString(),
+        const smartCheckinMap: Record<string, {
+            user: { name: string; id: number };
+            date: string;
+            totalSmartGoal: number;
+            checkinCount: number;
+          }> = {};
+          
+          checkins.forEach((checkin) => {
+            const date = checkin.check_in_date?.toLocaleDateString();
+            const userId = checkin.user_id;
+          
+            if (!date || !userId) return;
+          
+            const key = `${userId}_${date}`;
+            const smartGoal = typeof checkin.smart_goals === "number" ? Math.round(checkin.smart_goals) : 0;
+          
+            if (!smartCheckinMap[key]) {
+              smartCheckinMap[key] = {
                 user: {
-                    name: `${checkin.users?.first_name} ${checkin.users?.last_name ?? ""}` || "Unknown",
-                    id: checkin.users?.slack_user_id || "no-id"
+                  name: `${checkin.users?.first_name ?? ""} ${checkin.users?.last_name ?? ""}`.trim() || "Unknown",
+                  id: userId,
                 },
-                percentage:
-                    checkin.goals.length === 0
-                        ? 0
-                        : Math.floor(
-                              (checkin.goals.filter((goal) => goal.is_smart).length /
-                                  checkin.goals.length) *
-                                  100
-                          ),
+                date,
+                totalSmartGoal: smartGoal,
+                checkinCount: 1,
+              };
+            } else {
+              smartCheckinMap[key].totalSmartGoal += smartGoal;
+              smartCheckinMap[key].checkinCount += 1;
+            }
+          });
+          
+          const smartCheckins = Object.values(smartCheckinMap).map(({ user, date, totalSmartGoal, checkinCount }) => {
+            const normalizedPercentage = checkinCount > 0
+              ?  Math.round((totalSmartGoal / checkinCount) * 100) / 100
+              : 0;
+          
+            return {
+              user,
+              date,
+              percentage: normalizedPercentage,
             };
-        });
+          });
 
-        // Get team user count based on teamChannelId
-        let teamUserCount = 0;
-        if (teamChannelId) {
-            teamUserCount = await prisma.user_team_mappings.count({
-                where: {
-                  teams: {
-                    slack_channel_id: teamChannelId
-                  }
-                }
-            });
-        } else {
-            // If no team is specified, count distinct users across all teams
-            const userTeamMappings = await prisma.user_team_mappings.findMany({
-                select: {
-                    user_id: true
-                },
-                distinct: ['user_id']
-            });
-            teamUserCount = userTeamMappings.length;
-        }
 
         const blockedMap: Record<string, number> = {};
+        const totalEntriesPerDate: Record<string, number> = {};
+
 
         checkins.forEach((checkin) => {
-            const date = checkin.checkin_date?.toLocaleDateString();
-            const blocked = checkin.blocker?.length ? 1 : 0;
+            const date = checkin.check_in_date?.toLocaleDateString();
+            const blocked = checkin.is_blocked === true ? 1 : 0;
             if(date)
             {
                 blockedMap[date] = (blockedMap[date] ?? 0) + blocked;
+                totalEntriesPerDate[date] = (totalEntriesPerDate[date] ?? 0) + 1;
             }
         }, []);
 
-        let selectedUsersCount = userId.length;
-        if(selectedUsersCount === 0)
-        {
-            selectedUsersCount = teamUserCount;
-        }
         const blockedUsersCount = dateRange.map(date => {
             const blockedCount = blockedMap[date] ?? 0;
+            const totalEntries = totalEntriesPerDate[date] ?? 0;
 
-            const percentage = blockedMap[date] !== 0
-              ? Math.floor((blockedCount / selectedUsersCount) * 100)
-              : 0;
+            const percentage = totalEntries > 0
+            ? Math.round(Number(((blockedCount / totalEntries) * 100).toFixed(2)))
+            : 0;
             return { date, percentage };
           });
 
-          const checkinsPerDate: Record<string, Set<string>> = {};
+          const checkinsPerDate: Record<string, number> = {};
 
           checkins.forEach((checkin) => {
-              const date = checkin.checkin_date?.toLocaleDateString();
-              if (date) {
-                  if (!checkinsPerDate[date]) {
-                      checkinsPerDate[date] = new Set();
-                  }
-                  checkinsPerDate[date].add(checkin.slack_user_id);
+            if (checkin.has_checked_in) {
+                const date = checkin.check_in_date?.toLocaleDateString();
+                if (date) {
+                  checkinsPerDate[date] = (checkinsPerDate[date] ?? 0) + 1;
+                }
               }
           });
           
           const checkinUserPercentageByDate = dateRange.map((date) => {
-            const userCount = checkinsPerDate[date]?.size || 0;
-            const percentage = selectedUsersCount > 0
-                ? Math.floor((userCount / selectedUsersCount) * 100)
-                : 0;
+            const checkedInCount = checkinsPerDate[date] ?? 0;
+            const totalEntries = totalEntriesPerDate[date] ?? 0;
+
+            const percentage = totalEntries > 0
+            ? Math.round(Number(((checkedInCount / totalEntries) * 100).toFixed(2)))
+            : 0;
             
             return {
                 date,

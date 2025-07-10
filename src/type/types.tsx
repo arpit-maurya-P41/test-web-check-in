@@ -162,3 +162,40 @@ export type DashboardApiResponse = {
   blockedUsersCount: PercentageData[];
   checkinUserPercentageByDate: PercentageData[];
 }
+
+export type CheckinAPIResponse = {
+  date: string;
+  teamSummary: {
+    totalMembers: number;
+    participation: {
+      count: number;
+      percentage: number;
+    };
+    blockers: {
+      count: number;
+      percentage: number;
+    };
+    smart: {
+      totalGoals: number;
+      smartGoals: number;
+      percentage: number;
+    };
+  };
+  checkedInUsers: Array<{
+    user_id: number;
+    team_id: number;
+    has_checked_in: boolean;
+    is_blocked: boolean;
+    user: {
+      name: string;
+      goals: Array<{
+        is_smart: boolean;
+        goal_text: string;
+      }>;
+    };
+  }>;
+  notCheckedInUsers: Array<{
+    user_id: number;
+    name: string;
+  }>;
+}

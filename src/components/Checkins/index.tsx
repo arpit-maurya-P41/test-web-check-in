@@ -23,17 +23,10 @@ import {
 import { logoutUser } from "@/app/actions/authActions";
 import { useSidebarStore } from "@/store/sidebarStore";
 import "./Checkins.css";
-import { CheckinEntry, Goal } from "@/type/types";
+import { CheckinAPIResponse } from "@/type/types";
 import { CheckinProps, Team } from "@/type/PropTypes";
 import dayjs, { Dayjs } from "dayjs";
 import { useFetch } from "@/utils/useFetch";
-import { teams } from "@prisma/client";
-
-// Add type for team data from API
-type TeamWithCount = teams & {
-  userCount: number;
-};
-
 const { Header, Content } = Layout;
 
 const Checkins: React.FC<CheckinProps> = ({
@@ -47,9 +40,8 @@ const Checkins: React.FC<CheckinProps> = ({
   } = theme.useToken();
   const { sidebarCollapsed, toggleSidebar } = useSidebarStore();
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
-  const [goalsSummary, setGoalsSummary] = useState<CheckinEntry[]>([]);
+  const [checkInsData, setCheckInsData] = useState<CheckinAPIResponse | null>(null);
   const [currentDate, setCurrentDate] = useState<Dayjs>(dayjs());
-  const [teamMembers, setTeamMembers] = useState<Record<number, number>>({});
 
   const handlePreviousDay = () => {
     setCurrentDate((prev) => prev.subtract(1, "day"));
@@ -83,17 +75,21 @@ const Checkins: React.FC<CheckinProps> = ({
   const buildQueryParams = () => {
     const params = new URLSearchParams();
     const dateStr = currentDate.format("YYYY-MM-DD");
-
     if (selectedTeam) {
-      params.append("teamChannelId", selectedTeam.slack_channel_id);
+      params.append("teamId", selectedTeam.id.toString());
     }
-    params.append("startDate", dateStr);
-    params.append("endDate", dateStr);
-
+    
+    params.append("date", dateStr);
+    
+    // Add user ID and role information
+    params.append("userId", userId);
+    params.append("isAdmin", isAdmin.toString());
+    params.append("isManager", (isManager || false).toString());
+    
     return params.toString();
   };
 
-  const { data: checkinsData } = useFetch<CheckinEntry[]>(
+  const { data: checkinsData } = useFetch<CheckinAPIResponse>(
     `/api/checkins?${buildQueryParams()}`,
     {
       dependencies: [selectedTeam, currentDate],
@@ -102,152 +98,12 @@ const Checkins: React.FC<CheckinProps> = ({
 
   useEffect(() => {
     if (checkinsData) {
-      setGoalsSummary(JSON.parse(JSON.stringify(checkinsData)));
+      setCheckInsData(checkinsData);
     }
   }, [checkinsData]);
 
-  // Fetch team members count when component mounts or when selected team changes
-  useEffect(() => {
-    const fetchTeamMembers = async () => {
-      try {
-        const response = await fetch("/api/teams");
-        const data = await response.json();
-        const memberCounts = data.teams.reduce(
-          (acc: Record<number, number>, team: TeamWithCount) => {
-            acc[team.id] = team.userCount;
-            return acc;
-          },
-          {}
-        );
-        setTeamMembers(memberCounts);
-      } catch (error) {
-        console.error("Error fetching team members:", error);
-      }
-    };
-
-    fetchTeamMembers();
-  }, []);
-
-  const groupedByDate = (goalsSummary || []).reduce(
-    (
-      acc: Record<
-        string,
-        Record<
-          string,
-          {
-            teamGoals: Record<number, Goal[]>;
-            teams: { name: string; id: number; slack_channel_id: string }[];
-          }
-        >
-      >,
-      entry
-    ) => {
-      const date = new Date(entry.checkin_date).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-      const fullName = `${entry.users.first_name} ${
-        entry.users.last_name ?? ""
-      }`;
-
-      if (!acc[date]) acc[date] = {};
-      if (!acc[date][fullName]) {
-        acc[date][fullName] = {
-          teamGoals: {},
-          teams: entry.users.user_team_mappings.map((mapping) => mapping.teams),
-        };
-      }
-
-      // Find the team based on slack_channel_id
-      const team = entry.users.user_team_mappings
-        .map((mapping) => mapping.teams)
-        .find((team) => team.slack_channel_id === entry.slack_channel_id);
-
-      const teamId = team?.id;
-      if (teamId && !acc[date][fullName].teamGoals[teamId]) {
-        acc[date][fullName].teamGoals[teamId] = [];
-      }
-      if (teamId) {
-        acc[date][fullName].teamGoals[teamId].push(...entry.goals);
-      }
-
-      return acc;
-    },
-    {}
-  );
-
   const isToday = currentDate.isSame(dayjs(), "day");
   const isFutureDate = currentDate.isAfter(dayjs(), "day");
-
-  const calculateDaySummary = (
-    users: Record<
-      string,
-      {
-        teamGoals: Record<number, Goal[]>;
-        teams: { name: string; id: number; slack_channel_id: string }[];
-      }
-    >
-  ) => {
-    // Get total members based on selected team or all teams
-    let totalMembers = 0;
-    if (selectedTeam) {
-      totalMembers = teamMembers[selectedTeam.id] || 0;
-    } else {
-      // Sum up unique members across all teams
-      const uniqueMembers = new Set<string>();
-      Object.values(users).forEach(({ teams: userTeams }) => {
-        userTeams.forEach((team) => {
-          if (teamMembers[team.id]) {
-            uniqueMembers.add(team.slack_channel_id);
-          }
-        });
-      });
-      totalMembers = Object.values(teamMembers).reduce(
-        (sum, count) => sum + count,
-        0
-      );
-    }
-
-    // Count participating users for the selected team or all teams
-    const participatingUsers = Object.entries(users).filter(([, userData]) => {
-      if (selectedTeam) {
-        return userData.teams.some((team) => team.id === selectedTeam.id);
-      }
-      return true;
-    }).length;
-
-    // Calculate absences
-    const absentUsers = Math.max(0, totalMembers - participatingUsers);
-
-    // Count SMART goals
-    let smartGoalUsers = 0;
-    Object.entries(users).forEach(([, userData]) => {
-      if (
-        selectedTeam &&
-        !userData.teams.some((team) => team.id === selectedTeam.id)
-      ) {
-        return;
-      }
-      const hasSmartGoal = Object.values(userData.teamGoals).some((goals) =>
-        goals.some((goal) => goal.is_smart)
-      );
-      if (hasSmartGoal) smartGoalUsers++;
-    });
-
-    return {
-      totalMembers,
-      participatingUsers,
-      absentUsers,
-      smartGoalUsers,
-      participationRate:
-        totalMembers > 0 ? (participatingUsers / totalMembers) * 100 : 0,
-      smartGoalRate:
-        participatingUsers > 0
-          ? (smartGoalUsers / participatingUsers) * 100
-          : 0,
-    };
-  };
 
   return (
     <Layout>
@@ -376,190 +232,310 @@ const Checkins: React.FC<CheckinProps> = ({
             gap: 16,
           }}
         >
-          {Object.entries(groupedByDate).length > 0 ? (
-            Object.entries(groupedByDate).map(([date, users]) => {
-              const summary = calculateDaySummary(users);
-              return (
-                <>
-                  {/* Day Summary Section */}
-                  <Card
-                    style={{
-                      marginBottom: 24,
-                      backgroundColor: "#fafafa",
-                      border: "1px solid #f0f0f0",
-                    }}
-                  >
-                    <Row gutter={[24, 24]}>
-                      <Col xs={24} sm={8}>
-                        <div style={{ textAlign: "center" }}>
-                          <Progress
-                            type="circle"
-                            percent={Math.round(summary.participationRate)}
-                            format={() => (
-                              <div>
-                                <div style={{ fontSize: "24px", fontWeight: "bold" }}>
-                                  {summary.participatingUsers}
-                                </div>
-                                <div style={{ fontSize: "12px", color: "#8c8c8c" }}>
-                                  of {summary.totalMembers}
-                                </div>
-                              </div>
-                            )}
-                          />
-                          <div style={{ marginTop: "12px", fontWeight: "500" }}>
-                            Participation
-                          </div>
+          {checkInsData ? (
+            <>
+              {/* Day Summary Section */}
+              <Card
+                style={{
+                  marginBottom: 24,
+                  backgroundColor: "#fafafa",
+                  border: "1px solid #f0f0f0",
+                }}
+              >
+                <Row gutter={[24, 24]}>
+                  <Col xs={24} sm={8}>
+                    <div style={{ textAlign: "center" }}>
+                      <Progress
+                        type="circle"
+                        percent={checkInsData.teamSummary.participation.percentage}
+                        format={(percent) => `${percent}%`}
+                      />
+                      <div style={{ marginTop: "12px", fontWeight: "500" }}>
+                        Participation ({checkInsData.teamSummary.participation.count} of {checkInsData.teamSummary.totalMembers})
+                      </div>
+                    </div>
+                  </Col>
+                  <Col xs={24} sm={8}>
+                    <div style={{ textAlign: "center" }}>
+                      <Progress
+                        type="circle"
+                        percent={checkInsData.teamSummary.blockers.percentage}
+                        format={(percent) => `${percent}%`}
+                        status="exception"
+                      />
+                      <div style={{ marginTop: "12px", fontWeight: "500" }}>
+                        Blockers ({checkInsData.teamSummary.blockers.count})
+                      </div>
+                    </div>
+                  </Col>
+                  <Col xs={24} sm={8}>
+                    <div style={{ textAlign: "center" }}>
+                      <Progress
+                        type="circle"
+                        percent={checkInsData.teamSummary.smart.percentage}
+                        format={(percent) => `${percent}%`}
+                        status="active"
+                      />
+                      <div style={{ marginTop: "12px", fontWeight: "500" }}>
+                        SMART Goals ({checkInsData.teamSummary.smart.smartGoals} of {checkInsData.teamSummary.smart.totalGoals})
+                      </div>
+                    </div>
+                  </Col>
+                </Row>
+              </Card>
+
+              {/* Checked In Users Section */}
+              <Card
+                style={{
+                  border: "1px solid #eee",
+                  padding: "16px",
+                  borderRadius: 8,
+                  backgroundColor: "#fff",
+                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
+                }}
+              >
+                <h2 style={{ marginBottom: 16 }}>
+                  Check-ins for {currentDate.format("MMM DD, YYYY")}
+                </h2>
+                
+                {/* Not Checked In Users Section */}
+                {checkInsData.notCheckedInUsers.length > 0 && (
+                  <div style={{ marginBottom: 32 }}>
+                    <h3 style={{ marginBottom: 16, color: "#ff4d4f" }}>
+                      ❌ Not Checked In ({checkInsData.notCheckedInUsers.length})
+                    </h3>
+                    <div style={{ 
+                      display: "flex", 
+                      flexWrap: "wrap", 
+                      gap: "8px",
+                      marginBottom: 16
+                    }}>
+                      {checkInsData.notCheckedInUsers.map((user) => (
+                        <div
+                          key={user.user_id}
+                          style={{
+                            backgroundColor: "#fff2f0",
+                            border: "1px solid #ffccc7",
+                            borderRadius: "6px",
+                            padding: "4px 8px",
+                            fontSize: "14px",
+                            color: "#a8071a",
+                          }}
+                        >
+                          {user.name}
                         </div>
-                      </Col>
-                      <Col xs={24} sm={8}>
-                        <div style={{ textAlign: "center" }}>
-                          <Progress
-                            type="circle"
-                            percent={100}
-                            format={() => (
-                              <div>
-                                <div style={{ fontSize: "24px", fontWeight: "bold" }}>
-                                  {summary.absentUsers}
-                                </div>
-                                <div style={{ fontSize: "12px", color: "#8c8c8c" }}>
-                                  members
-                                </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {checkInsData.checkedInUsers.length > 0 && (
+                  <div style={{ marginBottom: 32 }}>
+                    <h3 style={{ marginBottom: 16, color: "#52c41a" }}>
+                      ✅ Checked In ({checkInsData.checkedInUsers.length})
+                    </h3>
+                    
+                    {selectedTeam === null ? (
+                      // All Teams selected: group by team and show team header
+                      (() => {
+                        const usersByTeam: Record<number, typeof checkInsData.checkedInUsers> = checkInsData.checkedInUsers.reduce((acc: Record<number, typeof checkInsData.checkedInUsers>, user) => {
+                          const teamId = user.team_id;
+                          if (!acc[teamId]) {
+                            acc[teamId] = [];
+                          }
+                          acc[teamId].push(user);
+                          return acc;
+                        }, {});
+                        return Object.entries(usersByTeam).map(([teamId, users]) => {
+                          const teamIdNum = parseInt(teamId);
+                          const team = teams.find(t => t.id === teamIdNum);
+                          const teamName = team ? team.name : `Team ${teamIdNum}`;
+                          return (
+                            <div key={teamId} style={{ marginBottom: 24 }}>
+                              <div style={{
+                                backgroundColor: "#e6f7ff",
+                                padding: "10px 16px",
+                                borderRadius: "8px",
+                                marginBottom: "16px",
+                                borderLeft: "4px solid #1890ff",
+                                fontWeight: "600",
+                                fontSize: "16px"
+                              }}>
+                                {teamName}
                               </div>
-                            )}
-                            status="exception"
-                          />
-                          <div style={{ marginTop: "12px", fontWeight: "500" }}>
-                            Absences
-                          </div>
-                        </div>
-                      </Col>
-                      <Col xs={24} sm={8}>
-                        <div style={{ textAlign: "center" }}>
-                          <Progress
-                            type="circle"
-                            percent={Math.round(summary.smartGoalRate)}
-                            format={() => (
-                              <div>
-                                <div style={{ fontSize: "24px", fontWeight: "bold" }}>
-                                  {summary.smartGoalUsers}
+                              {users.map((user) => (
+                                <div key={user.user_id} style={{ marginBottom: 16, marginLeft: 16 }}>
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      marginBottom: 12,
+                                      backgroundColor: "#f8f9fa",
+                                      padding: "10px",
+                                      borderRadius: "8px",
+                                    }}
+                                  >
+                                    <span style={{ marginRight: 8, fontSize: 16 }}>
+                                      👤
+                                    </span>
+                                    <strong style={{ fontSize: 15 }}>{user.user.name}</strong>
+                                    {user.is_blocked && (
+                                      <span style={{ 
+                                        marginLeft: 8, 
+                                        color: "#ff4d4f",
+                                        fontSize: 14,
+                                        fontWeight: 500
+                                      }}>
+                                        🚫 Blocked
+                                      </span>
+                                    )}
+                                  </div>
+                                  {user.user.goals.length > 0 ? (
+                                    <ul
+                                      style={{
+                                        paddingLeft: 20,
+                                        margin: 0,
+                                        listStyle: "none",
+                                      }}
+                                    >
+                                      {user.user.goals.map((goal, idx: number) => (
+                                        <li
+                                          key={idx}
+                                          style={{
+                                            display: "flex",
+                                            alignItems: "flex-start",
+                                            gap: "8px",
+                                            backgroundColor: "#fff",
+                                            marginBottom: "8px",
+                                            padding: "8px",
+                                            borderRadius: "4px",
+                                            border: "1px solid #f0f0f0",
+                                          }}
+                                        >
+                                          <span style={{ marginTop: "2px" }}>
+                                            •
+                                          </span>
+                                          <span style={{ flex: 1 }}>
+                                            {goal.goal_text}
+                                            {goal.is_smart && (
+                                              <span style={{ 
+                                                marginLeft: 8, 
+                                                color: "#1890ff",
+                                                fontSize: 12,
+                                                fontWeight: 500
+                                              }}>
+                                                SMART
+                                              </span>
+                                            )}
+                                          </span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  ) : (
+                                    <p
+                                      style={{
+                                        margin: "0 0 0 20px",
+                                        color: "#666",
+                                        fontStyle: "italic",
+                                      }}
+                                    >
+                                      No goals set for today.
+                                    </p>
+                                  )}
                                 </div>
-                                <div style={{ fontSize: "12px", color: "#8c8c8c" }}>
-                                  of {summary.participatingUsers}
-                                </div>
-                              </div>
-                            )}
-                            status="active"
-                          />
-                          <div style={{ marginTop: "12px", fontWeight: "500" }}>
-                            SMART Goals
-                          </div>
-                        </div>
-                      </Col>
-                    </Row>
-                  </Card>
-                  <Card
-                    key={date}
-                    style={{
-                      border: "1px solid #eee",
-                      padding: "16px",
-                      borderRadius: 8,
-                      backgroundColor: "#fff",
-                      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
-                    }}
-                  >
-                    <h2 style={{ marginBottom: 16 }}>{date}</h2>
-                    {/* Existing user entries */}
-                    {Object.entries(users).map(
-                      ([fullName, { teamGoals, teams }]) => (
-                        <div key={fullName} style={{ marginBottom: 24 }}>
+                              ))}
+                            </div>
+                          );
+                        });
+                      })()
+                    ) : (
+                      // Specific team selected: just show users
+                      checkInsData.checkedInUsers.map((user) => (
+                        <div key={user.user_id} style={{ marginBottom: 16 }}>
                           <div
                             style={{
                               display: "flex",
                               alignItems: "center",
-                              marginBottom: 16,
+                              marginBottom: 12,
                               backgroundColor: "#f8f9fa",
-                              padding: "12px",
+                              padding: "10px",
                               borderRadius: "8px",
                             }}
                           >
-                            <span style={{ marginRight: 8, fontSize: 18 }}>
+                            <span style={{ marginRight: 8, fontSize: 16 }}>
                               👤
                             </span>
-                            <strong style={{ fontSize: 16 }}>{fullName}</strong>
+                            <strong style={{ fontSize: 15 }}>{user.user.name}</strong>
+                            {user.is_blocked && (
+                              <span style={{ 
+                                marginLeft: 8, 
+                                color: "#ff4d4f",
+                                fontSize: 14,
+                                fontWeight: 500
+                              }}>
+                                🚫 Blocked
+                              </span>
+                            )}
                           </div>
-                          {teams.map((team) => (
-                            <div key={team.id} style={{ marginBottom: 20 }}>
-                              <div
-                                style={{
-                                  marginBottom: "12px",
-                                }}
-                              >
-                                <span
+                          {user.user.goals.length > 0 ? (
+                            <ul
+                              style={{
+                                paddingLeft: 20,
+                                margin: 0,
+                                listStyle: "none",
+                              }}
+                            >
+                              {user.user.goals.map((goal, idx: number) => (
+                                <li
+                                  key={idx}
                                   style={{
-                                    color: "#595959",
-                                    fontSize: "14px",
-                                    fontWeight: 500,
-                                    backgroundColor: "#f5f5f5",
-                                    padding: "4px 12px",
-                                    borderRadius: "6px",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    gap: "4px",
+                                    display: "flex",
+                                    alignItems: "flex-start",
+                                    gap: "8px",
+                                    backgroundColor: "#fff",
+                                    marginBottom: "8px",
+                                    padding: "8px",
+                                    borderRadius: "4px",
+                                    border: "1px solid #f0f0f0",
                                   }}
                                 >
-                                  🏢 {team.name}
-                                </span>
-                              </div>
-                              {teamGoals[team.id]?.length > 0 ? (
-                                <ul
-                                  style={{
-                                    paddingLeft: 20,
-                                    margin: 0,
-                                    listStyle: "none",
-                                  }}
-                                >
-                                  {teamGoals[team.id].map((goal, idx) => (
-                                    <li
-                                      key={idx}
-                                      style={{
-                                        display: "flex",
-                                        alignItems: "flex-start",
-                                        gap: "8px",
-                                        backgroundColor: "#fff",
-                                      }}
-                                    >
-                                      <span style={{ marginTop: "2px" }}>
-                                        •
+                                  <span style={{ marginTop: "2px" }}>
+                                    •
+                                  </span>
+                                  <span style={{ flex: 1 }}>
+                                    {goal.goal_text}
+                                    {goal.is_smart && (
+                                      <span style={{ 
+                                        marginLeft: 8, 
+                                        color: "#1890ff",
+                                        fontSize: 12,
+                                        fontWeight: 500
+                                      }}>
+                                        SMART
                                       </span>
-                                      <span style={{ flex: 1 }}>
-                                        {goal.goal_text}{" "}
-                                        {goal.goal_progress?.length > 0 &&
-                                          (goal.goal_progress[0].is_met
-                                            ? "✅"
-                                            : "❌")}
-                                      </span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              ) : (
-                                <p
-                                  style={{
-                                    margin: "0 0 0 20px",
-                                    color: "#666",
-                                  }}
-                                >
-                                  No goals for this team.
-                                </p>
-                              )}
-                            </div>
-                          ))}
+                                    )}
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p
+                              style={{
+                                margin: "0 0 0 20px",
+                                color: "#666",
+                                fontStyle: "italic",
+                              }}
+                            >
+                              No goals set for today.
+                            </p>
+                          )}
                         </div>
-                      )
+                      ))
                     )}
-                  </Card>
-                </>
-              );
-            })
+                  </div>
+                )}
+              </Card>
+            </>
           ) : (
             <Card
               style={{

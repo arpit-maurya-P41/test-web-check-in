@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/prisma";
+import { removeFutureCheckins } from "@/utils/helper";
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,6 +29,8 @@ export async function POST(req: NextRequest) {
     await prisma.user_team_role.deleteMany({
       where: { team_id: teamId },
     });
+
+    await removeFutureCheckins(undefined, teamId);
 
     return NextResponse.json({ success: true });
   } catch (error) {

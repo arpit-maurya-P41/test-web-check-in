@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/prisma";
+import { removeFutureCheckins } from "@/utils/helper";
+import { insertCheckinsForNewUser } from "@/utils/cronCheckins";
 
 export async function GET() {
   console.log("Detected GET request");
@@ -72,6 +74,31 @@ export async function POST(req: Request) {
       await prisma.user_team_mappings.deleteMany({
         where: { user_id: existingUser.id },
       });
+
+      const previousRoles = await prisma.user_team_role.findMany({
+        where: {
+          user_id: existingUser.id,
+        },
+        select: {
+          team_id: true,
+        },
+      });
+
+      const removedTeamIds = previousRoles
+      .map((r) => r.team_id)
+      .filter((id) => !body.user_team_mappings.includes(id));
+
+      await prisma.user_team_role.deleteMany({
+        where: {
+          user_id: existingUser.id,
+          team_id: {
+            in: removedTeamIds,
+          },
+        },
+      });
+
+      await removeFutureCheckins(existingUser.id, removedTeamIds);
+
       await prisma.user_team_mappings.createMany({
         data: body.user_team_mappings.map((id: number) => ({
           user_id: existingUser.id,
@@ -97,6 +124,9 @@ export async function POST(req: Request) {
           });
         }
       }
+
+      await insertCheckinsForNewUser(existingUser.id, body.user_team_mappings);
+
     }else {
       const user = await prisma.users.create({
         data: {
@@ -126,6 +156,7 @@ export async function POST(req: Request) {
           },
         });
       }
+      await insertCheckinsForNewUser(user.id, body.user_team_mappings);
     }
     const users = await prisma.users.findMany({
       orderBy: { id: "asc" },

@@ -26,6 +26,14 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Record not found" }, { status: 404 });
     }
 
+    await prisma.daily_user_checkins.updateMany({
+      where: {
+        user_id,
+        team_id,
+      },
+      data: { is_active : check_in },
+    });
+
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("Check-in update error:", err);

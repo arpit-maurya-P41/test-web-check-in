@@ -337,6 +337,24 @@ const Dashboard: React.FC<DashboardProps> = ({
     autoFit: true,
   };
 
+  const predefinedRanges: Record<string, [dayjs.Dayjs, dayjs.Dayjs]> = {
+    Today: [dayjs(), dayjs()],
+    Yesterday: [dayjs().subtract(1, "day"), dayjs().subtract(1, "day")],
+    "Last 7 Days": [dayjs().subtract(6, "day"), dayjs()],
+    "Last 14 Days": [dayjs().subtract(13, "day"), dayjs()],
+    "Last 30 Days": [dayjs().subtract(29, "day"), dayjs()],
+    "This Month": [
+      dayjs().startOf("month"),
+      dayjs().isSame(dayjs().endOf("month"), "day")
+        ? dayjs().endOf("month")
+        : dayjs(),
+    ],
+    "Last Month": [
+      dayjs().subtract(1, "month").startOf("month"),
+      dayjs().subtract(1, "month").endOf("month"),
+    ],
+  };
+
   return (
     <Layout>
       <Sidebar
@@ -413,6 +431,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                     }}
                     allowClear
                     maxDate={dayjs()}
+                    presets={Object.entries(predefinedRanges).map(
+                      ([label, range]) => ({
+                        label,
+                        value: range,
+                      })
+                    )}
+                    size="small"
                   />
                 </div>
 
@@ -421,6 +446,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   value={selectedTeams}
                   onChange={handleTeamChange}
                   style={{ minWidth: 240 }}
+                  size="large"
                 >
                   {isAdmin && (
                     <Option key={ALL_TEAMS} value={ALL_TEAMS}>
@@ -444,6 +470,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   value={selectedUsers}
                   onChange={handleUserChange}
                   style={{ minWidth: 240, maxWidth: 500 }}
+                  size="large"
                 >
                   {usersData.map((user) => (
                     <Option key={user.id} value={user.id}>
