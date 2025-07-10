@@ -375,8 +375,8 @@ const Checkins: React.FC<CheckinProps> = ({
                               }}>
                                 {teamName}
                               </div>
-                              {users.map((user) => (
-                                <div key={user.user_id} style={{ marginBottom: 16, marginLeft: 16 }}>
+                              {users.map((user, index) => (
+                                <div key={`${user.user_id}-${user.team_id}-${index}`} style={{ marginBottom: 16, marginLeft: 16 }}>
                                   <div
                                     style={{
                                       display: "flex",
@@ -462,8 +462,8 @@ const Checkins: React.FC<CheckinProps> = ({
                       })()
                     ) : (
                       // Specific team selected: just show users
-                      checkInsData.checkedInUsers.map((user) => (
-                        <div key={user.user_id} style={{ marginBottom: 16 }}>
+                      checkInsData.checkedInUsers.map((user, index) => (
+                        <div key={`${user.user_id}-${user.team_id}-${index}`} style={{ marginBottom: 16 }}>
                           <div
                             style={{
                               display: "flex",
