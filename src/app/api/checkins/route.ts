@@ -104,15 +104,19 @@ export async function GET(req: NextRequest) {
     let smartGoals = 0;
     let blockerCount = 0;
     const checkedInUsers = [];
-    const notCheckedInUsers = [];
+    const notCheckedInUsers: { user_id: number; name: string }[] = [];
+    const notCheckedUserIds = new Set<number>();
 
     for (const entry of dailyCheckins) {
       const checkin = checkinMap.get(entry.user_id);
       if (!checkin) {
-        notCheckedInUsers.push({
-          user_id: entry.user_id,
-          name: `${entry.users.first_name} ${entry.users.last_name}`,
-        });
+        if (!notCheckedUserIds.has(entry.user_id)) {
+          notCheckedUserIds.add(entry.user_id);
+          notCheckedInUsers.push({
+            user_id: entry.user_id,
+            name: `${entry.users.first_name} ${entry.users.last_name}`,
+          });
+        }
         continue;
       }
       const goals = checkin?.goals || [];
