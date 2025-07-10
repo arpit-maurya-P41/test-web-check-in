@@ -89,7 +89,7 @@ const Checkins: React.FC<CheckinProps> = ({
     return params.toString();
   };
 
-  const { data: checkinsData } = useFetch<CheckinAPIResponse>(
+  const { data: checkinsData, loading } = useFetch<CheckinAPIResponse>(
     `/api/checkins?${buildQueryParams()}`,
     {
       dependencies: [selectedTeam, currentDate],
@@ -97,7 +97,7 @@ const Checkins: React.FC<CheckinProps> = ({
   );
 
   useEffect(() => {
-    if (checkinsData) {
+    if (checkinsData && !loading) {
       setCheckInsData({
         date: checkinsData.date,
         teamSummary: checkinsData.teamSummary,
@@ -105,7 +105,7 @@ const Checkins: React.FC<CheckinProps> = ({
         notCheckedInUsers: checkinsData.notCheckedInUsers || []
       });
     }
-  }, [checkinsData]);
+  }, [checkinsData, loading]);
 
   const isToday = currentDate.isSame(dayjs(), "day");
   const isFutureDate = currentDate.isAfter(dayjs(), "day");
@@ -237,7 +237,7 @@ const Checkins: React.FC<CheckinProps> = ({
             gap: 16,
           }}
         >
-          {checkInsData ? (
+          {checkInsData && !loading ? (
             <>
               {/* Day Summary Section */}
               <Card
@@ -541,6 +541,23 @@ const Checkins: React.FC<CheckinProps> = ({
                 )}
               </Card>
             </>
+          ) : loading ? (
+            <Card
+              style={{
+                border: "1px solid #eee",
+                padding: "16px",
+                borderRadius: 8,
+                backgroundColor: "#fff",
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
+                textAlign: "center",
+              }}
+            >
+              <div
+                style={{ fontSize: "16px", color: "#666", marginBottom: "8px" }}
+              >
+                Loading check-ins for {currentDate.format("MMM DD, YYYY")}...
+              </div>
+            </Card>
           ) : (
             <Card
               style={{
