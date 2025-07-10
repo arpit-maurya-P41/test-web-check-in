@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/prisma";
 import { getDateRange } from "@/utils/dateUtils";
-import { isUserAdmin, isUserManager } from "@/app/actions/dashboardActions";
+import { getAllTeams, getUserTeams, isUserAdmin } from "@/app/actions/dashboardActions";
 
 export async function GET(req: NextRequest) {
     console.log("Detected GET request");
@@ -22,49 +22,19 @@ export async function GET(req: NextRequest) {
             endDate = new Date();
         }
 
-        // Get accessible teams based on user role
         let accessibleTeamIds: number[] = [];
         
         if (requestingUserId) {
             const isAdmin = await isUserAdmin(requestingUserId);
             if (isAdmin) {
-                // Admin can access all teams
-                const allTeams = await prisma.teams.findMany({
-                    where: { is_active: true },
-                    select: { id: true }
-                });
+                const allTeams = await getAllTeams();
                 accessibleTeamIds = allTeams.map(team => team.id);
             } else {
-                const isManager = await isUserManager(requestingUserId);
-                if (isManager) {
-                    // Get teams where user is manager
-                    const managerTeams = await prisma.user_team_role.findMany({
-                        where: {
-                            user_id: Number(requestingUserId),
-                            roles: {
-                                role_name: {
-                                    equals: "Manager",
-                                    mode: "insensitive"
-                                }
-                            }
-                        },
-                        select: { team_id: true }
-                    });
-                    accessibleTeamIds = managerTeams.map(team => team.team_id);
-                } else {
-                    // Get teams where user is a member
-                    const userTeams = await prisma.user_team_mappings.findMany({
-                        where: {
-                            user_id: Number(requestingUserId)
-                        },
-                        select: { team_id: true }
-                    });
-                    accessibleTeamIds = userTeams.map(team => team.team_id);
-                }
+                const userTeams = await getUserTeams(requestingUserId);
+                accessibleTeamIds = userTeams.map(team => team.id);
             }
         }
 
-        // Build where clause for checkins query
         const whereClause: {
             check_in_date: {
                 gte: Date;

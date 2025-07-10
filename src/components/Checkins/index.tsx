@@ -164,6 +164,7 @@ const Checkins: React.FC<CheckinProps> = ({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  cursor: "pointer"
                 }}
                 onClick={handleAllTeamsClick}
               >
