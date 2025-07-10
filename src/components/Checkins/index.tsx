@@ -11,7 +11,7 @@ import {
   Progress,
 } from "antd";
 import Sidebar from "../Sidebar";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   DownOutlined,
   LogoutOutlined,
@@ -74,7 +74,7 @@ const Checkins: React.FC<CheckinProps> = ({
     setSelectedTeam(null);
   };
 
-  const buildQueryParams = () => {
+  const queryParams = useMemo(() => {
     const params = new URLSearchParams();
     const dateStr = currentDate.format("YYYY-MM-DD");
     if (selectedTeam) {
@@ -86,13 +86,16 @@ const Checkins: React.FC<CheckinProps> = ({
     // Add user ID and role information
     params.append("userId", userId);
     params.append("isAdmin", isAdmin.toString());    
-    return params.toString();
-  };
+    const result = params.toString();
+    console.log('Query params changed:', result);
+    return result;
+  }, [selectedTeam, currentDate, userId, isAdmin]);
 
   const { data: checkinsData } = useFetch<CheckinAPIResponse>(
-    `/api/checkins?${buildQueryParams()}`,
+    queryParams ? `/api/checkins?${queryParams}` : '',
     {
-      dependencies: [selectedTeam, currentDate],
+      dependencies: [queryParams],
+      skipOnMount: !queryParams,
     }
   );
 
