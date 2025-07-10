@@ -58,7 +58,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [dashboardData, setDashboardData] = useState<DashboardData[]>([]);
   const [dates, setDates] = useState<[Dayjs, Dayjs]>(getDefaultDates());
   const [selectedTeams, setSelectedTeams] = useState<string>(
-    teams[0]?.slack_channel_id
+    teams[0]?.id.toString()
   );
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [blockedData, setBlockedData] = useState<PercentageData[]>([]);
@@ -66,13 +66,20 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [usersData, setUsersData] = useState<users[]>([]);
 
   const handleTeamChange = async (value: string) => {
-    setSelectedTeams(value ?? teams[0]?.slack_channel_id);
-    const selectedTeam = teams.find((t) => t.slack_channel_id === value);
-    const teamId = selectedTeam?.id;
-
-    if (teamId) {
-      const teamUsers = await getTeamUsers(teamId);
-      setUsersData(teamUsers);
+    setSelectedTeams(value);
+    if (value === "all") {
+      const allUsers = await Promise.all(teams.map(team => getTeamUsers(team.id)));
+      const uniqueUsers = Array.from(
+        new Map(allUsers.flat().map(user => [user.id, user])).values()
+      );
+      setUsersData(uniqueUsers);
+    } else {
+      const selectedTeam = teams.find((t) => t.id.toString() === value);
+      const teamId = selectedTeam?.id;
+      if (teamId) {
+        const teamUsers = await getTeamUsers(teamId);
+        setUsersData(teamUsers);
+      }
     }
   };
 
@@ -89,9 +96,10 @@ const Dashboard: React.FC<DashboardProps> = ({
 
     params.append("startDate", startDate);
     params.append("endDate", endDate);
+    params.append("requestingUserId", userId);
 
-    if (selectedTeams) {
-      params.append("teamChannelId", selectedTeams.toString());
+    if (selectedTeams && selectedTeams !== "all") {
+      params.append("teamId", selectedTeams.toString());
     }
 
     if (selectedUsers.length > 0) {
@@ -126,14 +134,23 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   useEffect(() => {
     const fetchInitialUsers = async () => {
-      const defaultTeam = teams[0];
-      if (defaultTeam?.id) {
-        const teamUsers = await getTeamUsers(defaultTeam.id);
-        setUsersData(teamUsers);
+      if (teams.length > 0) {
+        const defaultTeam = teams[0];
+        if (defaultTeam?.id) {
+          const teamUsers = await getTeamUsers(defaultTeam.id);
+          setUsersData(teamUsers);
+        }
       }
     };
     fetchInitialUsers();
   }, [teams]);
+
+  // Set initial selected team
+  useEffect(() => {
+    if (teams.length > 0) {
+      setSelectedTeams(isAdmin ? "all" : teams[0]?.id.toString());
+    }
+  }, [teams, isAdmin]);
 
   const config = {
     data: dashboardData,
@@ -167,8 +184,11 @@ const Dashboard: React.FC<DashboardProps> = ({
       },
     },
     label: {
-      text: (d: DashboardData) =>
-        d.percentage === null ? "" : `${d.percentage}`,
+      text: (d: DashboardData) => {
+        // Improved handling for null/undefined percentage values
+        if (d.percentage === null || d.percentage === undefined) return "";
+        return `${d.percentage}`;
+      },
       position: "inside",
       style: {
         fill: "#fff",
@@ -291,10 +311,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                   style={{ minWidth: 240 }}
                   size="large"
                 >
+                  <Option key="all" value="all">All Teams</Option>
                   {teams.map((team) => (
                     <Option
-                      key={team.slack_channel_id}
-                      value={team.slack_channel_id}
+                      key={team.id}
+                      value={team.id.toString()}
                     >
                       {team.name}
                     </Option>
@@ -321,7 +342,14 @@ const Dashboard: React.FC<DashboardProps> = ({
           </Row>
           <Row>
             <Col span={24} style={{ padding: 8 }}>
-              <Title level={2}>Smart Goals</Title>
+              <Title level={2} style={{ display: "flex", alignItems: "center",justifyContent: "space-between" }}>
+                Smart Goals
+                {dashboardData.length > 0 && (
+                  <Title level={2} style={{color: "#1677ff"}}>
+                    {Math.round(dashboardData.reduce((sum, item) => sum + (item.percentage || 0), 0) / dashboardData.length * 100) / 100} %
+                  </Title>
+                )}
+              </Title>
               {config.data && config.data.length > 0 ? (
                 <Heatmap {...config} />
               ) : (
@@ -329,14 +357,28 @@ const Dashboard: React.FC<DashboardProps> = ({
                   No data available
                 </div>
               )}
-              <Title level={2}>Blockers</Title>
+              <Title level={2} style={{ display: "flex", alignItems: "center",justifyContent: "space-between" }}>
+                Blockers
+                {blockedData.length > 0 && (
+                  <Title level={2} style={{color: "#1677ff"}}>
+                    {Math.round(blockedData.reduce((sum, item) => sum + (item.percentage || 0), 0) / blockedData.length)}%
+                  </Title>
+                )}
+              </Title>
               <PercentageLineChart
                 title="Blocked Users Percentage"
                 data={blockedData}
                 yLabel="Blocked Users (%)"
                 color="#f5222d"
               />
-              <Title level={2}>Participation</Title>
+              <Title level={2} style={{ display: "flex", alignItems: "center",justifyContent: "space-between" }}>
+                Participation
+                {checkinData.length > 0 && (
+                  <Title level={2} style={{color: "#1677ff"}}>
+                    {Math.round(checkinData.reduce((sum, item) => sum + (item.percentage || 0), 0) / checkinData.length)}%
+                  </Title>
+                )}
+              </Title>
               <PercentageLineChart
                 title="Check-in Users Percentage"
                 data={checkinData}

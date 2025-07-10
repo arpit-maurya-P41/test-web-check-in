@@ -100,7 +100,46 @@ export async function getDashboardData(userId: string) {
   return userId;
 }
 
-export async function getTeams(userId: string) {
+export async function getAllTeams() {
+  const teams = await prisma.teams.findMany({
+    where: {
+      is_active: true
+    },
+    orderBy: { id: "asc" },
+  });
+  return teams;
+}
+
+export async function getManagerTeams(userId: string) {
+  const managerTeams = await prisma.user_team_role.findMany({
+    where: {
+      user_id: Number(userId),
+      roles: {
+        role_name: {
+          equals: "Manager",
+          mode: "insensitive"
+        }
+      }
+    },
+    select: {
+      team_id: true
+    }
+  });
+
+  const teams = await prisma.teams.findMany({
+    where: {
+      id: {
+        in: managerTeams.map((team) => team.team_id),
+      },
+      is_active: true
+    },
+    orderBy: { id: "asc" },
+  });
+
+  return teams;
+}
+
+export async function getUserTeams(userId: string) {
   const userTeams = await prisma.user_team_mappings.findMany({
     where: {
       user_id: Number(userId),
@@ -112,11 +151,26 @@ export async function getTeams(userId: string) {
       id: {
         in: userTeams.map((team) => team.team_id),
       },
+      is_active: true
     },
     orderBy: { id: "asc" },
   });
 
   return teams;
+}
+
+export async function getTeams(userId: string) {
+  const isAdmin = await isUserAdmin(userId);
+  if (isAdmin) {
+    return getAllTeams();
+  }
+
+  const isManager = await isUserManager(userId);
+  if (isManager) {
+    return getManagerTeams(userId);
+  }
+
+  return getUserTeams(userId);
 }
 
 export async function getTeamUsers(teamId: number) {

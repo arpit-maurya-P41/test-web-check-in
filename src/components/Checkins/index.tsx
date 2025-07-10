@@ -83,9 +83,7 @@ const Checkins: React.FC<CheckinProps> = ({
     
     // Add user ID and role information
     params.append("userId", userId);
-    params.append("isAdmin", isAdmin.toString());
-    params.append("isManager", (isManager || false).toString());
-    
+    params.append("isAdmin", isAdmin.toString());    
     return params.toString();
   };
 
