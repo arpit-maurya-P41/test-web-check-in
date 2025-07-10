@@ -146,8 +146,8 @@ model daily_user_checkins {
   team_id        Int
   check_in_date  DateTime  @db.Date
   has_checked_in Boolean?  @default(false)
-  is_blocked     Boolean?
-  smart_goals    Int?
+  is_blocked     Boolean?  @default(false)
+  smart_goals    Int?      @default(0)
   is_active      Boolean?  @default(true)
   created_at     DateTime? @default(now()) @db.Timestamp(6)
   updated_at     DateTime? @default(now()) @db.Timestamp(6)
