@@ -89,7 +89,7 @@ const Checkins: React.FC<CheckinProps> = ({
     return params.toString();
   };
 
-  const { data: checkinsData, loading } = useFetch<CheckinAPIResponse>(
+  const { data: checkinsData } = useFetch<CheckinAPIResponse>(
     `/api/checkins?${buildQueryParams()}`,
     {
       dependencies: [selectedTeam, currentDate],
@@ -97,7 +97,7 @@ const Checkins: React.FC<CheckinProps> = ({
   );
 
   useEffect(() => {
-    if (checkinsData && !loading) {
+    if (checkinsData) {
       setCheckInsData({
         date: checkinsData.date,
         teamSummary: checkinsData.teamSummary,
@@ -105,7 +105,7 @@ const Checkins: React.FC<CheckinProps> = ({
         notCheckedInUsers: checkinsData.notCheckedInUsers || []
       });
     }
-  }, [checkinsData, loading]);
+  }, [checkinsData]);
 
   const isToday = currentDate.isSame(dayjs(), "day");
   const isFutureDate = currentDate.isAfter(dayjs(), "day");
@@ -237,7 +237,7 @@ const Checkins: React.FC<CheckinProps> = ({
             gap: 16,
           }}
         >
-          {checkInsData && !loading ? (
+          {checkInsData ? (
             <>
               {/* Day Summary Section */}
               <Card
@@ -252,8 +252,8 @@ const Checkins: React.FC<CheckinProps> = ({
                     <div style={{ textAlign: "center" }}>
                       <Progress
                         type="circle"
-                        percent={checkInsData.teamSummary.participation.percentage}
-                        format={(percent) => `${percent}%`}
+                        percent={Math.round(checkInsData.teamSummary.participation.percentage || 0)}
+                        format={(percent) => `${Math.round(percent || 0)}%`}
                       />
                       <div style={{ marginTop: "12px", fontWeight: "500" }}>
                         Participation ({checkInsData.teamSummary.participation.count} of {checkInsData.teamSummary.totalMembers})
@@ -264,8 +264,8 @@ const Checkins: React.FC<CheckinProps> = ({
                     <div style={{ textAlign: "center" }}>
                       <Progress
                         type="circle"
-                        percent={checkInsData.teamSummary.blockers.percentage}
-                        format={(percent) => `${percent}%`}
+                        percent={Math.round(checkInsData.teamSummary.blockers.percentage || 0)}
+                        format={(percent) => `${Math.round(percent || 0)}%`}
                         status="exception"
                       />
                       <div style={{ marginTop: "12px", fontWeight: "500" }}>
@@ -277,8 +277,8 @@ const Checkins: React.FC<CheckinProps> = ({
                     <div style={{ textAlign: "center" }}>
                       <Progress
                         type="circle"
-                        percent={checkInsData.teamSummary.smart.percentage}
-                        format={(percent) => `${percent}%`}
+                        percent={Math.round(checkInsData.teamSummary.smart.percentage || 0)}
+                        format={(percent) => `${Math.round(percent || 0)}%`}
                         status="active"
                       />
                       <div style={{ marginTop: "12px", fontWeight: "500" }}>
@@ -541,23 +541,6 @@ const Checkins: React.FC<CheckinProps> = ({
                 )}
               </Card>
             </>
-          ) : loading ? (
-            <Card
-              style={{
-                border: "1px solid #eee",
-                padding: "16px",
-                borderRadius: 8,
-                backgroundColor: "#fff",
-                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
-                textAlign: "center",
-              }}
-            >
-              <div
-                style={{ fontSize: "16px", color: "#666", marginBottom: "8px" }}
-              >
-                Loading check-ins for {currentDate.format("MMM DD, YYYY")}...
-              </div>
-            </Card>
           ) : (
             <Card
               style={{
