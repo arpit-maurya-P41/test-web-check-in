@@ -37,11 +37,19 @@ export type Goal = {
     checkin_date: string;
     blocker: string | null;
     feeling: string | null;
+    slack_channel_id: string;
     goals: Goal[];
     users: {
         first_name: string;
         last_name: string;
-      };
+        user_team_mappings: {
+          teams: {
+            name: string;
+            id: number;
+            slack_channel_id: string;
+          }
+        }[];
+    };
   };
 
 export type FormValues = {
@@ -153,4 +161,41 @@ export type DashboardApiResponse = {
   smartCheckins: DashboardData[];
   blockedUsersCount: PercentageData[];
   checkinUserPercentageByDate: PercentageData[];
+}
+
+export type CheckinAPIResponse = {
+  date: string;
+  teamSummary: {
+    totalMembers: number;
+    participation: {
+      count: number;
+      percentage: number;
+    };
+    blockers: {
+      count: number;
+      percentage: number;
+    };
+    smart: {
+      totalGoals: number;
+      smartGoals: number;
+      percentage: number;
+    };
+  };
+  checkedInUsers: Array<{
+    user_id: number;
+    team_id: number;
+    has_checked_in: boolean;
+    is_blocked: boolean;
+    user: {
+      name: string;
+      goals: Array<{
+        is_smart: boolean;
+        goal_text: string;
+      }>;
+    };
+  }>;
+  notCheckedInUsers: Array<{
+    user_id: number;
+    name: string;
+  }>;
 }
