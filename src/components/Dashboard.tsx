@@ -187,7 +187,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       text: (d: DashboardData) => {
         // Improved handling for null/undefined percentage values
         if (d.percentage === null || d.percentage === undefined) return "";
-        return `${d.percentage}`;
+        return `${Math.round(d.percentage)}`;
       },
       position: "inside",
       style: {
@@ -346,7 +346,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 Smart Goals
                 {dashboardData.length > 0 && (
                   <Title level={2} style={{color: "#1677ff"}}>
-                    {Math.round(dashboardData.reduce((sum, item) => sum + (item.percentage || 0), 0) / dashboardData.length * 100) / 100} %
+                    {Math.round(dashboardData.reduce((sum, item) => sum + (item.percentage || 0), 0) / dashboardData.length)} %
                   </Title>
                 )}
               </Title>
