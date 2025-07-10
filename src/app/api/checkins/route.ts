@@ -7,20 +7,62 @@ export async function GET(req: NextRequest) {
 
     const date = searchParams.get("date");
     const teamId = searchParams.get("teamId");
+    const userId = searchParams.get("userId");
+    const isAdmin = searchParams.get("isAdmin") === "true";
 
     if (!date) {
       return NextResponse.json({ error: "Missing 'date'" }, { status: 400 });
     }
 
-    const dailyCheckins = await prisma.daily_user_checkins.findMany({
-      where: {
-        is_active: true,
-        check_in_date: {
-          gte: new Date(`${date}T00:00:00.000Z`),
-          lte: new Date(`${date}T23:59:59.999Z`),
+    if (!userId) {
+      return NextResponse.json({ error: "Missing 'userId'" }, { status: 400 });
+    }
+
+    // If teamId is provided, use it directly
+    // If no teamId (All Teams) and not admin, get user's accessible teams
+    let accessibleTeamIds: number[] = [];
+    
+    if (!teamId && !isAdmin) {
+      const userTeams = await prisma.user_team_mappings.findMany({
+        where: {
+          user_id: Number(userId),
         },
-        ...(teamId ? { team_id: Number(teamId) } : {}),
+        select: {
+          team_id: true,
+        },
+      });
+      
+      accessibleTeamIds = userTeams.map(team => team.team_id);
+      
+      if (accessibleTeamIds.length === 0) {
+        // If user has no teams, return empty response
+        return NextResponse.json({
+          date,
+          teamSummary: {
+            totalMembers: 0,
+            participation: { count: 0, percentage: 0 },
+            blockers: { count: 0, percentage: 0 },
+            smart: { totalGoals: 0, smartGoals: 0, percentage: 0 },
+          },
+          checkedInUsers: [],
+          notCheckedInUsers: []
+        });
+      }
+    }
+
+    // Build the where clause for daily_user_checkins
+    const whereClause = {
+      is_active: true,
+      check_in_date: {
+        gte: new Date(`${date}T00:00:00.000Z`),
+        lte: new Date(`${date}T23:59:59.999Z`),
       },
+      ...(teamId ? { team_id: Number(teamId) } : {}),
+      ...(!teamId && !isAdmin ? { team_id: { in: accessibleTeamIds } } : {}),
+    };
+
+    const dailyCheckins = await prisma.daily_user_checkins.findMany({
+      where: whereClause,
       include: {
         users: {
           select: {
@@ -41,6 +83,7 @@ export async function GET(req: NextRequest) {
           lte: new Date(`${date}T23:59:59.999Z`),
         },
         ...(teamId ? { team_id: Number(teamId) } : {}),
+        ...(!teamId && !isAdmin ? { team_id: { in: accessibleTeamIds } } : {}),
       },
       select: {
         user_id: true,
@@ -53,7 +96,6 @@ export async function GET(req: NextRequest) {
         },
       },
     });
-
 
     const checkinMap = new Map<number, typeof checkins[0]>();
     checkins.forEach((c) => checkinMap.set(c.user_id, c));
@@ -82,7 +124,6 @@ export async function GET(req: NextRequest) {
       }
 
       if (checkin.blocker) blockerCount++;
-      
       checkedInUsers.push({
         user_id: entry.user_id,
         team_id: entry.team_id,
@@ -121,9 +162,8 @@ export async function GET(req: NextRequest) {
     };
 
     return NextResponse.json(response);
-
   } catch (error) {
-    console.error("Error Detacted in checkins GET Request", error);
+    console.error("Error Detected in checkins GET Request", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }
