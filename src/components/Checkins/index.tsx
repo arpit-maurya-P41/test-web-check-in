@@ -9,7 +9,11 @@ import {
   Row,
   Col,
   Progress,
+  Modal,
+  DatePicker,
+  message,
 } from "antd";
+import Papa from 'papaparse';
 import Sidebar from "../Sidebar";
 import { useEffect, useState, useMemo } from "react";
 import {
@@ -19,6 +23,7 @@ import {
   MenuUnfoldOutlined,
   LeftOutlined,
   RightOutlined,
+  DownloadOutlined,
 } from "@ant-design/icons";
 import { logoutUser } from "@/app/actions/authActions";
 import { useSidebarStore } from "@/store/sidebarStore";
@@ -28,6 +33,7 @@ import { CheckinProps, Team } from "@/type/PropTypes";
 import dayjs, { Dayjs } from "dayjs";
 import { useFetch } from "@/utils/useFetch";
 const { Header, Content } = Layout;
+const { RangePicker } = DatePicker;
 
 const Checkins: React.FC<CheckinProps> = ({
   userId,
@@ -42,6 +48,121 @@ const Checkins: React.FC<CheckinProps> = ({
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [checkInsData, setCheckInsData] = useState<CheckinAPIResponse | null>(null);
   const [currentDate, setCurrentDate] = useState<Dayjs>(dayjs());
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [exportDateRange, setExportDateRange] = useState<[Dayjs, Dayjs] | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportClick = () => {
+    setIsExportModalOpen(true);
+  };
+
+  const handleExportCancel = () => {
+    setIsExportModalOpen(false);
+    setExportDateRange(null);
+  };
+
+  const convertToCSV = (data: any[]) => {
+    // Transform the data into a flat structure suitable for CSV
+    const csvData = data.map(entry => {
+      // Define the type for our row object
+      type RowType = {
+        Date: string;
+        "Team Name": string;
+        "Team ID": number;
+        "User Name": string;
+        "User ID": number;
+        "Has Checked In": string;
+        "Is Blocked": string;
+        "Smart Goals Percentage": number;
+        [key: string]: string | number; // Allow dynamic keys for goals
+      };
+
+      const baseRow: RowType = {
+        Date: entry.date,
+        "Team Name": entry.teamName,
+        "Team ID": entry.teamId,
+        "User Name": entry.userName,
+        "User ID": entry.userId,
+        "Has Checked In": entry.hasCheckedIn ? "Yes" : "No",
+        "Is Blocked": entry.isBlocked ? "Yes" : "No",
+        "Smart Goals Percentage": entry.smartGoalsPercentage || 0,
+      };
+
+      // Add goals columns
+      entry.goals.forEach((goal: { goalText: string; isSmart: boolean }, index: number) => {
+        baseRow[`Goal ${index + 1}`] = goal.goalText;
+        baseRow[`Goal ${index + 1} Smart`] = goal.isSmart ? "Yes" : "No";
+      });
+
+      // Fill in empty goals if less than 2 goals
+      for (let i = entry.goals.length + 1; i <= 2; i++) {
+        baseRow[`Goal ${i}`] = "";
+        baseRow[`Goal ${i} Smart`] = "No";
+      }
+
+      return baseRow;
+    });
+
+    return Papa.unparse(csvData, {
+      quotes: true, // Use quotes around all fields
+      header: true, // Include header row
+      delimiter: ",",
+    });
+  };
+
+  const downloadCSV = (csvString: string, filename: string) => {
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  const handleExportSubmit = async () => {
+    if (!exportDateRange || !exportDateRange[0] || !exportDateRange[1]) {
+      message.error('Please select a date range');
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      const params = new URLSearchParams({
+        startDate: exportDateRange[0].format('YYYY-MM-DD'),
+        endDate: exportDateRange[1].format('YYYY-MM-DD'),
+      });
+
+      if (selectedTeam) {
+        params.append('teamId', selectedTeam.id.toString());
+      }
+
+      const response = await fetch(`/api/checkins/export?${params.toString()}`);
+      const data = await response.json();
+      
+      if (data.exportData) {
+        const csvString = convertToCSV(data.exportData);
+        const filename = `checkins_${exportDateRange[0].format('YYYY-MM-DD')}_to_${exportDateRange[1].format('YYYY-MM-DD')}.csv`;
+        downloadCSV(csvString, filename);
+        message.success('Data exported successfully');
+      } else {
+        message.error('No data available for export');
+      }
+      
+      setIsExportModalOpen(false);
+      setExportDateRange(null);
+    } catch (error) {
+      console.error('Export error:', error);
+      message.error('Failed to export data');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const handlePreviousDay = () => {
     setCurrentDate((prev) => prev.subtract(1, "day"));
@@ -226,6 +347,16 @@ const Checkins: React.FC<CheckinProps> = ({
               >
                 Today
               </Button>
+
+              {/* Export Button */}
+              <Button
+                type="primary"
+                icon={<DownloadOutlined />}
+                onClick={handleExportClick}
+                style={{ height: "1.8rem" }}
+              >
+                Export
+              </Button>
             </div>
 
             <Button
@@ -236,6 +367,51 @@ const Checkins: React.FC<CheckinProps> = ({
             />
           </div>
         </Header>
+
+        {/* Export Modal */}
+        <Modal
+          title="Export Check-ins"
+          open={isExportModalOpen}
+          onCancel={handleExportCancel}
+          footer={[
+            <Button key="cancel" onClick={handleExportCancel}>
+              Cancel
+            </Button>,
+            <Button
+              key="submit"
+              type="primary"
+              loading={isExporting}
+              onClick={handleExportSubmit}
+              disabled={!exportDateRange}
+            >
+              Export
+            </Button>,
+          ]}
+        >
+          <div style={{ padding: "20px 0" }}>
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ marginBottom: 8 }}>Select Date Range:</div>
+              <RangePicker
+                style={{ width: "100%" }}
+                value={exportDateRange}
+                onChange={(dates) => {
+                  if (dates && dates[0] && dates[1]) {
+                    setExportDateRange([dates[0], dates[1]]);
+                  } else {
+                    setExportDateRange(null);
+                  }
+                }}
+                disabledDate={(current) => current && current > dayjs().endOf('day')}
+              />
+            </div>
+            {selectedTeam && (
+              <div style={{ color: '#666' }}>
+                Exporting data for team: {selectedTeam.name}
+              </div>
+            )}
+          </div>
+        </Modal>
+
         <Content
           style={{
             margin: "24px 16px",
