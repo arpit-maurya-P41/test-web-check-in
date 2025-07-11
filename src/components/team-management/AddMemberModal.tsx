@@ -52,7 +52,7 @@ const AddMembersModal: React.FC<AddMembersModalProps> = ({ open, onClose, onSave
       open={open}
       onCancel={handleReset}
       onOk={handleSave}
-      okText="Add"
+      okText="Save"
       cancelText="Cancel"
     >
       <Input.Search

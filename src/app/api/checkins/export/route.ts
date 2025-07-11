@@ -80,9 +80,8 @@ export async function GET(req: NextRequest) {
       exportData.push({
         date: entry.check_in_date.toISOString().split("T")[0],
         teamName: entry.teams?.name || "Unknown",
-        teamId: entry.teams.id || null,
         userName: `${entry.users.first_name} ${entry.users.last_name}`.trim(),
-        userId: entry.users.id,
+        userEmail: entry.users.email,
         hasCheckedIn: entry.has_checked_in,
         isBlocked: entry.is_blocked || false,
         goals: goals.map((g) => ({

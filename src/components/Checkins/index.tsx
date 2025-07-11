@@ -68,10 +68,9 @@ const Checkins: React.FC<CheckinProps> = ({
       type RowType = {
         Date: string;
         "Team Name": string;
-        "Team ID": number;
         "User Name": string;
-        "User ID": number;
-        "Has Checked In": string;
+        "Email": string;
+        "Has Participant": string;
         "Is Blocked": string;
         "Smart Goals Percentage": number;
         [key: string]: string | number; // Allow dynamic keys for goals
@@ -80,10 +79,9 @@ const Checkins: React.FC<CheckinProps> = ({
       const baseRow: RowType = {
         Date: entry.date,
         "Team Name": entry.teamName,
-        "Team ID": entry.teamId,
         "User Name": entry.userName,
-        "User ID": entry.userId,
-        "Has Checked In": entry.hasCheckedIn ? "Yes" : "No",
+        "Email": entry.userEmail,
+        "Has Participant": entry.hasCheckedIn ? "Yes" : "No",
         "Is Blocked": entry.isBlocked ? "Yes" : "No",
         "Smart Goals Percentage": entry.smartGoalsPercentage || 0,
       };
