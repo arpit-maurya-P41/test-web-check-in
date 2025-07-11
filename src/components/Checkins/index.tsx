@@ -70,7 +70,7 @@ const Checkins: React.FC<CheckinProps> = ({
         "Team Name": string;
         "User Name": string;
         "Email": string;
-        "Has Participant": string;
+        "Has Participlated": string;
         "Is Blocked": string;
         "Smart Goals Percentage": number;
         [key: string]: string | number; // Allow dynamic keys for goals
@@ -81,7 +81,7 @@ const Checkins: React.FC<CheckinProps> = ({
         "Team Name": entry.teamName,
         "User Name": entry.userName,
         "Email": entry.userEmail,
-        "Has Participant": entry.hasCheckedIn ? "Yes" : "No",
+        "Has Participlated": entry.hasCheckedIn ? "Yes" : "No",
         "Is Blocked": entry.isBlocked ? "Yes" : "No",
         "Smart Goals Percentage": entry.smartGoalsPercentage || 0,
       };
