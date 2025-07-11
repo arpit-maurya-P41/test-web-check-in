@@ -10,7 +10,6 @@ import {
   Button,
   Layout,
   theme,
-  DatePicker,
   Col,
   Row,
   Space,
@@ -18,11 +17,12 @@ import {
   Typography,
 } from "antd";
 
-import dayjs, { Dayjs } from "dayjs";
+import { Dayjs } from "dayjs";
 import { RangePickerProps } from "antd/lib/date-picker";
 import Sidebar from "@/components/Sidebar";
 import { logoutUser } from "@/app/actions/authActions";
 import { useSidebarStore } from "@/store/sidebarStore";
+import DateRangePicker, { getDefaultDates } from "./DateRangePicker";
 
 import { Heatmap } from "@ant-design/charts";
 import PercentageLineChart from "./PercentageLineChart";
@@ -39,10 +39,7 @@ import { useFetch } from "@/utils/useFetch";
 const { Title } = Typography;
 
 const { Option } = Select;
-const { RangePicker } = DatePicker;
 const { Header, Content } = Layout;
-const getDefaultDates = () =>
-  [dayjs().subtract(6, "day"), dayjs()] as [Dayjs, Dayjs];
 
 const Dashboard: React.FC<DashboardProps> = ({
   userId,
@@ -82,10 +79,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   };
 
   const handleUserChange = (value: string[]) => setSelectedUsers(value);
-  const handleRangeChange = (dates: RangePickerProps["value"]) => {
-    if (dates) setDates(dates as [Dayjs, Dayjs]);
-    else setDates(getDefaultDates());
-  };
 
   const queryParams = useMemo(() => {
     const params = new URLSearchParams();
@@ -198,24 +191,6 @@ const Dashboard: React.FC<DashboardProps> = ({
     autoFit: true,
   };
 
-  const predefinedRanges: Record<string, [dayjs.Dayjs, dayjs.Dayjs]> = {
-    Today: [dayjs(), dayjs()],
-    Yesterday: [dayjs().subtract(1, "day"), dayjs().subtract(1, "day")],
-    "Last 7 Days": [dayjs().subtract(6, "day"), dayjs()],
-    "Last 14 Days": [dayjs().subtract(13, "day"), dayjs()],
-    "Last 30 Days": [dayjs().subtract(29, "day"), dayjs()],
-    "This Month": [
-      dayjs().startOf("month"),
-      dayjs().isSame(dayjs().endOf("month"), "day")
-        ? dayjs().endOf("month")
-        : dayjs(),
-    ],
-    "Last Month": [
-      dayjs().subtract(1, "month").startOf("month"),
-      dayjs().subtract(1, "month").endOf("month"),
-    ],
-  };
-
   return (
     <Layout>
       <Sidebar
@@ -270,37 +245,18 @@ const Dashboard: React.FC<DashboardProps> = ({
                 style={{
                   marginBottom: 16,
                   display: "flex",
+                  width: "100%",
                 }}
                 wrap
               >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
+                <DateRangePicker
+                  dates={dates}
+                  onRangeChange={(dates: RangePickerProps["value"]) => {
+                    if (dates) setDates(dates as [Dayjs, Dayjs]);
+                    else setDates(getDefaultDates());
                   }}
-                >
-                  <RangePicker
-                    onChange={(dates: RangePickerProps["value"]) =>
-                      handleRangeChange(dates)
-                    }
-                    value={dates}
-                    format="YYYY-MM-DD"
-                    style={{
-                      padding: "8px",
-                      borderRadius: "8px",
-                    }}
-                    allowClear
-                    maxDate={dayjs()}
-                    presets={Object.entries(predefinedRanges).map(
-                      ([label, range]) => ({
-                        label,
-                        value: range,
-                      })
-                    )}
-                    size="small"
-                  />
-                </div>
+                  style={{ minWidth: 240 }}
+                />
 
                 <Select
                   placeholder="Select Teams"

@@ -10,7 +10,6 @@ import {
   Col,
   Progress,
   Modal,
-  DatePicker,
   message,
 } from "antd";
 import Papa from 'papaparse';
@@ -32,8 +31,8 @@ import { CheckinAPIResponse } from "@/type/types";
 import { CheckinProps, Team } from "@/type/PropTypes";
 import dayjs, { Dayjs } from "dayjs";
 import { useFetch } from "@/utils/useFetch";
+import DateRangePicker, { getDefaultDates } from "../DateRangePicker";
 const { Header, Content } = Layout;
-const { RangePicker } = DatePicker;
 
 const Checkins: React.FC<CheckinProps> = ({
   userId,
@@ -49,7 +48,7 @@ const Checkins: React.FC<CheckinProps> = ({
   const [checkInsData, setCheckInsData] = useState<CheckinAPIResponse | null>(null);
   const [currentDate, setCurrentDate] = useState<Dayjs>(dayjs());
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  const [exportDateRange, setExportDateRange] = useState<[Dayjs, Dayjs] | null>(null);
+  const [exportDateRange, setExportDateRange] = useState<[Dayjs, Dayjs]>(getDefaultDates());
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExportClick = () => {
@@ -58,7 +57,7 @@ const Checkins: React.FC<CheckinProps> = ({
 
   const handleExportCancel = () => {
     setIsExportModalOpen(false);
-    setExportDateRange(null);
+    setExportDateRange(getDefaultDates());
   };
 
   const convertToCSV = (data: any[]) => {
@@ -153,7 +152,7 @@ const Checkins: React.FC<CheckinProps> = ({
       }
       
       setIsExportModalOpen(false);
-      setExportDateRange(null);
+      setExportDateRange(getDefaultDates());
     } catch (error) {
       console.error('Export error:', error);
       message.error('Failed to export data');
@@ -389,17 +388,16 @@ const Checkins: React.FC<CheckinProps> = ({
           <div style={{ padding: "20px 0" }}>
             <div style={{ marginBottom: 16 }}>
               <div style={{ marginBottom: 8 }}>Select Date Range:</div>
-              <RangePicker
+              <DateRangePicker
+                dates={exportDateRange}
                 style={{ width: "100%" }}
-                value={exportDateRange}
-                onChange={(dates) => {
+                onRangeChange={(dates) => {
                   if (dates && dates[0] && dates[1]) {
                     setExportDateRange([dates[0], dates[1]]);
                   } else {
-                    setExportDateRange(null);
+                    setExportDateRange(getDefaultDates());
                   }
                 }}
-                disabledDate={(current) => current && current > dayjs().endOf('day')}
               />
             </div>
             {selectedTeam && (
