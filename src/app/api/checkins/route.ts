@@ -50,7 +50,6 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Build the where clause for daily_user_checkins
     const whereClause = {
       is_active: true,
       check_in_date: {
@@ -87,6 +86,7 @@ export async function GET(req: NextRequest) {
       },
       select: {
         user_id: true,
+        team_id: true,
         blocker: true,
         goals: {
           select: {
@@ -97,8 +97,8 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const checkinMap = new Map<number, typeof checkins[0]>();
-    checkins.forEach((c) => checkinMap.set(c.user_id, c));
+    const checkinMap = new Map<string, typeof checkins[0]>();
+    checkins.forEach((c) => checkinMap.set(`${c.user_id}-${c.team_id}`, c));
 
     let totalGoals = 0;
     let smartGoals = 0;
@@ -108,7 +108,8 @@ export async function GET(req: NextRequest) {
     const notCheckedUserIds = new Set<number>();
 
     for (const entry of dailyCheckins) {
-      const checkin = checkinMap.get(entry.user_id);
+      const key = `${entry.user_id}-${entry.team_id}`;
+      const checkin = checkinMap.get(key);
       if (!checkin) {
         if (!notCheckedUserIds.has(entry.user_id)) {
           notCheckedUserIds.add(entry.user_id);
